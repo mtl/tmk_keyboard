@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "util.h"
 #include "debug.h"
-#include "host.h"
-#include "led.h"
 #include "adb.h"
 #include "matrix.h"
 
@@ -37,8 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #if (MATRIX_ROWS > 255)
 #   error "MATRIX_ROWS must not exceed 255"
 #endif
-
-#define ADB_CAPS_UP     (ADB_CAPS | 0x80)
 
 
 static bool is_modified = false;
@@ -71,11 +67,17 @@ uint8_t matrix_cols(void)
 void matrix_init(void)
 {
     adb_host_init();
+    // wait for keyboard to boot up and receive command
+    _delay_ms(1000);
+    // Enable keyboard left/right modifier distinction
+    // Addr:Keyboard(0010), Cmd:Listen(10), Register3(11)
+    // upper byte: reserved bits 0000, device address 0010
+    // lower byte: device handler 00000011
+    adb_host_listen(0x2B,0x02,0x03);
 
     // initialize matrix state: all keys off
     for (uint8_t i=0; i < MATRIX_ROWS; i++) matrix[i] = 0x00;
 
-    print_enable = true;
     debug_enable = true;
     debug_matrix = true;
     debug_keyboard = true;
@@ -90,6 +92,7 @@ uint8_t matrix_scan(void)
     uint8_t key0, key1;
 
     is_modified = false;
+    _delay_ms(12);  // delay for preventing overload of poor ADB keyboard controller
     codes = adb_host_kbd_recv();
     key0 = codes>>8;
     key1 = codes&0xFF;
@@ -98,12 +101,6 @@ uint8_t matrix_scan(void)
         print("adb_host_kbd_recv: "); phex16(codes); print("\n");
     }
 
-#ifdef MATRIX_HAS_LOCKING_CAPS
-    // Send Caps key up event
-    if (matrix_is_on(MATRIX_ROW(ADB_CAPS), MATRIX_COL(ADB_CAPS))) {
-        register_key(ADB_CAPS_UP);
-    }
-#endif
     if (codes == 0) {                           // no keys
         return 0;
     } else if (codes == 0x7F7F) {   // power key press
@@ -111,28 +108,9 @@ uint8_t matrix_scan(void)
     } else if (codes == 0xFFFF) {   // power key release
         register_key(0xFF);
     } else if (key0 == 0xFF) {      // error
-        if (debug_matrix) print("adb_host_kbd_recv: ERROR(matrix cleared.)\n");
-        // clear matrix to unregister all keys
-        for (uint8_t i=0; i < MATRIX_ROWS; i++) matrix[i] = 0x00;
+        xprintf("adb_host_kbd_recv: ERROR(%02X)\n", codes);
         return key1;
     } else {
-#ifdef MATRIX_HAS_LOCKING_CAPS    
-        if (host_keyboard_leds() & (1<<USB_LED_CAPS_LOCK)) {
-            // Ignore LockingCaps key down event when CAPS LOCK is on
-            if (key0 == ADB_CAPS && (key1 == ADB_CAPS || key1 == 0xFF)) return 0;
-            if (key0 == ADB_CAPS) key0 = key1;
-            if (key1 == ADB_CAPS) key1 = 0xFF;
-            // Convert LockingCaps key up event into down event
-            if (key0 == ADB_CAPS_UP) key0 = ADB_CAPS;
-            if (key1 == ADB_CAPS_UP) key1 = ADB_CAPS;
-        } else {
-            // ADB_CAPS LOCK off:
-            // Ignore LockingCaps key up event when ADB_CAPS LOCK is off
-            if (key0 == ADB_CAPS_UP && (key1 == ADB_CAPS_UP || key1 == 0xFF)) return 0;
-            if (key0 == ADB_CAPS_UP) key0 = key1;
-            if (key1 == ADB_CAPS_UP) key1 = 0xFF;
-        }
-#endif        
         register_key(key0);
         if (key1 != 0xFF)       // key1 is 0xFF when no second key.
             register_key(key1);

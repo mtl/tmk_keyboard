@@ -40,8 +40,14 @@
 #include "host.h"
 #include "host_driver.h"
 #include "keyboard.h"
+#include "action.h"
+#include "led.h"
 #include "sendchar.h"
 #include "debug.h"
+#ifdef SLEEP_LED_ENABLE
+#include "sleep_led.h"
+#endif
+#include "suspend.h"
 
 #include "descriptor.h"
 #include "lufa.h"
@@ -133,14 +139,41 @@ static void Console_Task(void)
 /*******************************************************************************
  * USB Events
  ******************************************************************************/
-/** Event handler for the USB_Connect event. */
+/*
+ * Event Order of Plug in:
+ * 0) EVENT_USB_Device_Connect
+ * 1) EVENT_USB_Device_Suspend
+ * 2) EVENT_USB_Device_Reset
+ * 3) EVENT_USB_Device_Wake
+*/
 void EVENT_USB_Device_Connect(void)
+{
+    led_set(0x1f);  // all on
+}
+
+void EVENT_USB_Device_Disconnect(void)
 {
 }
 
-/** Event handler for the USB_Disconnect event. */
-void EVENT_USB_Device_Disconnect(void)
+void EVENT_USB_Device_Reset(void)
 {
+}
+
+void EVENT_USB_Device_Suspend()
+{
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_enable();
+#endif
+}
+
+void EVENT_USB_Device_WakeUp()
+{
+    suspend_wakeup_init();
+
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_disable();
+#endif
+    led_set(host_keyboard_leds());
 }
 
 void EVENT_USB_Device_StartOfFrame(void)
@@ -151,32 +184,47 @@ void EVENT_USB_Device_StartOfFrame(void)
 /** Event handler for the USB_ConfigurationChanged event.
  * This is fired when the host sets the current configuration of the USB device after enumeration.
  */
+#if LUFA_VERSION_INTEGER < 0x120730
+    /* old API 120219 */
+    #define ENDPOINT_CONFIG(epnum, eptype, epdir, epsize, epbank)    Endpoint_ConfigureEndpoint(epnum, eptype, epdir, epsize, epbank)
+#else
+    /* new API >= 120730 */
+    #define ENDPOINT_BANK_SINGLE 1
+    #define ENDPOINT_BANK_DOUBLE 2
+    #define ENDPOINT_CONFIG(epnum, eptype, epdir, epsize, epbank)    Endpoint_ConfigureEndpoint((epdir) | (epnum) , eptype, epsize, epbank)
+#endif
 void EVENT_USB_Device_ConfigurationChanged(void)
 {
     bool ConfigSuccess = true;
 
     /* Setup Keyboard HID Report Endpoints */
-    ConfigSuccess &= Endpoint_ConfigureEndpoint(KEYBOARD_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
-                                                KEYBOARD_EPSIZE, ENDPOINT_BANK_SINGLE);
+    ConfigSuccess &= ENDPOINT_CONFIG(KEYBOARD_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
+                                     KEYBOARD_EPSIZE, ENDPOINT_BANK_SINGLE);
 
 #ifdef MOUSE_ENABLE
     /* Setup Mouse HID Report Endpoint */
-    ConfigSuccess &= Endpoint_ConfigureEndpoint(MOUSE_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
-                                                MOUSE_EPSIZE, ENDPOINT_BANK_SINGLE);
+    ConfigSuccess &= ENDPOINT_CONFIG(MOUSE_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
+                                     MOUSE_EPSIZE, ENDPOINT_BANK_SINGLE);
 #endif
 
 #ifdef EXTRAKEY_ENABLE
     /* Setup Extra HID Report Endpoint */
-    ConfigSuccess &= Endpoint_ConfigureEndpoint(EXTRAKEY_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
-                                                EXTRAKEY_EPSIZE, ENDPOINT_BANK_SINGLE);
+    ConfigSuccess &= ENDPOINT_CONFIG(EXTRAKEY_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
+                                     EXTRAKEY_EPSIZE, ENDPOINT_BANK_SINGLE);
 #endif
 
 #ifdef CONSOLE_ENABLE
     /* Setup Console HID Report Endpoints */
-    ConfigSuccess &= Endpoint_ConfigureEndpoint(CONSOLE_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
-                                                CONSOLE_EPSIZE, ENDPOINT_BANK_DOUBLE);
-    ConfigSuccess &= Endpoint_ConfigureEndpoint(CONSOLE_OUT_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_OUT,
-                                                CONSOLE_EPSIZE, ENDPOINT_BANK_SINGLE);
+    ConfigSuccess &= ENDPOINT_CONFIG(CONSOLE_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
+                                     CONSOLE_EPSIZE, ENDPOINT_BANK_DOUBLE);
+    ConfigSuccess &= ENDPOINT_CONFIG(CONSOLE_OUT_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_OUT,
+                                     CONSOLE_EPSIZE, ENDPOINT_BANK_SINGLE);
+#endif
+
+#ifdef NKRO_ENABLE
+    /* Setup NKRO HID Report Endpoints */
+    ConfigSuccess &= ENDPOINT_CONFIG(NKRO_IN_EPNUM, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN,
+                                     NKRO_EPSIZE, ENDPOINT_BANK_SINGLE);
 #endif
 }
 
@@ -305,15 +353,34 @@ static void send_keyboard(report_keyboard_t *report)
 {
     uint8_t timeout = 0;
 
-    // TODO: handle NKRO report
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+        return;
+
     /* Select the Keyboard Report Endpoint */
-    Endpoint_SelectEndpoint(KEYBOARD_IN_EPNUM);
+#ifdef NKRO_ENABLE
+    if (keyboard_nkro) {
+        Endpoint_SelectEndpoint(NKRO_IN_EPNUM);
+    }
+    else
+#endif
+    {
+        Endpoint_SelectEndpoint(KEYBOARD_IN_EPNUM);
+    }
 
     /* Check if Keyboard Endpoint Ready for Read/Write */
     while (--timeout && !Endpoint_IsReadWriteAllowed()) ;
 
     /* Write Keyboard Report Data */
-    Endpoint_Write_Stream_LE(report, sizeof(report_keyboard_t), NULL);
+#ifdef NKRO_ENABLE
+    if (keyboard_nkro) {
+        Endpoint_Write_Stream_LE(report, NKRO_EPSIZE, NULL);
+    }
+    else
+#endif
+    {
+        /* boot mode */
+        Endpoint_Write_Stream_LE(report, KEYBOARD_EPSIZE, NULL);
+    }
 
     /* Finalize the stream transfer to send the last packet */
     Endpoint_ClearIN();
@@ -325,6 +392,9 @@ static void send_mouse(report_mouse_t *report)
 {
 #ifdef MOUSE_ENABLE
     uint8_t timeout = 0;
+
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+        return;
 
     /* Select the Mouse Report Endpoint */
     Endpoint_SelectEndpoint(MOUSE_IN_EPNUM);
@@ -344,6 +414,9 @@ static void send_system(uint16_t data)
 {
     uint8_t timeout = 0;
 
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+        return;
+
     report_extra_t r = {
         .report_id = REPORT_ID_SYSTEM,
         .usage = data
@@ -357,6 +430,9 @@ static void send_system(uint16_t data)
 static void send_consumer(uint16_t data)
 {
     uint8_t timeout = 0;
+
+    if (USB_DeviceState != DEVICE_STATE_Configured)
+        return;
 
     report_extra_t r = {
         .report_id = REPORT_ID_CONSUMER,
@@ -455,19 +531,34 @@ static void SetupHardware(void)
 
     // for Console_Task
     USB_Device_EnableSOFEvents();
+    print_set_sendchar(sendchar);
 }
 
 int main(void)  __attribute__ ((weak));
 int main(void)
 {
     SetupHardware();
+    sei();
+#if defined(INTERRUPT_CONTROL_ENDPOINT)
+    while (USB_DeviceState != DEVICE_STATE_Configured) ;
+#endif
+    print("USB configured.\n");
+
     keyboard_init();
     host_set_driver(&lufa_driver);
-    sei();
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_init();
+#endif
 
-    // TODO: can't print here
-    debug("LUFA init\n");
+    print("Keyboard start.\n");
     while (1) {
+        while (USB_DeviceState == DEVICE_STATE_Suspended) {
+            suspend_power_down();
+            if (USB_Device_RemoteWakeupEnabled && suspend_wakeup_condition()) {
+                    USB_Device_SendRemoteWakeup();
+            }
+        }
+
         keyboard_task();
 
 #if !defined(INTERRUPT_CONTROL_ENDPOINT)

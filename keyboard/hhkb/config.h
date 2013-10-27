@@ -18,17 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* controller configuration */
-#include "controller_teensy.h"
-
 
 #define VENDOR_ID       0xFEED
 #define PRODUCT_ID      0xCAFE
-#define DEVICE_VER      0x0103
+#define DEVICE_VER      0x0104
 #define MANUFACTURER    t.m.k.
 #define PRODUCT         HHKB mod
-
-
 #define DESCRIPTION     t.m.k. keyboard firmware for HHKB mod
 
 
@@ -40,24 +35,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* key combination for command */
 #define IS_COMMAND() (keyboard_report->mods == (MOD_BIT(KC_LSHIFT) | MOD_BIT(KC_RSHIFT))) 
 
-/* mouse keys */
-#ifdef MOUSEKEY_ENABLE
-#   define MOUSEKEY_DELAY_TIME 100
-#endif
+
+/* period of tapping(ms) */
+#define TAPPING_TERM    300
+/* tap count needed for toggling a feature */
+#define TAPPING_TOGGLE  5
+/* Oneshot timeout(ms) */
+#define ONESHOT_TIMEOUT 300
+
+/* Boot Magic salt key: Space */
+#define BOOTMAGIC_KEY_SALT      KC_FN6
 
 
-/* PS/2 mouse */
-#ifdef PS2_MOUSE_ENABLE
 /*
-#   define PS2_CLOCK_PORT  PORTF
-#   define PS2_CLOCK_PIN   PINF
-#   define PS2_CLOCK_DDR   DDRF
-#   define PS2_CLOCK_BIT   0
-#   define PS2_DATA_PORT   PORTF
-#   define PS2_DATA_PIN    PINF
-#   define PS2_DATA_DDR    DDRF
-#   define PS2_DATA_BIT    1
-*/
-#endif
+ * Feature disable options
+ *  These options are also useful to firmware size reduction.
+ */
+/* disable debug print */
+//#define NO_DEBUG
+
+/* disable print */
+//#define NO_PRINT
+
+/* disable action features */
+//#define NO_ACTION_LAYER
+//#define NO_ACTION_TAPPING
+//#define NO_ACTION_ONESHOT
+//#define NO_ACTION_MACRO
+//#define NO_ACTION_FUNCTION
 
 #endif

@@ -1,5 +1,5 @@
 /*
-Copyright 2011 Jun Wako <wakojun@gmail.com>
+Copyright 2011,2012,2013 Jun Wako <wakojun@gmail.com>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,28 +26,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 extern "C" {
 #endif
 
+/* key matrix position */
 typedef struct {
-    uint8_t row;
     uint8_t col;
+    uint8_t row;
 } key_t;
 
+/* key event */
 typedef struct {
     key_t    key;
     bool     pressed;
+    uint16_t time;
 } keyevent_t;
 
-typedef struct {
-    keyevent_t  event;
-    uint8_t     code;
-    uint8_t     mods;
-    uint16_t    time;
-} keyrecord_t;
+/* equivalent test of key_t */
+#define KEYEQ(keya, keyb)       ((keya).row == (keyb).row && (keya).col == (keyb).col)
 
-#define KEYEQ(keya, keyb)     (keya.row == keyb.row && keya.col == keyb.col)
+/* Rules for No Event:
+ * 1) (time == 0) to handle (keyevent_t){} as empty event
+ * 2) Matrix(255, 255) to make TICK event available
+ */
+static inline bool IS_NOEVENT(keyevent_t event) { return event.time == 0 || (event.key.row == 255 && event.key.col == 255); }
+static inline bool IS_PRESSED(keyevent_t event) { return (!IS_NOEVENT(event) && event.pressed); }
+static inline bool IS_RELEASED(keyevent_t event) { return (!IS_NOEVENT(event) && !event.pressed); }
 
+/* Tick event */
+#define TICK                    (keyevent_t){           \
+    .key = (key_t){ .row = 255, .col = 255 },           \
+    .pressed = false,                                   \
+    .time = (timer_read() | 1)                          \
+}
 
-extern uint8_t current_layer;
-extern uint8_t default_layer;
 
 void keyboard_init(void);
 void keyboard_task(void);

@@ -30,11 +30,9 @@
 #include "matrix.h"
 #include "print.h"
 #include "debug.h"
+#include "sendchar.h"
 #include "util.h"
-#include "bootloader.h"
-#ifdef PS2_MOUSE_ENABLE
-#   include "ps2_mouse.h"
-#endif
+#include "suspend.h"
 #include "host.h"
 #include "pjrc.h"
 
@@ -44,9 +42,6 @@
 
 int main(void)
 {
-    DEBUG_LED_CONFIG;
-    DEBUG_LED_OFF;
-
     // set for 16 MHz clock
     CPU_PRESCALE(0);
 
@@ -56,9 +51,21 @@ int main(void)
     usb_init();
     while (!usb_configured()) /* wait */ ;
 
+    print_set_sendchar(sendchar);
+
     keyboard_init();
     host_set_driver(pjrc_driver());
+#ifdef SLEEP_LED_ENABLE
+    sleep_led_init();
+#endif
     while (1) {
-       keyboard_task(); 
+        while (suspend) {
+            suspend_power_down();
+            if (remote_wakeup && suspend_wakeup_condition()) {
+                usb_remote_wakeup();
+            }
+        }
+
+        keyboard_task(); 
     }
 }

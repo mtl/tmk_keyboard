@@ -26,10 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MANUFACTURER    t.m.k.
 #define PRODUCT         Phantom
 
-
 /* message strings */
 #define DESCRIPTION     t.m.k. keyboard firmware for Phantom
-
 
 /* matrix size */
 #define MATRIX_ROWS 6
@@ -41,16 +39,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 /* Set 0 if need no debouncing */
 #define DEBOUNCE    7
 
+/* Set LED brightness 0-255.
+ * This have no effect if sleep LED is enabled. */
+#define LED_BRIGHTNESS  250
 
 /* key combination for command */
 #define IS_COMMAND() ( \
     keyboard_report->mods == (MOD_BIT(KC_LSHIFT) | MOD_BIT(KC_RSHIFT)) \
 )
-
-// TODO: configurable
-#define DEBUG_LED 0
-#define DEBUG_LED_CONFIG
-#define DEBUG_LED_ON
-#define DEBUG_LED_OFF
 
 #endif
