@@ -48,8 +48,10 @@ ifdef NKRO_ENABLE
 endif
 
 ifdef PS2_MOUSE_ENABLE
-    SRC += $(COMMON_DIR)/ps2.c \
-           $(COMMON_DIR)/ps2_mouse.c
+    #SRC += $(COMMON_DIR)/ps2.c \
+           #$(COMMON_DIR)/ps2_mouse.c
+    SRC += $(TOP_DIR)/protocol/ps2.c \
+           $(TOP_DIR)/protocol/ps2_mouse.c
     OPT_DEFS += -DPS2_MOUSE_ENABLE
 endif
 

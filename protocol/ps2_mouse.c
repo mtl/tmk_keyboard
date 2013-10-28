@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             ps2_mouse_error_count = 0; \
             ps2_mouse_enable = false; \
         } \
+		print( "PS/2 Error. :(\n" ); \
         return ps2_error; \
     } \
 } while (0)
@@ -65,6 +66,8 @@ static uint8_t ps2_mouse_btn_prev = 0;
 uint8_t ps2_mouse_init(void) {
     uint8_t rcv;
 
+	bool post_error = false;
+
     if (!ps2_mouse_enable) return 1;
 
     ps2_host_init();
@@ -72,7 +75,7 @@ uint8_t ps2_mouse_init(void) {
     // Reset
     rcv = ps2_host_send(0xFF);
     print("ps2_mouse_init: send 0xFF: ");
-    phex(ps2_error); print("\n");
+    phex(rcv); phex(ps2_error); print("\n");
     ERROR_RETURN();
 
     // ACK
@@ -80,6 +83,9 @@ uint8_t ps2_mouse_init(void) {
     print("ps2_mouse_init: read ACK: ");
     phex(rcv); phex(ps2_error); print("\n");
     ERROR_RETURN();
+	if ( rcv == 0xfc ) {
+		post_error = true;
+	}
 
     // BAT takes some time
     _delay_ms(100);
@@ -87,6 +93,23 @@ uint8_t ps2_mouse_init(void) {
     print("ps2_mouse_init: read BAT: ");
     phex(rcv); phex(ps2_error); print("\n");
     ERROR_RETURN();
+
+	if ( post_error ) {
+		rcv = ps2_host_send(0xe2);
+		print("ps2_mouse_init: send 0xE2: ");
+		phex(rcv); phex(ps2_error); print("\n");
+		ERROR_RETURN();
+
+		rcv = ps2_host_send(0x25);
+		print("ps2_mouse_init: send 0x25: ");
+		phex(rcv); phex(ps2_error); print("\n");
+		ERROR_RETURN();
+
+		rcv = ps2_host_recv();
+		print("ps2_mouse_init: read POST error: ");
+		phex(rcv); phex(ps2_error); print("\n");
+		ERROR_RETURN();
+	}
 
     // Device ID
     rcv = ps2_host_recv();
@@ -135,20 +158,25 @@ uint8_t ps2_mouse_read(void)
 
     if (!ps2_mouse_enable) return 1;
 
-    ps2_host_send(0xEB);
-    ERROR_RETURN();
-
-    rcv=ps2_host_recv();
+    rcv=ps2_host_send(0xEB);
     ERROR_RETURN();
 
     if(rcv==0xFA) {
-        ps2_mouse_btn = ps2_host_recv();
+        ps2_mouse_btn = ps2_host_recv_response();
         ERROR_RETURN();
-        ps2_mouse_x = ps2_host_recv();
+        ps2_mouse_x = ps2_host_recv_response();
         ERROR_RETURN();
-        ps2_mouse_y = ps2_host_recv();
+        ps2_mouse_y = ps2_host_recv_response();
         ERROR_RETURN();
+		/*print( "Mouse read ok.\n" );*/
+		/*_delay_ms( 100 );*/
     }
+	else {
+		print( "Mouse read failed: " );
+		_delay_ms( 100 );
+		phex( rcv );
+		print( ".\n" );
+	}
     return 0;
 }
 
@@ -165,6 +193,8 @@ void ps2_mouse_usb_send(void)
     if (!ps2_mouse_enable) return;
 
     if (ps2_mouse_changed()) {
+		print( "Mouse changed!!.\n" );
+		_delay_ms( 100 );
         int8_t x, y, v, h;
         x = y = v = h = 0;
 
@@ -188,15 +218,22 @@ void ps2_mouse_usb_send(void)
             if (y > 0 || y < 0) v = (y > 64 ? 64 : (y < -64 ? -64 :y));
             if (h || v) {
                 scrolled = true;
+				print( "usb_mouse_send 1.\n" );
+				_delay_ms( 100 );
                 usb_mouse_send(0,0, -v/16, h/16, 0);
                 _delay_ms(100);
             }
         } else if (!scrolled && (ps2_mouse_btn_prev & PS2_MOUSE_SCROLL_BUTTON)) {
+			print( "usb_mouse_send 2.\n" );
+			_delay_ms( 100 );
             usb_mouse_send(0,0,0,0, PS2_MOUSE_SCROLL_BUTTON);
             _delay_ms(100);
+			print( "usb_mouse_send 3.\n" );
             usb_mouse_send(0,0,0,0, 0);
         } else { 
             scrolled = false;
+			print( "usb_mouse_send 4.\n" );
+			_delay_ms( 100 );
             usb_mouse_send(x, y, 0, 0, ps2_mouse_btn & PS2_MOUSE_BTN_MASK);
         }
 
