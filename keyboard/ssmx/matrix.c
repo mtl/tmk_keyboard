@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "print.h"
 #include "matrix.h"
+#include "pwm-driver.h"
 #include "trackpoint.h"
 #include "util.h"
 
@@ -94,6 +95,10 @@ void matrix_init(void)
     phex( status );
     print( "\n" );
 
+#endif
+
+#ifdef LED_CONTROLLER_ENABLE
+    pwm_init( 1.0f );
 #endif
 }
 

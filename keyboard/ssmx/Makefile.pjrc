@@ -51,8 +51,7 @@ TARGET_DIR = .
 SRC =				\
 	keymap.c		\
 	matrix.c		\
-	led.c			\
-	trackpoint.c
+	led.c
 
 CONFIG_H = config.h
 
@@ -73,9 +72,9 @@ F_CPU = 16000000
 
 # Boot Section Size in *bytes*
 #   Teensy halfKay   512
+#   Teensy++ halfKay 1024
 #   Atmel DFU loader 4096
 #   LUFA bootloader  4096
-#OPT_DEFS += -DBOOTLOADER_SIZE=4096
 OPT_DEFS += -DBOOTLOADER_SIZE=1024
 
 
@@ -89,11 +88,14 @@ CONSOLE_ENABLE = yes    # Console for debug
 COMMAND_ENABLE = yes    # Commands for debug and configuration
 #SLEEP_LED_ENABLE = yes  # Breathing sleep LED during USB suspend
 #NKRO_ENABLE = yes	# USB Nkey Rollover(+500)
-PS2_ENABLE = yes # PS/2 support enable/disable
+#--PS2_ENABLE = yes # PS/2 support enable/disable
 #PS2_MOUSE_ENABLE = yes	# PS/2 mouse(TrackPoint) support
-PS2_USE_USART = yes	# uses hardware USART engine for PS/2 signal receive(recomened)
+#--PS2_USE_USART = yes	# uses hardware USART engine for PS/2 signal receive(recomened)
 #PS2_USE_INT = yes	# uses external interrupt for falling edge of PS/2 clock pin
 #PS2_USE_BUSYWAIT = yes	# uses primitive reference code
+TWI_ENABLE = yes # Needed for LED controller (and display?)
+LED_CONTROLLER_ENABLE = yes # Enable the external LED controller
+DISPLAY_ENABLE = yes # Enable the display
 
 ifdef PS2_ENABLE
 ifdef PS2_USE_USART
@@ -108,13 +110,26 @@ ifdef PS2_USE_BUSYWAIT
     SRC += $(TOP_DIR)/protocol/ps2.c
     OPT_DEFS += -DPS2_USE_BUSYWAIT
 endif
-    SRC += $(TOP_DIR)/protocol/ps2_mouse.c \
-		$(TOP_DIR)/protocol/pjrc/usb_mouse.c
+    SRC += \
+		$(TOP_DIR)/protocol/ps2_mouse.c \
+		$(TOP_DIR)/protocol/pjrc/usb_mouse.c \
+		trackpoint.c
     OPT_DEFS += -DMOUSE_ENABLE
     OPT_DEFS += -DPS2_ENABLE
     OPT_DEFS += -DPS2_MOUSE_DEBUG
 endif
 
+ifdef TWI_ENABLE
+    SRC += twi_master.c
+ifdef LED_CONTROLLER_ENABLE
+    SRC += pwm-driver.c
+    OPT_DEFS += -DLED_CONTROLLER_ENABLE
+endif
+#ifdef DISPLAY_ENABLE
+#    SRC += display.c
+#    OPT_DEFS += -DDISPLAY_ENABLE
+#endif
+endif
 
 # Search Path
 VPATH += $(TARGET_DIR)
