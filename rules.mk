@@ -124,6 +124,8 @@ CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -ffunction-sections
+# Without -fdata-sections, u8glib massively inflates the firmware:
+CFLAGS += -fdata-sections
 CFLAGS += -fno-inline-small-functions
 CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums

@@ -17,39 +17,15 @@
 #include "debug.h"
 
 #ifndef PWM_DRIVER_ADDRESS
-#define PWM_DRIVER_ADDRESS 0x80
+#define PWM_DRIVER_ADDRESS 0x40
 #endif
 
 
 /***************************************************************************/
 
 // Globals:
-static uint8_t message[ PWM_MAX_MESSAGE ];
 static bool initialized = false;
-
-/***************************************************************************/
-
-bool pwm_init( float freq ) {
-
-    twi_init();
-    initialized = true;
-    if ( ! pwm_reset() ) {
-        initialized = false;
-        return false;
-    }
-
-    if ( ! pwm_set_freq( freq ) ) {
-        print( "PWM: Failed to set prescaler frequency.\n" );
-        initialized = false;
-        return false;
-    }
-
-    for ( int i = 0; i < PWM_MAX_MESSAGE; i++ ) {
-        message[ i ] = 0;
-    }
-
-    return true;
-}
+static uint8_t message[ PWM_MAX_MESSAGE ];
 
 
 /***************************************************************************/
@@ -93,15 +69,58 @@ void pwm_enable_rgb_led( pwm_rgb_led_t * led ) {
 
 /***************************************************************************/
 
+// Get PWM prescaler setting for @param(update_rate) Hz.
+uint8_t pwm_get_prescale_value( float update_rate ) {
+
+    float pv = PWM_OSC_CLOCK;
+    pv = PWM_OSC_CLOCK / ( 4096 * update_rate );
+    uint8_t prescale_value = floor( pv + 0.5 ) - 1;
+
+    return prescale_value < PWM_MIN_PRESCALE ? PWM_MIN_PRESCALE : prescale_value;
+}
+
+
+/***************************************************************************/
+
+bool pwm_init() {
+
+    twi_init();
+    initialized = true;
+    if ( ! pwm_reset() ) {
+        initialized = false;
+        return false;
+    }
+
+    // Set prescaler:
+    if ( ! pwm_set_prescaler( PWM_MIN_PRESCALE ) ) {
+        print( "PWM: Failed to set prescaler.\n" );
+        initialized = false;
+        return false;
+    }
+
+    // Initialize bulk register write message buffer:
+    message[ 0 ] = PWM_LED0_ON_L;
+    for ( int i = 1; i < PWM_MAX_MESSAGE; i++ ) {
+        message[ i ] = 0;
+    }
+
+    return true;
+}
+
+
+/***************************************************************************/
+
 // Read an 8-bit register:
 bool pwm_read_register( uint8_t reg, uint8_t * value ) {
 
     if ( ! initialized ) return false;
 
-    print( "Reading register 1: " );
-    phex( reg );
-    print( "\n" );
-    _delay_ms( 100 );
+    for ( int i = 0; i < 10; i++ ) {
+        print( "Reading register 1: " );
+        phex( reg );
+        print( "\n" );
+        _delay_ms( 100 );
+    }
 
     // Select the register to read:
     twi_start_tx( PWM_DRIVER_ADDRESS, &reg, 1 );
@@ -123,10 +142,12 @@ bool pwm_read_register( uint8_t reg, uint8_t * value ) {
         return false;
     }
 
-    print( "Reading register 2: " );
-    phex( value );
-    print( "\n" );
-    _delay_ms( 100 );
+    for ( int i = 0; i < 10; i++ ) {
+        print( "Reading register 2: " );
+        phex( *value );
+        print( "\n" );
+        _delay_ms( 100 );
+    }
 
     return true;
 }
@@ -136,7 +157,8 @@ bool pwm_read_register( uint8_t reg, uint8_t * value ) {
 
 bool pwm_reset() {
 
-    pwm_write_register( PWM_PCA9685_MODE1, 0x0, true );
+    // Set MODE1 to known values:
+    pwm_write_register( PWM_MODE1, 0x0, true );
 
     if ( ! twi_success() ) {
         print( "PWM reset failed: " );
@@ -144,6 +166,21 @@ bool pwm_reset() {
         print( "\n" );
         return false;
     }
+
+    uint8_t mode_2;
+    if ( ! pwm_read_register( PWM_MODE2, &mode_2 ) ) {
+        return false;
+    }
+    if (
+        ! pwm_write_register(
+            PWM_MODE2,
+            mode_2 | (1<<PWM_INVRT) | (0<<PWM_OUTDRV),
+            true
+        )
+    ) {
+        return false;
+    }
+
     return true;
 }
 
@@ -162,30 +199,21 @@ void pwm_set_channel( uint8_t channel, uint16_t on, uint16_t off ) {
 
 /***************************************************************************/
 
-// Set PWM frequency to @param(freq) Hz.
-bool pwm_set_freq( float freq ) {
+// Set PWM prescaler to the given value.
+bool pwm_set_prescaler( uint8_t prescale_value ) {
 
     if ( ! initialized ) return false;
 
-    float prescaleval = 25000000; // 25 MHz
-    prescaleval /= 4096; // 12-bit
-    prescaleval /= freq;
-    prescaleval -= 1;
-    uint8_t prescale = floor( prescaleval + 0.5 );
-    print( "PWM: Final pre-scale: " );
-    phex( prescale );
-    print( "\n" );
-
-    uint8_t mode;
-    if ( ! pwm_read_register( PWM_PCA9685_MODE1, &mode ) ) {
+    uint8_t mode_1;
+    if ( ! pwm_read_register( PWM_MODE1, &mode_1 ) ) {
         return false;
     }
 
     // Put the device to sleep:
     if (
         ! pwm_write_register(
-            PWM_PCA9685_MODE1,
-            ( mode & 0x7F ) | 0x10,
+            PWM_MODE1,
+            ( mode_1 & ~PWM_RESTART ) | (1<<PWM_SLEEP),
             true
         )
     ) {
@@ -193,19 +221,29 @@ bool pwm_set_freq( float freq ) {
     }
 
     // Set prescaler:
-    if ( ! pwm_write_register( PWM_PCA9685_PRESCALE, prescale, true ) ) {
+    if ( ! pwm_write_register( PWM_PRE_SCALE, prescale_value, true ) ) {
         return false;
     }
 
     // Wake up:
-    if ( ! pwm_write_register( PWM_PCA9685_MODE1, mode, true ) ) {
+    if ( ! pwm_write_register( PWM_MODE1, mode_1, true ) ) {
         return false;
     }
 
-    // Enable auto-increment.  This should really go in pwm_reset(),
+    // Allow time for oscillator to stabilize after wake-up:
+    _delay_us( 500 );
+
+    // Restart PWM channels after coming out of sleep, and enable
+    // auto-increment mode.  The latter should really go in pwm_reset(),
     // but here it saves having to re-read the MODE1 register.
-    _delay_ms( 5 );
-    if ( ! pwm_write_register( PWM_PCA9685_MODE1, mode | 0xa1, true ) ) {
+    if (
+        ! pwm_write_register(
+            PWM_MODE1,
+//            mode_1 | (0xa1),
+            mode_1 | (1<<PWM_RESTART) | (1<<PWM_AI) | (1<<PWM_ALLCALL),
+            true
+        )
+    ) {
         return false;
     }
 
@@ -252,12 +290,14 @@ bool pwm_write_register( uint8_t reg, uint8_t value, bool wait ) {
     msg[ 0 ] = reg;
     msg[ 1 ] = value;
 
-    print( "Writing register 1: " );
-    phex( reg );
-    print( ", " );
-    phex( value );
-    print( "\n" );
-    _delay_ms( 100 );
+    for ( int i = 0; i < 10; i++ ) {
+        print( "Writing register 1: " );
+        phex( reg );
+        print( ", " );
+        phex( value );
+        print( "\n" );
+        _delay_ms( 100 );
+    }
 
     twi_start_tx( PWM_DRIVER_ADDRESS, msg, 2 );
 

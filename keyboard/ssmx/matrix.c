@@ -25,9 +25,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "print.h"
 #include "matrix.h"
-#include "pwm-driver.h"
-#include "trackpoint.h"
 #include "util.h"
+
+//#ifdef DISPLAY_ENABLE
+#include "display.h"
+//#endif
+
+//#ifdef LED_CONTROLLER_ENABLE
+#include "pwm-driver.h"
+//#endif
+
+//#ifdef PS2_ENABLE
+#include "trackpoint.h"
+//#endif
 
 
 #ifndef DEBOUNCE
@@ -97,8 +107,12 @@ void matrix_init(void)
 
 #endif
 
+#ifdef DISPLAY_ENABLE
+    display_init();
+#endif
+
 #ifdef LED_CONTROLLER_ENABLE
-    pwm_init( 1.0f );
+    pwm_init();
 #endif
 }
 

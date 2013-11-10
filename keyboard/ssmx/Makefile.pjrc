@@ -38,6 +38,10 @@
 # To rebuild project do "make clean" then "make all".
 #----------------------------------------------------------------------------
 
+pristine:
+	-find . -type f -name "*~" -exec rm -rf {} \;
+	-find . -type f -name ".*.sw?" -exec rm -rf {} \;
+
 # Target file name (without extension).
 TARGET = ssmx
 
@@ -125,10 +129,13 @@ ifdef LED_CONTROLLER_ENABLE
     SRC += pwm-driver.c
     OPT_DEFS += -DLED_CONTROLLER_ENABLE
 endif
-#ifdef DISPLAY_ENABLE
-#    SRC += display.c
-#    OPT_DEFS += -DDISPLAY_ENABLE
-#endif
+ifdef DISPLAY_ENABLE
+    SRC += \
+		$(shell ls u8glib/src/*.c 2>/dev/null) \
+		display.c
+	VPATH += u8glib/src
+	OPT_DEFS += -DDISPLAY_ENABLE
+endif
 endif
 
 # Search Path

@@ -88,11 +88,6 @@ static bool initialized = false;
 /// TWI state machine interrupt handler
 ISR(TWI_vect)
 {
-	print( "TWI ISR: " );
-	phex( TW_STATUS );
-	print( "\n" );
-	_delay_ms( 100 );
-
     switch(TW_STATUS)
     {
     case TW_START:
@@ -237,7 +232,8 @@ void twi_start_tx(uint8_t adr, uint8_t *data, uint8_t bytes_to_send)
     }
 
     // Copy address; clear R/~W bit in SLA+R/W address field
-    twi_adr = adr & ~TW_READ;
+    //twi_adr = adr & ~TW_READ;
+    twi_adr = adr << 1;
 
     // Save pointer to data and number of bytes to send
     twi_data        = data;
@@ -256,7 +252,8 @@ void twi_start_rx(uint8_t adr, uint8_t *data, uint8_t bytes_to_receive)
     }
 
     // Copy address; set R/~W bit in SLA+R/W address field
-    twi_adr = adr | TW_READ;
+    //twi_adr = adr | TW_READ;
+    twi_adr = ( adr << 1 ) | TW_READ;
 
     // Save pointer to data and number of bytes to receive
     twi_data         = data;
