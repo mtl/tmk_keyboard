@@ -1,0 +1,10 @@
+*~
+.*.sw?
+ssmx.eep
+ssmx.elf
+ssmx.hex
+ssmx.lss
+ssmx.map
+ssmx.sym
+obj_ssmx/
+Makefile.lufa

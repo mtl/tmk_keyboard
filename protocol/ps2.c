@@ -167,9 +167,11 @@ uint8_t ps2_host_recv_response(void)
     idle();
 
     /* wait start bit */
-    wait_clock_lo(2000);
+//    wait_clock_lo(2000);
+    WAIT(clock_lo, 25000, 0xde);
     data = recv_data();
 
+ERROR:
     inhibit();
     return data;
 }

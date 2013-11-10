@@ -124,6 +124,8 @@ CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -ffunction-sections
+# Without -fdata-sections, u8glib massively inflates the firmware:
+CFLAGS += -fdata-sections
 CFLAGS += -fno-inline-small-functions
 CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
@@ -307,6 +309,7 @@ REMOVE = rm -f
 REMOVEDIR = rmdir
 COPY = cp
 WINSHELL = cmd
+TEENSY_LOADER_CLI = ../../../teensy/teensy_loader_cli/teensy_loader_cli
 
 
 # Define Messages
@@ -411,7 +414,7 @@ program: $(TARGET).hex $(TARGET).eep
 	$(PROGRAM_CMD)
 
 teensy: $(TARGET).hex
-	teensy_loader_cli -mmcu=$(MCU) -w -v $(TARGET).hex
+	$(TEENSY_LOADER_CLI) -mmcu=$(MCU) -w -v $(TARGET).hex
 
 flip: $(TARGET).hex
 	batchisp -hardware usb -device $(MCU) -operation erase f
