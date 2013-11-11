@@ -16,22 +16,30 @@
  ***************************************************************************/
 
 typedef struct pwm_rgb_led {
-	uint16_t on_r;
-	uint16_t on_g;
-	uint16_t on_b;
-	uint16_t off_r;
-	uint16_t off_g;
-	uint16_t off_b;
-	uint8_t channel_r;
-	uint8_t channel_g;
-	uint8_t channel_b;
-	bool enabled;
+    uint16_t on_r;
+    uint16_t on_g;
+    uint16_t on_b;
+    uint16_t off_r;
+    uint16_t off_g;
+    uint16_t off_b;
+    uint8_t channel_r;
+    uint8_t channel_g;
+    uint8_t channel_b;
+    uint8_t flags;
 } pwm_rgb_led_t;
 
 
 /****************************************************************************
  * Constants and macros
  ***************************************************************************/
+
+// pwm_rgb_led_t flags:
+// LED currently lit:
+#define PWM_LED_FLAGS_ON       0x01
+// LED master enable:
+#define PWM_LED_FLAGS_ENABLED  0x02
+// LED is driven directly by the Teensy, not by the PWM controller:
+#define PWM_LED_FLAGS_TEENSY   0x04
 
 // Max message: 1-byte starting register address, plus 16 channels, 2
 // registers per channel (lo/hi), and 2 bytes per register:
@@ -86,12 +94,12 @@ typedef struct pwm_rgb_led {
  ***************************************************************************/
 
 bool pwm_commit( bool );
-void pwm_disable_rgb_led( pwm_rgb_led_t * );
-void pwm_enable_rgb_led( pwm_rgb_led_t * );
 uint8_t pwm_get_prescale_value( float );
 bool pwm_init( void );
 bool pwm_read_register( uint8_t, uint8_t * );
 bool pwm_reset( void );
+void pwm_rgb_led_off( pwm_rgb_led_t * );
+void pwm_rgb_led_on( pwm_rgb_led_t * );
 void pwm_set_channel( uint8_t, uint16_t, uint16_t );
 bool pwm_set_prescaler( uint8_t );
 void pwm_set_rgb_led( pwm_rgb_led_t * );
@@ -102,3 +110,5 @@ bool pwm_write_register( uint8_t, uint8_t, bool );
 /***************************************************************************/
 
 #endif
+
+/* vi: set et sts=4 sw=4 ts=4: */

@@ -52,23 +52,6 @@ bool pwm_commit( bool wait ) {
 
 /***************************************************************************/
 
-void pwm_disable_rgb_led( pwm_rgb_led_t * led ) {
-
-    led->enabled = false;
-    pwm_set_rgb_led( led );
-}
-
-
-/***************************************************************************/
-
-void pwm_enable_rgb_led( pwm_rgb_led_t * led ) {
-    led->enabled = true;
-    pwm_set_rgb_led( led );
-}
-
-
-/***************************************************************************/
-
 // Get PWM prescaler setting for @param(update_rate) Hz.
 uint8_t pwm_get_prescale_value( float update_rate ) {
 
@@ -115,12 +98,12 @@ bool pwm_read_register( uint8_t reg, uint8_t * value ) {
 
     if ( ! initialized ) return false;
 
-    for ( int i = 0; i < 10; i++ ) {
-        print( "Reading register 1: " );
-        phex( reg );
-        print( "\n" );
-        _delay_ms( 100 );
-    }
+//    for ( int i = 0; i < 10; i++ ) {
+//        print( "Reading register 1: " );
+//        phex( reg );
+//        print( "\n" );
+//        _delay_ms( 100 );
+//    }
 
     // Select the register to read:
     twi_start_tx( PWM_DRIVER_ADDRESS, &reg, 1 );
@@ -142,12 +125,12 @@ bool pwm_read_register( uint8_t reg, uint8_t * value ) {
         return false;
     }
 
-    for ( int i = 0; i < 10; i++ ) {
-        print( "Reading register 2: " );
-        phex( *value );
-        print( "\n" );
-        _delay_ms( 100 );
-    }
+//    for ( int i = 0; i < 10; i++ ) {
+//        print( "Reading register 2: " );
+//        phex( *value );
+//        print( "\n" );
+//        _delay_ms( 100 );
+//    }
 
     return true;
 }
@@ -182,6 +165,24 @@ bool pwm_reset() {
     }
 
     return true;
+}
+
+
+/***************************************************************************/
+
+void pwm_rgb_led_off( pwm_rgb_led_t * led ) {
+
+    led->flags &= ~PWM_LED_FLAGS_ON;
+    pwm_set_rgb_led( led );
+}
+
+
+/***************************************************************************/
+
+void pwm_rgb_led_on( pwm_rgb_led_t * led ) {
+
+    led->flags |= PWM_LED_FLAGS_ON;
+    pwm_set_rgb_led( led );
 }
 
 
@@ -255,7 +256,7 @@ bool pwm_set_prescaler( uint8_t prescale_value ) {
 
 void pwm_set_rgb_led( pwm_rgb_led_t * led ) {
 
-    if ( led->enabled ) {
+    if ( led->flags & PWM_LED_FLAGS_ON ) {
         pwm_set_channel( led->channel_r, led->on_r, led->off_r );
         pwm_set_channel( led->channel_g, led->on_g, led->off_g );
         pwm_set_channel( led->channel_b, led->on_b, led->off_b );
@@ -270,10 +271,11 @@ void pwm_set_rgb_led( pwm_rgb_led_t * led ) {
 /***************************************************************************/
 
 void pwm_toggle_rgb_led( pwm_rgb_led_t * led ) {
-    if ( led->enabled ) {
-        pwm_disable_rgb_led( led );
+
+    if ( led->flags & PWM_LED_FLAGS_ON ) {
+        pwm_rgb_led_off( led );
     } else {
-        pwm_enable_rgb_led( led );
+        pwm_rgb_led_on( led );
     }
 }
 
@@ -290,14 +292,14 @@ bool pwm_write_register( uint8_t reg, uint8_t value, bool wait ) {
     msg[ 0 ] = reg;
     msg[ 1 ] = value;
 
-    for ( int i = 0; i < 10; i++ ) {
-        print( "Writing register 1: " );
-        phex( reg );
-        print( ", " );
-        phex( value );
-        print( "\n" );
-        _delay_ms( 100 );
-    }
+//    for ( int i = 0; i < 10; i++ ) {
+//        print( "Writing register 1: " );
+//        phex( reg );
+//        print( ", " );
+//        phex( value );
+//        print( "\n" );
+//        _delay_ms( 100 );
+//    }
 
     twi_start_tx( PWM_DRIVER_ADDRESS, msg, 2 );
 

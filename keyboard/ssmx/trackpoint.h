@@ -35,7 +35,7 @@ typedef int TP_STATUS;
 #define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 7, 6, 5, 4, 3, 2, 1)
 #define VA_NUM_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, N, ...) N
 #define tp_command(...) \
-	_tp_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
+    _tp_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
 
 // Command byte responses:
 #define TP_CMD_ACK 0xfa
@@ -51,7 +51,7 @@ typedef int TP_STATUS;
 #define TP_CMD_RESET 0xff
 
 enum tp_ram_locations {
-	TP_RAM_POST_REG = 0x25
+    TP_RAM_POST_REG = 0x25
 };
 
 
@@ -87,3 +87,5 @@ TP_STATUS trackpoint_poll( void );
 /***************************************************************************/
 
 #endif
+
+/* vi: set et sts=4 sw=4 ts=4: */
