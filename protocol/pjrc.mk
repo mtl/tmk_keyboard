@@ -7,9 +7,8 @@ SRC +=	$(PJRC_DIR)/main.c \
 	$(PJRC_DIR)/usb.c
 
 # Option modules
-#ifdef $(or MOUSEKEY_ENABLE, MOUSE_ENABLE)
-var_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
-ifeq ($(or $(call var_defined,MOUSE_ENABLE),$(call var_defined,MOUSEKEY_ENABLE)),yes)
+is_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
+ifeq ($(or $(call is_defined,MOUSE_ENABLE),$(call is_defined,MOUSEKEY_ENABLE)),yes)
     SRC += $(PJRC_DIR)/usb_mouse.c
 endif
 

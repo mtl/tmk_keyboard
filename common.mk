@@ -47,9 +47,8 @@ ifdef NKRO_ENABLE
     OPT_DEFS += -DNKRO_ENABLE
 endif
 
-#ifdef $(or MOUSEKEY_ENABLE, PS2_MOUSE_ENABLE)
-var_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
-ifeq ($(or $(call var_defined,MOUSEKEY_ENABLE),$(call var_defined,PS2_MOUSE_ENABLE)),yes)
+is_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
+ifeq ($(or $(call is_defined,MOUSEKEY_ENABLE),$(call is_defined,PS2_MOUSE_ENABLE)),yes)
     OPT_DEFS += -DMOUSE_ENABLE
 endif
 
