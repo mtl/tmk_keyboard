@@ -168,8 +168,8 @@ uint8_t ps2_mouse_read(void)
         ERROR_RETURN();
         ps2_mouse_y = ps2_host_recv_response();
         ERROR_RETURN();
-		/*print( "Mouse read ok.\n" );*/
-		/*_delay_ms( 100 );*/
+		//print( "Mouse read ok.\n" );
+		//_delay_ms( 100 );
     }
 	else {
 		print( "Mouse read failed: " );

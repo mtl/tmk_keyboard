@@ -92,50 +92,37 @@ CONSOLE_ENABLE = yes    # Console for debug
 COMMAND_ENABLE = yes    # Commands for debug and configuration
 #SLEEP_LED_ENABLE = yes  # Breathing sleep LED during USB suspend
 #NKRO_ENABLE = yes	# USB Nkey Rollover(+500)
-#--PS2_ENABLE = yes # PS/2 support enable/disable
-#PS2_MOUSE_ENABLE = yes	# PS/2 mouse(TrackPoint) support
-#--PS2_USE_USART = yes	# uses hardware USART engine for PS/2 signal receive(recomened)
-#PS2_USE_INT = yes	# uses external interrupt for falling edge of PS/2 clock pin
-#PS2_USE_BUSYWAIT = yes	# uses primitive reference code
-TWI_ENABLE = yes # Needed for LED controller (and display?)
-LED_CONTROLLER_ENABLE = yes # Enable the external LED controller
+TRACKPOINT_ENABLE = yes # TrackPoint support enable/disable
+#LED_CONTROLLER_ENABLE = yes # Enable the external LED controller
 DISPLAY_ENABLE = yes # Enable the display
 
-ifdef PS2_ENABLE
-ifdef PS2_USE_USART
-    SRC += $(TOP_DIR)/protocol/ps2_usart.c
-    OPT_DEFS += -DPS2_USE_USART
-endif
-ifdef PS2_USE_INT
-    SRC += $(TOP_DIR)/protocol/ps2.c
-    OPT_DEFS += -DPS2_USE_INT
-endif
-ifdef PS2_USE_BUSYWAIT
-    SRC += $(TOP_DIR)/protocol/ps2.c
-    OPT_DEFS += -DPS2_USE_BUSYWAIT
-endif
-    SRC += \
-		$(TOP_DIR)/protocol/ps2_mouse.c \
-		$(TOP_DIR)/protocol/pjrc/usb_mouse.c \
-		trackpoint.c
-    OPT_DEFS += -DMOUSE_ENABLE
-    OPT_DEFS += -DPS2_ENABLE
+ifdef TRACKPOINT_ENABLE
+    SRC += trackpoint.c
+    OPT_DEFS += -DTRACKPOINT_ENABLE
+
+	# Enable AVR to talk to the mouse:
+    PS2_MOUSE_ENABLE = yes
+    PS2_USE_USART = yes    # uses hardware USART engine for PS/2 signal receive(recomened)
+    #PS2_USE_INT = yes      # uses external interrupt for falling edge of PS/2 clock pin
+    #PS2_USE_BUSYWAIT = yes # uses primitive reference code
     OPT_DEFS += -DPS2_MOUSE_DEBUG
+
+	# Enable AVR to present a mouse HID to the USB host:
+    MOUSE_ENABLE = yes
+    OPT_DEFS += -DMOUSE_ENABLE
 endif
 
-ifdef TWI_ENABLE
-    SRC += twi_master.c
 ifdef LED_CONTROLLER_ENABLE
-    SRC += pwm-driver.c
+    SRC += pwm-driver.c twi_master.c
     OPT_DEFS += -DLED_CONTROLLER_ENABLE
 endif
+
 ifdef DISPLAY_ENABLE
     SRC += \
 		$(shell ls u8glib/src/*.c 2>/dev/null) \
 		display.c
-	VPATH += u8glib/src
-	OPT_DEFS += -DDISPLAY_ENABLE
-endif
+    VPATH += u8glib/src
+    OPT_DEFS += -DDISPLAY_ENABLE
 endif
 
 # Search Path

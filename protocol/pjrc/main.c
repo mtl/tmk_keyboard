@@ -35,6 +35,7 @@
 #include "suspend.h"
 #include "host.h"
 #include "pjrc.h"
+#include "timer.h"
 
 
 #define CPU_PRESCALE(n)    (CLKPR = 0x80, CLKPR = (n))
@@ -58,7 +59,17 @@ int main(void)
 #ifdef SLEEP_LED_ENABLE
     sleep_led_init();
 #endif
+
     while (1) {
+
+		uint32_t mtl_time = timer_read32();
+		for ( int i = 0; i < 1000; i++ ) {
+
+			/*print( "Main loop: i = " );*/
+			/*phex( (uint8_t) ( i >> 8 ) & 0xff );*/
+			/*phex( (uint8_t) ( i >> 0 ) & 0xff );*/
+			/*print( "\n" );*/
+
         while (suspend) {
             suspend_power_down();
             if (remote_wakeup && suspend_wakeup_condition()) {
@@ -67,5 +78,19 @@ int main(void)
         }
 
         keyboard_task(); 
-    }
+
+		}
+		mtl_time = timer_elapsed32( mtl_time );
+		// No TP: 247 ms
+		// TP full: 10820 ms
+		// No usb report: same as TP full
+		print( "Time for 1,000 keyboard_tasks: " );
+		phex( (uint8_t) ( mtl_time >> 24 ) & 0xff );
+		phex( (uint8_t) ( mtl_time >> 16 ) & 0xff );
+		phex( (uint8_t) ( mtl_time >>  8 ) & 0xff );
+		phex( (uint8_t) ( mtl_time >>  0 ) & 0xff );
+		print( "\n" );
+	}
+
+
 }

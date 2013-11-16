@@ -106,7 +106,61 @@ void ps2_host_init(void)
     idle();
     PS2_USART_INIT();
     PS2_USART_RX_INT_ON();
+    //PS2_USART_TX_INT_ON();
 }
+
+//---------------------------------------------------------------------------
+
+/*
+ISR(PS2_USART_TX_VECT) {
+	print( "PS2_USART_TX_VECT\n" );
+}
+
+bool ps2_host_send_ready() {
+    return PS2_USART_TX_EMPTY;
+}
+
+
+void ps2_host_send_start(uint8_t data) {
+    
+	print( "Waiting for send ready.\n" );
+	while ( ! ps2_host_send_ready() );
+	print( "Initiating send.\n" );
+
+    inhibit();
+    _delay_us(100);
+
+	// Request to send:
+    data_lo();
+    _delay_us(52);
+    clock_hi();
+//    WAIT(clock_lo, 15000, 1);
+//    _delay_us(15);
+
+	// Initiate transmission:
+    PS2_USART_DATA = data;
+}
+
+
+uint8_t ps2_host_send2(uint8_t data) {
+
+	ps2_host_send_start( data );
+	print( "Waiting for receipt.\n" );
+	while ( pbuf_empty() ) {
+		;
+	}
+	uint8_t res = ps2_host_recv();
+
+	print( "Sent " );
+	phex( data );
+	print( ", received " );
+	phex( res );
+	print( "\n" );
+
+	return res;
+}
+*/
+//---------------------------------------------------------------------------
 
 uint8_t ps2_host_send(uint8_t data)
 {
@@ -322,3 +376,14 @@ static inline uint8_t pbuf_dequeue(void)
 
     return val;
 }
+
+/*
+bool pbuf_empty() {
+    uint8_t sreg = SREG;
+    cli();
+	bool result = pbuf_head == pbuf_tail;
+    SREG = sreg;
+	return result;
+}
+*/
+

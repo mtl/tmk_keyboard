@@ -73,11 +73,7 @@ void led_init() {
 // later.
 void led_set( uint8_t usb_led ) {
 
-#ifndef LED_CONTROLLER_ENABLE
-    // May be better to wire the caps lock LEDs to the Teensy.
-    // TrackPoint lights act as caps lock:
-    led_set_trackpoint( usb_led & ( 1 << USB_LED_CAPS_LOCK ) );
-#else
+#ifdef LED_CONTROLLER_ENABLE
     for ( int i = 0; i < 6; i++ ) {
 
         bool new_on;
@@ -102,6 +98,10 @@ void led_set( uint8_t usb_led ) {
             leds[ i ].flags | PWM_LED_FLAGS_ENABLED
         );
     }
+#else
+    // May be better to wire the caps lock LEDs to the Teensy.
+    // TrackPoint lights act as caps lock:
+    led_set_trackpoint( usb_led & ( 1 << USB_LED_CAPS_LOCK ) );
 #endif
 }
 
@@ -198,20 +198,21 @@ void led_set_teensy_led( pwm_rgb_led_t * led ) {
 void led_set_trackpoint( bool on ) {
 
     if ( on ) {
-
-        // On: Output high
-        //DDRB |= (1<<7);
-        //PORTB |= (1<<7);
-
+#ifdef LED_CONTROLLER_ENABLE
         led_set_teensy_channel( LED_TEENSY_CH_B7, led_trackpoint_value );
-
+#else
+        // On: Output high
+        DDRB |= (1<<7);
+        PORTB |= (1<<7);
+#endif
     } else {
-
-        // Off: Hi-Z
-        //DDRB &= ~(1<<7);
-        //PORTB &= ~(1<<7);
-
+#ifdef LED_CONTROLLER_ENABLE
         led_set_teensy_channel( LED_TEENSY_CH_B7, 0 );
+#else
+        // Off: Hi-Z
+        DDRB &= ~(1<<7);
+        PORTB &= ~(1<<7);
+#endif
     }
 
     led_trackpoint_on = on;
@@ -229,7 +230,8 @@ void led_teensy_pwm_init() {
     // Configure PWM on OC1A, OC1B, and OC1C:
     //   Waveform generation mode (WGM) 5 (fast PWM mode, 8-bit),
     //   Set OC1A, OC1B, and OC1C on compare match, clear at top.
-    // B7 could alternatively be driven by OCR0A.
+    // B7 could alternatively be driven by OCR0A, but timer 0 is used by
+    // the TMK firmware for stuff.
     TCCR1A = (
         (1<<COM1A1) |
         (1<<COM1A0) |

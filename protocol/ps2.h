@@ -78,6 +78,15 @@ uint8_t ps2_host_recv_response(void);
 uint8_t ps2_host_recv(void);
 void ps2_host_set_led(uint8_t usb_led);
 
+/*
+bool ps2_host_send_ready( void );
+void ps2_host_send_start( uint8_t );
+uint8_t ps2_host_send2( uint8_t );
+bool pbuf_empty( void );
+*/
+
+
+
 /* device role */
 
 #endif

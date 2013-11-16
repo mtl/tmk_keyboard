@@ -7,7 +7,9 @@ SRC +=	$(PJRC_DIR)/main.c \
 	$(PJRC_DIR)/usb.c
 
 # Option modules
-ifdef $(or MOUSEKEY_ENABLE, PS2_MOUSE_ENABLE, MOUSE_ENABLE)
+#ifdef $(or MOUSEKEY_ENABLE, MOUSE_ENABLE)
+var_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
+ifeq ($(or $(call var_defined,MOUSE_ENABLE),$(call var_defined,MOUSEKEY_ENABLE)),yes)
     SRC += $(PJRC_DIR)/usb_mouse.c
 endif
 
@@ -18,5 +20,5 @@ endif
 # Search Path
 VPATH += $(TOP_DIR)/$(PJRC_DIR)
 
-# This indicates using LUFA stack
+# This indicates using PJRC stack
 OPT_DEFS += -DPROTOCOL_PJRC

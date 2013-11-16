@@ -47,15 +47,9 @@ ifdef NKRO_ENABLE
     OPT_DEFS += -DNKRO_ENABLE
 endif
 
-ifdef PS2_MOUSE_ENABLE
-    #SRC += $(COMMON_DIR)/ps2.c \
-           #$(COMMON_DIR)/ps2_mouse.c
-    SRC += $(TOP_DIR)/protocol/ps2.c \
-           $(TOP_DIR)/protocol/ps2_mouse.c
-    OPT_DEFS += -DPS2_MOUSE_ENABLE
-endif
-
-ifdef $(or MOUSEKEY_ENABLE, PS2_MOUSE_ENABLE)
+#ifdef $(or MOUSEKEY_ENABLE, PS2_MOUSE_ENABLE)
+var_defined=$(if $(findstring undefined,$(origin $(1))),,yes)
+ifeq ($(or $(call var_defined,MOUSEKEY_ENABLE),$(call var_defined,PS2_MOUSE_ENABLE)),yes)
     OPT_DEFS += -DMOUSE_ENABLE
 endif
 

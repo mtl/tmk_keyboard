@@ -27,17 +27,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "util.h"
 
-//#ifdef DISPLAY_ENABLE
+#include "led-local.h"
+
+#ifdef DISPLAY_ENABLE
 #include "display.h"
-//#endif
+#endif
 
-//#ifdef LED_CONTROLLER_ENABLE
-#include "pwm-driver.h"
-//#endif
-
-//#ifdef PS2_ENABLE
+#ifdef TRACKPOINT_ENABLE
 #include "trackpoint.h"
-//#endif
+#endif
 
 
 #ifndef DEBOUNCE
@@ -85,44 +83,36 @@ void matrix_init(void)
         matrix_debouncing[i] = (matrix_row_t) 0;
     }
 
-    print( "TP init 1\n" );
-    _delay_ms(100);
-#ifdef PS2_ENABLE
-    print( "TP init 2\n" );
-    _delay_ms(100);
-    // Initialize the TrackPoint:
-    TP_STATUS status = trackpoint_init();
-    print( "TP init 3: " );
-    phex( status );
-    print( "\n" );
-    _delay_ms(100);
-//    printf( "TP init 3: x%02X.\n", status );
-//    _delay_ms(1000);
-
-
-    status = trackpoint_poll();
-    print( "Initial TrackPoint poll result: " );
-    phex( status );
-    print( "\n" );
-
+#ifdef LED_CONTROLLER_ENABLE
+    led_init();
 #endif
 
 #ifdef DISPLAY_ENABLE
     display_init();
 #endif
 
-#ifdef LED_CONTROLLER_ENABLE
-    pwm_init();
+#ifdef TRACKPOINT_ENABLE
+    // Initialize the TrackPoint:
+    print( "TP initializing...\n" );
+    _delay_ms(100);
+    TP_STATUS status = trackpoint_init();
+    print( "TP init status: " );
+    phex( status );
+    print( "\n" );
 #endif
 }
 
 uint8_t matrix_scan(void)
 {
-#ifdef PS2_ENABLE
+#ifdef LED_CONTROLLER_ENABLE
+    led_update();
+#endif
+
+#ifdef TRACKPOINT_ENABLE
     TP_STATUS status = trackpoint_poll();
-//    print( "TrackPoint poll result: " );
-//    phex( status );
-//    print( "\n" );
+    print( "TrackPoint poll result: " );
+    phex( status );
+    print( "\n" );
 #endif
 
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {

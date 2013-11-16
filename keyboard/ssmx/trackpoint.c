@@ -104,6 +104,7 @@ typedef struct {
 // Read the TP status.  If status hasn't changed, report.buttons will be 0xff.
 TP_STATUS tp_get_report( report_mouse_t * report ) {
 
+/*
     // Ensure the TrackPoint is enabled:
     if ( ! tp_ready() ) return TP_DISABLED;
 
@@ -128,7 +129,7 @@ TP_STATUS tp_get_report( report_mouse_t * report ) {
 
 
 
-
+*/
 
     return TP_OK;
 }

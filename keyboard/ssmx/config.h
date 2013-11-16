@@ -79,6 +79,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PS2_DATA_DDR    DDRD
 #define PS2_DATA_BIT    2
 
+/*
+#define PS2_USART_TX_VECT       USART1_TX_vect
+#define PS2_USART_TX_DATA       UDR1
+#define PS2_USART_TX_EMPTY      (!(UCSR1A & (1<<UDRE1)))
+#define PS2_USART_TX_COMPLETE   (UCSR1A & (1<<TXC1))
+#define PS2_USART_TX_INT_ON() do {  \
+    UCSR1B |= ((1 << TXCIE1) |      \
+              (1 << TXEN1));        \
+} while (0)
+//    UCSR1B &= ~(1 << UDRIE1)        \
+*/
+
+
+
+
 /* synchronous, odd parity, 1-bit stop, 8-bit data, sample at falling edge */
 /* set DDR of CLOCK as input to be slave */
 #define PS2_USART_INIT() do {   \

@@ -217,6 +217,16 @@ static inline uint8_t pbuf_dequeue(void)
 
     return val;
 }
+/*
+bool pbuf_empty() {
+    uint8_t sreg = SREG;
+    cli();
+	bool result = pbuf_head == pbuf_tail;
+    SREG = sreg;
+	return result;
+}
+*/
+
 
 /* get data received by interrupt */
 uint8_t ps2_host_recv(void)
