@@ -67,6 +67,9 @@ void display_draw() {
     display_draw_logo(1);
     u8g_SetRGB(&u8g, 255, 0, 0 );
     display_draw_logo(0);
+
+    u8g_SetRGB(&u8g, 0, 255, 255 );
+    display_draw_url();
 }
 
 
@@ -74,8 +77,8 @@ void display_draw() {
 
 void display_draw_logo( uint8_t d ) {
 
-	//uint8_t ybase = 10;
-	uint8_t ybase = 100;
+	uint8_t ybase = 10;
+	//uint8_t ybase = 100;
 
     u8g_SetFont(&u8g, u8g_font_gdr25r);
     u8g_DrawStr(&u8g, 0+d, ybase + 20+d, "U");
@@ -88,6 +91,22 @@ void display_draw_logo( uint8_t d ) {
     u8g_DrawVLine(&u8g, 45+d, ybase + 22+d, 12);
 }
 
+
+/***************************************************************************/
+
+void display_draw_url() {
+
+	//uint8_t ybase = 10;
+
+    u8g_SetFont( &u8g, u8g_font_4x6 );
+    if ( u8g_GetHeight(&u8g) < 59 ) {
+        u8g_DrawStr( &u8g, 53, 9,"code.google.com" );
+        u8g_DrawStr( &u8g, 77, 18,"/p/u8glib" );
+    }
+    else {
+        u8g_DrawStr( &u8g, 1, 54,"code.google.com/p/u8glib" );
+    }
+}
 
 /***************************************************************************/
 
