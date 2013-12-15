@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include "stdint.h"
 #include "led.h"
+#include "print.h"
 #include "pwm-driver.h"
 #include "trackpoint.h"
 #include "led-local.h"
@@ -18,49 +19,77 @@
 // Globals:
 static bool led_trackpoint_on = true;
 uint8_t led_trackpoint_value = 0xff;
+
+#ifdef LED_CONTROLLER_ENABLE
 static volatile bool led_update_pending = false;
 static pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
-
+#endif
 
 /***************************************************************************/
 
 // Only necessary to call if LED_CONTROLLER_ENABLED is defined.
 void led_init() {
 
-    // Initialize PWM on the Teensy:
-    led_teensy_pwm_init();
+    // For the LEDs that are wired directly to the Teensy, put them into
+    // Hi-Z mode (DDR:0, PORT:0), regardless of whether or not the LED
+    // control logic is enabled.  This is because those lines coming into
+    // the Teensy will be driven at +5V, and it may need to be assured that
+    // the Teensy will not also try to drive those lines at +5V.  Grounding
+    // them would light the LEDs at full brightness, which is also not
+    // preferred.
+    DDRB  &= ~0b01110000;
+    PORTB &= ~0b01110000;
+    DDRC  &= ~0b01110000;
+    PORTC &= ~0b01110000;
+
+    // Configure the TrackPoint lighting:
     led_set_trackpoint( led_trackpoint_on );
 
-    // Initialize LED settings:
+#ifdef LED_CONTROLLER_ENABLE
+
+    // Initialize PWM on the Teensy:
+    led_teensy_pwm_init();
+
+    // Initialize the external LED controller:
+    bool pwm_initialized = pwm_init();
+
+    // Configure initial LED settings:
     for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
 
-        pwm_rgb_led_t led = leds[ i ];
+        pwm_rgb_led_t * led = &leds[ i ];
 
-        led.flags = PWM_LED_FLAGS_ENABLED;
-        led.channel_r = i * 3 + 0;
-        led.channel_g = i * 3 + 1;
-        led.channel_b = i * 3 + 2;
-        led.on_r = PWM_LED_FULL;
-        led.on_b = 0;
-        led.on_g = 0;
-        led.off_r = 0;
-        led.off_b = 0;
-        led.off_g = 0;
+        led->flags = PWM_LED_FLAGS_ENABLED;
+        led->channel_r = i * 3 + 0;
+        led->channel_g = i * 3 + 1;
+        led->channel_b = i * 3 + 2;
+        led->on_r = 0;
+        led->on_b = 0;
+        led->on_g = 0;
+        led->off_r = 0;
+        led->off_b = 0;
+        led->off_g = 0;
 
         // PWM controller only supports 5 RGB LEDs.  The rest
         // are wired to the Teensy:
-        if ( i >= 5 ) {
-            led.flags |= PWM_LED_FLAGS_TEENSY;
-            led_set_teensy_led( &led );
+        if ( i >= LED_ARRAY_FIRST_TEENSY ) {
+            led->flags |= PWM_LED_FLAGS_TEENSY;
+            //led->on_r = LED_TEENSY_FULL;
+            led->on_r = 0x01;
+            led_set_teensy_led( led );
         } else {
-            pwm_set_rgb_led( &led );
+            //led->on_r = PWM_LED_FULL;
+            led->on_r = 0x199;
+            led->off_r = 0x4cc;
+            pwm_set_rgb_led( led );
         }
     }
 
     // Program the LED controller:
-    if ( pwm_init() ) {
-        pwm_commit( false );
+    if ( pwm_initialized ) {
+        pwm_commit( true );
     }
+
+#endif
 }
 
 
@@ -74,11 +103,13 @@ void led_init() {
 void led_set( uint8_t usb_led ) {
 
 #ifdef LED_CONTROLLER_ENABLE
-    for ( int i = 0; i < 6; i++ ) {
+    for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
 
         bool new_on;
 
         switch ( i ) {
+            case LED_DISPLAY:
+                continue;
             case LED_CAPS_LOCK_0:
             case LED_CAPS_LOCK_1:
                 new_on = usb_led & ( 1 << USB_LED_CAPS_LOCK );
@@ -95,7 +126,7 @@ void led_set( uint8_t usb_led ) {
 
         led_set_one(
             &leds[ i ], new_on,
-            leds[ i ].flags | PWM_LED_FLAGS_ENABLED
+            leds[ i ].flags & PWM_LED_FLAGS_ENABLED
         );
     }
 #else
@@ -116,7 +147,7 @@ void led_set_one( pwm_rgb_led_t * led, bool on, bool enabled ) {
     bool was_on = led->flags & PWM_LED_FLAGS_ON;
     bool was_enabled = led->flags & PWM_LED_FLAGS_ENABLED;
 
-    // Whether something changed that we may want to persist:
+    // Whether a change occurred that we may want to persist:
 //    bool state_changed = on == was_on && enabled == was_enabled;
 
     if ( on ) {
@@ -130,7 +161,10 @@ void led_set_one( pwm_rgb_led_t * led, bool on, bool enabled ) {
     if ( enabled ) {
         led->flags |= PWM_LED_FLAGS_ENABLED;
 
-        if ( on && ( ! was_on || ! was_enabled )  ) {
+        if (
+            ( on && ( ! was_enabled || ! was_on ) ) ||
+            ( ! on && ( was_enabled && was_on ) )
+        ) {
             effect_changed = true;
         }
     } else {
@@ -160,13 +194,69 @@ void led_set_one( pwm_rgb_led_t * led, bool on, bool enabled ) {
 void led_set_teensy_channel( uint8_t channel, uint8_t value ) {
 
     switch ( channel ) {
-        case LED_TEENSY_CH_B4: OCR2A = value; break;
-        case LED_TEENSY_CH_B5: OCR1AL = value; break;
-        case LED_TEENSY_CH_B6: OCR1BL = value; break;
-        case LED_TEENSY_CH_B7: OCR1CL = value; break;
-        case LED_TEENSY_CH_C4: OCR3CL = value; break;
-        case LED_TEENSY_CH_C5: OCR3BL = value; break;
-        case LED_TEENSY_CH_C6: OCR3AL = value; break;
+        case LED_TEENSY_CH_B4:
+            if ( value ) {
+                OCR2A = value;
+                DDRB |= 0b00010000;
+            } else {
+                DDRB &= ~0b00010000;
+                PORTB &= ~0b00010000;
+            }
+            break;
+        case LED_TEENSY_CH_B5:
+            if ( value ) {
+                OCR1AL = value;
+                DDRB |= 0b00100000;
+            } else {
+                DDRB &= ~0b00100000;
+                PORTB &= ~0b00100000;
+            }
+            break;
+        case LED_TEENSY_CH_B6:
+            if ( value ) {
+                OCR1BL = value;
+                DDRB |= 0b01000000;
+            } else {
+                DDRB &= ~0b01000000;
+                PORTB &= ~0b01000000;
+            }
+            break;
+        case LED_TEENSY_CH_B7:
+            if ( value ) {
+                OCR1CL = value;
+                DDRB |= 0b10000000;
+            } else {
+                DDRB &= ~0b10000000;
+                PORTB &= ~0b10000000;
+            }
+            break;
+        case LED_TEENSY_CH_C4:
+            if ( value ) {
+                OCR3CL = value;
+                DDRC |= 0b00010000;
+            } else {
+                DDRC &= ~0b00010000;
+                PORTC &= ~0b00010000;
+            }
+            break;
+        case LED_TEENSY_CH_C5:
+            if ( value ) {
+                OCR3BL = value;
+                DDRC |= 0b00100000;
+            } else {
+                DDRC &= ~0b00100000;
+                PORTC &= ~0b00100000;
+            }
+            break;
+        case LED_TEENSY_CH_C6:
+            if ( value ) {
+                OCR3AL = value;
+                DDRC |= 0b01000000;
+            } else {
+                DDRC &= ~0b01000000;
+                PORTC &= ~0b01000000;
+            }
+            break;
     }
 }
 
@@ -176,8 +266,8 @@ void led_set_teensy_channel( uint8_t channel, uint8_t value ) {
 void led_set_teensy_led( pwm_rgb_led_t * led ) {
 
     if (
-        led->flags | PWM_LED_FLAGS_ENABLED &&
-        led->flags | PWM_LED_FLAGS_ON
+        led->flags & PWM_LED_FLAGS_ENABLED &&
+        led->flags & PWM_LED_FLAGS_ON
     ) {
         led_set_teensy_channel( led->channel_r, led->on_r );
         led_set_teensy_channel( led->channel_g, led->on_g );
@@ -185,6 +275,7 @@ void led_set_teensy_led( pwm_rgb_led_t * led ) {
 
     } else {
 
+        // Should disable PWM instead?
         led_set_teensy_channel( led->channel_r, 0 );
         led_set_teensy_channel( led->channel_g, 0 );
         led_set_teensy_channel( led->channel_b, 0 );

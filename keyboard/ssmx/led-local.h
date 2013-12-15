@@ -20,23 +20,32 @@
  * Constants and macros
  ***************************************************************************/
 
-// leds array indices:
-// PWM controller LEDs:
-#define LED_CAPS_LOCK_0     0
-#define LED_CAPS_LOCK_1     1
-#define LED_NUM_LOCK_0      2
-#define LED_SCROLL_LOCK_0   3
-#define LED_DISPLAY         4
-// Teensy-based LEDs:
-#define LED_NUM_LOCK_1      5
-#define LED_SCROLL_LOCK_1   6
-#define LED_ARRAY_SIZE      7
-// Teensy-based, but not in the array because it's not RGB:
-#define LED_TRACKPOINT      7
+enum led_indices {
+
+    // LEDs wired to the PWM controller:
+#ifdef LED_CONTROLLER_ENABLE
+    LED_CAPS_LOCK_1,
+    LED_NUM_LOCK_0,
+    LED_SCROLL_LOCK_0,
+    LED_CAPS_LOCK_0,
+    LED_DISPLAY,
+#endif
+
+    // LEDs wired directly to the Teensy:
+    LED_NUM_LOCK_1,
+    LED_SCROLL_LOCK_1,
+
+    // Wired directly to the Teensy; not in the array because it's not RGB:
+    LED_TRACKPOINT
+};
+
+#define LED_ARRAY_SIZE LED_TRACKPOINT
+#define LED_ARRAY_FIRST_TEENSY LED_NUM_LOCK_1
+#define LED_TEENSY_FULL 0xff
 
 // Teensy PWM "channel numbers":
-#define LED_TEENSY_CH_B4 (LED_NUM_LOCK_1 * 3 + 0)
-#define LED_TEENSY_CH_B5 (LED_NUM_LOCK_1 * 3 + 1)
+#define LED_TEENSY_CH_B4 (LED_NUM_LOCK_1 * 3 + 1)
+#define LED_TEENSY_CH_B5 (LED_NUM_LOCK_1 * 3 + 0)
 #define LED_TEENSY_CH_B6 (LED_NUM_LOCK_1 * 3 + 2)
 #define LED_TEENSY_CH_C4 (LED_SCROLL_LOCK_1 * 3 + 0)
 #define LED_TEENSY_CH_C5 (LED_SCROLL_LOCK_1 * 3 + 1)

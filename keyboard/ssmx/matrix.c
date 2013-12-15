@@ -83,16 +83,16 @@ void matrix_init(void)
         matrix_debouncing[i] = (matrix_row_t) 0;
     }
 
-#ifdef LED_CONTROLLER_ENABLE
+    // Initialize LED control logic:
     led_init();
-#endif
 
+    // Initialize the OLED display:
 #ifdef DISPLAY_ENABLE
     display_init();
 #endif
 
-#ifdef TRACKPOINT_ENABLE
     // Initialize the TrackPoint:
+#ifdef TRACKPOINT_ENABLE
     print( "TP initializing...\n" );
     _delay_ms(100);
     TP_STATUS status = trackpoint_init();
@@ -104,10 +104,12 @@ void matrix_init(void)
 
 uint8_t matrix_scan(void)
 {
+    // Update LED states if necessary:
 #ifdef LED_CONTROLLER_ENABLE
     led_update();
 #endif
 
+    // Poll the TrackPoint for updates:
 #ifdef TRACKPOINT_ENABLE
     TP_STATUS status = trackpoint_poll();
     print( "TrackPoint poll result: " );

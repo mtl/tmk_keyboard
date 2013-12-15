@@ -84,12 +84,12 @@ int main(void)
 		// No TP: 247 ms
 		// TP full: 10820 ms
 		// No usb report: same as TP full
-		print( "Time for 1,000 keyboard_tasks: " );
-		phex( (uint8_t) ( mtl_time >> 24 ) & 0xff );
-		phex( (uint8_t) ( mtl_time >> 16 ) & 0xff );
-		phex( (uint8_t) ( mtl_time >>  8 ) & 0xff );
-		phex( (uint8_t) ( mtl_time >>  0 ) & 0xff );
-		print( "\n" );
+//		print( "Time for 1,000 keyboard_tasks: " );
+//		phex( (uint8_t) ( mtl_time >> 24 ) & 0xff );
+//		phex( (uint8_t) ( mtl_time >> 16 ) & 0xff );
+//		phex( (uint8_t) ( mtl_time >>  8 ) & 0xff );
+//		phex( (uint8_t) ( mtl_time >>  0 ) & 0xff );
+//		print( "\n" );
 	}
 
 

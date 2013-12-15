@@ -82,7 +82,7 @@ bool pwm_init() {
     }
 
     // Initialize bulk register write message buffer:
-    message[ 0 ] = PWM_LED0_ON_L;
+    message[ 0 ] = PWM_LED0_ON_L;  // First register to write, then auto-increment
     for ( int i = 1; i < PWM_MAX_MESSAGE; i++ ) {
         message[ i ] = 0;
     }

@@ -25,6 +25,7 @@ endif
 ifdef MOUSEKEY_ENABLE
     SRC += $(COMMON_DIR)/mousekey.c
     OPT_DEFS += -DMOUSEKEY_ENABLE
+    OPT_DEFS += -DMOUSE_ENABLE
 endif
 
 ifdef EXTRAKEY_ENABLE
