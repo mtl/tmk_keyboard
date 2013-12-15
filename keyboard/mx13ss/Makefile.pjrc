@@ -43,7 +43,7 @@ pristine:
 	-find . -type f -name ".*.sw?" -exec rm -rf {} \;
 
 # Target file name (without extension).
-TARGET = ssmx
+TARGET = mx13ss
 
 # Directory common source filess exist
 TOP_DIR = ../..
