@@ -33,6 +33,7 @@
 void display_init( void );
 void display_draw( void );
 void display_draw_logo( uint8_t );
+void display_draw_url( void );
 
 
 /***************************************************************************/

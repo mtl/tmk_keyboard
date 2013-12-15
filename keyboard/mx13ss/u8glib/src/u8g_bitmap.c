@@ -175,3 +175,57 @@ void u8g_DrawXBMP(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint
     h--;
   }
 }
+/*=========================================================================*/
+
+void u8g_DrawColorBitmap(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const uint8_t *bitmap)
+{
+	// Save caller's draw color:
+	uint8_t red = u8g->arg_pixel.color;
+	uint8_t green = u8g->arg_pixel.hi_color;
+	uint8_t blue = u8g->arg_pixel.blue;
+
+	if ( u8g_IsBBXIntersection(u8g, x, y, w, h) == 0 )
+		return;
+  
+	for ( int i = 0; i < h; i++ ) {
+		for ( int j = 0; j < w; j++ ) {
+
+			u8g_SetRGB( u8g, bitmap[ 0 ], bitmap[ 1 ], bitmap[ 2 ] );
+			u8g_DrawPixel( u8g, x + j, y + i );
+			bitmap += 3;
+		}
+	}
+
+	// Restore caller's draw color:
+	u8g_SetRGB(u8g, red, green, blue );
+}
+
+void u8g_DrawColorBitmapP(
+	u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h,
+	const u8g_pgm_uint8_t *bitmap
+) {
+	// Save caller's draw color:
+	uint8_t red = u8g->arg_pixel.color;
+	uint8_t green = u8g->arg_pixel.hi_color;
+	uint8_t blue = u8g->arg_pixel.blue;
+
+	if ( u8g_IsBBXIntersection(u8g, x, y, w, h) == 0 )
+		return;
+
+	for ( int i = 0; i < h; i++ ) {
+		for ( int j = 0; j < w; j++ ) {
+
+			u8g_SetRGB(
+				u8g,
+				u8g_pgm_read( bitmap + 0 ),
+				u8g_pgm_read( bitmap + 1 ),
+				u8g_pgm_read( bitmap + 2 )
+			);
+			u8g_DrawPixel( u8g, x + j, y + i );
+			bitmap += 3;
+		}
+	}
+
+	// Restore caller's draw color:
+	u8g_SetRGB(u8g, red, green, blue );
+}

@@ -7,6 +7,8 @@
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
+#include <avr/pgmspace.h> 
+#include "dt_logo.h"
 #include "display.h"
 #include "u8g.h"
 
@@ -61,6 +63,15 @@ void display_init() {
 
 void display_draw() {
 
+    u8g_DrawColorBitmapP(
+        &u8g,
+        0, 0, // x, y
+        128, // width
+        124, // height
+        dt_logo
+    );
+
+/*
     u8g_SetRGB(&u8g, 0, 0, 255 );
     display_draw_logo(2);
     u8g_SetRGB(&u8g, 0, 255, 0 );
@@ -70,6 +81,8 @@ void display_draw() {
 
     u8g_SetRGB(&u8g, 0, 255, 255 );
     display_draw_url();
+*/
+
 }
 
 

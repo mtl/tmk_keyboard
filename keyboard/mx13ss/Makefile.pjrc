@@ -120,6 +120,7 @@ endif
 ifdef DISPLAY_ENABLE
     SRC += \
 		$(shell ls u8glib/src/*.c 2>/dev/null) \
+		dt_logo.rgb \
 		display.c
     VPATH += u8glib/src
     OPT_DEFS += -DDISPLAY_ENABLE
@@ -133,4 +134,21 @@ include $(TOP_DIR)/protocol/pjrc.mk
 include $(TOP_DIR)/protocol.mk
 include $(TOP_DIR)/common.mk
 include $(TOP_DIR)/rules.mk
+
+%.rgb : %.png
+	@echo Converting $< to RGB...
+	convert -depth 8 $< $*.rgb
+
+$(OBJDIR)/%.o : %.rgb
+	@echo Converting $<...
+	$(OBJCOPY) -I binary -O elf32-avr -B avr:51 \
+	--rename-section .data=.progmem.data,contents,alloc,load,readonly,data \
+	--redefine-sym _binary_$*_rgb_start=$* \
+	--redefine-sym _binary_$*_rgb_end=$*_end \
+	--redefine-sym _binary_$*_rgb_size=$*_size_sym \
+	$(<) $(@)
+	@echo "extern const char" $(*)"[] PROGMEM;" > $(*).h
+	@echo "extern const char" $(*)_end"[] PROGMEM;" >> $(*).h
+	@echo "extern const char" $(*)_size_sym"[];" >> $(*).h
+	@echo "#define $(*)_size ((int)$(*)_size_sym)" >> $(*).h
 
