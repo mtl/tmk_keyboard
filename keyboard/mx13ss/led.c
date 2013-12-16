@@ -18,7 +18,7 @@
 
 // Globals:
 static bool led_trackpoint_on = true;
-uint8_t led_trackpoint_value = 0xff;
+uint8_t led_trackpoint_value = 0x11;
 
 #ifdef LED_CONTROLLER_ENABLE
 static volatile bool led_update_pending = false;
@@ -42,16 +42,18 @@ void led_init() {
     DDRC  &= ~0b01110000;
     PORTC &= ~0b01110000;
 
+    // Initialize PWM on the Teensy:
+    led_teensy_pwm_init();
+
     // Configure the TrackPoint lighting:
     led_set_trackpoint( led_trackpoint_on );
 
 #ifdef LED_CONTROLLER_ENABLE
 
-    // Initialize PWM on the Teensy:
-    led_teensy_pwm_init();
-
     // Initialize the external LED controller:
     bool pwm_initialized = pwm_init();
+
+#endif
 
     // Configure initial LED settings:
     for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
@@ -80,15 +82,17 @@ void led_init() {
             //led->on_r = PWM_LED_FULL;
             led->on_r = 0x199;
             led->off_r = 0x4cc;
+#ifdef LED_CONTROLLER_ENABLE
             pwm_set_rgb_led( led );
+#endif
         }
     }
 
+#ifdef LED_CONTROLLER_ENABLE
     // Program the LED controller:
     if ( pwm_initialized ) {
         pwm_commit( true );
     }
-
 #endif
 }
 
@@ -288,22 +292,20 @@ void led_set_teensy_led( pwm_rgb_led_t * led ) {
 // Turn the TrackPoint lights on or off.
 void led_set_trackpoint( bool on ) {
 
+    // Without PWM, the TrackPoint LED can be swiched on/off as follows:
+    //
+    // On (output high):
+    //DDRB |= (1<<7);
+    //PORTB |= (1<<7);
+    //
+    // Off (hi-Z):
+    //DDRB &= ~(1<<7);
+    //PORTB &= ~(1<<7);
+
     if ( on ) {
-#ifdef LED_CONTROLLER_ENABLE
         led_set_teensy_channel( LED_TEENSY_CH_B7, led_trackpoint_value );
-#else
-        // On: Output high
-        DDRB |= (1<<7);
-        PORTB |= (1<<7);
-#endif
     } else {
-#ifdef LED_CONTROLLER_ENABLE
         led_set_teensy_channel( LED_TEENSY_CH_B7, 0 );
-#else
-        // Off: Hi-Z
-        DDRB &= ~(1<<7);
-        PORTB &= ~(1<<7);
-#endif
     }
 
     led_trackpoint_on = on;
@@ -318,6 +320,15 @@ void led_teensy_pwm_init() {
     DDRB |= 0b11110000;
     DDRC |= 0b01110000;
 
+    // Can't use OC0A because timer 0 is being used by common/timer.c in CTC
+    // (non-PWM) mode.  Pin B7 can be driven by either OC0A or OC1C, so we use
+    // OC1C.
+
+    // This seems to be required to enable PWM on B7.  Has something to do
+    // with the OC0A/OC1C output modulator that is supposed to be disabled
+    // when OC0A is not in use.
+    PORTB &= ~0b10000000;
+
     // Configure PWM on OC1A, OC1B, and OC1C:
     //   Waveform generation mode (WGM) 5 (fast PWM mode, 8-bit),
     //   Set OC1A, OC1B, and OC1C on compare match, clear at top.
@@ -329,7 +340,7 @@ void led_teensy_pwm_init() {
         (1<<COM1B1) |
         (1<<COM1B0) |
         (1<<COM1C1) |
-        (1<<COM1C0) |
+        (1<<COM1C1) |
         (0<<WGM11)  |
         (1<<WGM10)
     );
@@ -349,7 +360,7 @@ void led_teensy_pwm_init() {
 
     // Configure PWM on OC2A:
     //   Waveform generation mode (WGM) 3 (fast PWM mode),
-    //   Set OC0A on compare match, clear at top.
+    //   Set OC2A on compare match, clear at top.
     TCCR2A = (
         (1<<COM2A1) |
         (1<<COM2A0) |
