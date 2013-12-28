@@ -4,6 +4,10 @@
 #include "util.h"
 #include "action_layer.h"
 
+#ifdef LED_CONTROLLER_ENABLE
+#include "led-local.h"
+#endif
+
 #ifdef DEBUG_ACTION
 #include "debug.h"
 #else
@@ -64,6 +68,10 @@ static void layer_state_set(uint32_t state)
     layer_state = state;
     layer_debug(); dprintln();
     clear_keyboard_but_mods(); // To avoid stuck keys
+
+#ifdef LED_CONTROLLER_ENABLE
+	led_set_layer_indicator( state );
+#endif
 }
 
 void layer_clear(void)

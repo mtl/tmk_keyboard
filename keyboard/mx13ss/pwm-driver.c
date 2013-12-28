@@ -157,7 +157,7 @@ bool pwm_reset() {
     if (
         ! pwm_write_register(
             PWM_MODE2,
-            mode_2 | (1<<PWM_INVRT) | (0<<PWM_OUTDRV),
+            mode_2 | (0<<PWM_INVRT) | (1<<PWM_OCH) | (0<<PWM_OUTDRV),
             true
         )
     ) {
@@ -183,6 +183,43 @@ void pwm_rgb_led_on( pwm_rgb_led_t * led ) {
 
     led->flags |= PWM_LED_FLAGS_ON;
     pwm_set_rgb_led( led );
+}
+
+
+/***************************************************************************/
+
+void pwm_rgb_led_set_percent( pwm_rgb_led_t * led, int color, int percent ) {
+
+    if ( led->flags & PWM_LED_FLAGS_TEENSY ) {
+
+        uint8_t value = 0;
+        if ( percent >= 100 ) {
+            value = 0xff;
+        } else if ( percent ) {
+            value = ( percent * 0xff ) / 100;
+            if ( value > 0xff ) value = 0xff;
+            if ( ! value ) value = 1;
+        }
+        led->values[ color ] = value;
+
+    } else {
+        uint16_t on_value = 0;
+        uint32_t off_value = 0;
+
+        if ( ! percent ) {
+            off_value = PWM_LED_FULL;
+        } else if ( percent >= 100 ) {
+            on_value = PWM_LED_FULL;
+        } else {
+            off_value = 4095;
+            off_value *= percent;
+            off_value /= 100;
+            off_value += 1;
+            if ( off_value > 0xfff ) off_value = 0xfff;
+        }
+        led->values[ color + 0 ] = on_value;
+        led->values[ color + 1 ] = (uint16_t) off_value;
+    }
 }
 
 
@@ -256,14 +293,21 @@ bool pwm_set_prescaler( uint8_t prescale_value ) {
 
 void pwm_set_rgb_led( pwm_rgb_led_t * led ) {
 
-    if ( led->flags & PWM_LED_FLAGS_ON ) {
-        pwm_set_channel( led->channel_r, led->on_r, led->off_r );
-        pwm_set_channel( led->channel_g, led->on_g, led->off_g );
-        pwm_set_channel( led->channel_b, led->on_b, led->off_b );
+    if (
+        led->flags & PWM_LED_FLAGS_ENABLED &&
+        led->flags & PWM_LED_FLAGS_ON
+    ) {
+        for ( int ch = 0; ch < 3; ch++ ) {
+            pwm_set_channel(
+                led->channels[ ch ],
+                led->values[ ch * 2 + 0 ], 
+                led->values[ ch * 2 + 1 ] 
+            );
+        }
     } else {
-        pwm_set_channel( led->channel_r, 0, PWM_LED_FULL );
-        pwm_set_channel( led->channel_g, 0, PWM_LED_FULL );
-        pwm_set_channel( led->channel_b, 0, PWM_LED_FULL );
+        for ( int ch = 0; ch < 3; ch++ ) {
+            pwm_set_channel( led->channels[ ch ], 0, PWM_LED_FULL );
+        }
     }
 }
 

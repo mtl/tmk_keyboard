@@ -12,6 +12,7 @@
 #include "pwm-driver.h"
 #include "trackpoint.h"
 #include "led-local.h"
+#include "timer.h"
 
 
 /***************************************************************************/
@@ -61,27 +62,22 @@ void led_init() {
         pwm_rgb_led_t * led = &leds[ i ];
 
         led->flags = PWM_LED_FLAGS_ENABLED;
-        led->channel_r = i * 3 + 0;
-        led->channel_g = i * 3 + 1;
-        led->channel_b = i * 3 + 2;
-        led->on_r = 0;
-        led->on_b = 0;
-        led->on_g = 0;
-        led->off_r = 0;
-        led->off_b = 0;
-        led->off_g = 0;
+        for ( int ch = 0; ch < 3; ch++ ) {
+            led->channels[ ch ] = i * 3 + ch;
+        }
+        for ( int v = 0; v < 6; v++ ) {
+            led->values[ v ] = 0;
+        }
 
         // PWM controller only supports 5 RGB LEDs.  The rest
         // are wired to the Teensy:
         if ( i >= LED_ARRAY_FIRST_TEENSY ) {
             led->flags |= PWM_LED_FLAGS_TEENSY;
-            //led->on_r = LED_TEENSY_FULL;
-            led->on_r = 0x01;
+            // Must set teensy flag before calling this:
+            pwm_rgb_led_set_percent( led, PWM_RED, 99 );
             led_set_teensy_led( led );
         } else {
-            //led->on_r = PWM_LED_FULL;
-            led->on_r = 0x199;
-            led->off_r = 0x4cc;
+            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
 #ifdef LED_CONTROLLER_ENABLE
             pwm_set_rgb_led( led );
 #endif
@@ -92,6 +88,7 @@ void led_init() {
     // Program the LED controller:
     if ( pwm_initialized ) {
         pwm_commit( true );
+        led_update_pending = false;
     }
 #endif
 }
@@ -138,6 +135,35 @@ void led_set( uint8_t usb_led ) {
     // TrackPoint lights act as caps lock:
     led_set_trackpoint( usb_led & ( 1 << USB_LED_CAPS_LOCK ) );
 #endif
+}
+
+
+/***************************************************************************/
+
+void led_set_layer_indicator( uint32_t state ) {
+
+    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+
+    if ( state == 1 ) {
+        led->flags &= ~PWM_LED_FLAGS_ENABLED;
+    } else {
+
+        led->flags |= PWM_LED_FLAGS_ENABLED | PWM_LED_FLAGS_ON;
+        for ( int v = 0; v < 6; v++ ) {
+            led->values[ v ] = 0;
+        }
+
+        if ( state & 2 ) {
+            pwm_rgb_led_set_percent( led, PWM_RED, 80 );
+        }
+        if ( state & 4 ) {
+            pwm_rgb_led_set_percent( led, PWM_BLUE, 80 );
+        }
+
+    }
+
+    pwm_set_rgb_led( led );
+    led_update_pending = true;
 }
 
 
@@ -273,16 +299,19 @@ void led_set_teensy_led( pwm_rgb_led_t * led ) {
         led->flags & PWM_LED_FLAGS_ENABLED &&
         led->flags & PWM_LED_FLAGS_ON
     ) {
-        led_set_teensy_channel( led->channel_r, led->on_r );
-        led_set_teensy_channel( led->channel_g, led->on_g );
-        led_set_teensy_channel( led->channel_b, led->on_b );
+        for ( int ch = 0; ch < 3; ch++ ) {
+            led_set_teensy_channel(
+                led->channels[ ch ],
+                led->values[ ch * 2 ]
+            );
+        }
 
     } else {
 
         // Should disable PWM instead?
-        led_set_teensy_channel( led->channel_r, 0 );
-        led_set_teensy_channel( led->channel_g, 0 );
-        led_set_teensy_channel( led->channel_b, 0 );
+        for ( int ch = 0; ch < 3; ch++ ) {
+            led_set_teensy_channel( led->channels[ ch ], 0 );
+        }
     }
 }
 
@@ -415,10 +444,94 @@ void led_teensy_pwm_init() {
 // Invoke this in the main keyboard loop to commit pending changes.
 void led_update() {
 
+    led_fade();
+
     if ( led_update_pending ) {
         led_update_pending = false;
         pwm_commit( false );
     }
+}
+
+
+/***************************************************************************/
+
+bool led_fade_direction = true;
+int led_fade_color = 0;
+bool led_fade_percent = true;
+uint32_t led_fade_time = 0;
+
+int led_fade_interval = 0;
+int led_fade_step = 0;
+int16_t led_fade_value = 0;
+int led_fade_max = 0;
+
+void led_fade() {
+
+    pwm_rgb_led_t * led = &leds[ LED_SCROLL_LOCK_0 ];
+
+    if ( led_fade_time == 0 ) {
+        led_fade_time = timer_read32();
+
+        led->flags |= PWM_LED_FLAGS_ON;
+        led->flags |= PWM_LED_FLAGS_ENABLED;
+
+        if ( led_fade_percent ) {
+            led_fade_interval = 100;
+            led_fade_step = 1;
+            led_fade_value = 0;
+            led_fade_max = 100;
+        } else {
+            led_fade_interval = 100;
+            led_fade_step = 41;
+            led_fade_value = 0;
+            led_fade_max = 4095;
+        }
+    }
+
+    else {
+
+        if ( timer_elapsed32( led_fade_time ) >= led_fade_interval ) {
+
+            if ( led_fade_direction ) {
+                if ( led_fade_value == led_fade_max ) {
+                    led_fade_direction = false;
+                    led_fade_value = led_fade_max - led_fade_step;
+                }
+                else {
+                    led_fade_value += led_fade_step;
+                    if ( led_fade_value > led_fade_max ) {
+                        led_fade_value = led_fade_max;
+                    }
+                }
+
+            } else {
+                if ( led_fade_value == 0 ) {
+                    led_fade_direction = true;
+                    led_fade_value = led_fade_step;
+                    led_fade_color += 2;
+                    if ( led_fade_color >= 6 ) led_fade_color = 0;
+                }
+                else {
+                    led_fade_value -= led_fade_step;
+                    if ( led_fade_value < 0 ) {
+                        led_fade_value = 0;
+                    }
+                }
+            }
+
+            if ( led_fade_percent ) {
+                pwm_rgb_led_set_percent( led, led_fade_color, led_fade_value );
+            } else {
+                led->values[ led_fade_color + 0 ] = 0;
+                led->values[ led_fade_color + 1 ] = led_fade_value;
+            }
+
+            pwm_set_rgb_led( led );
+            led_update_pending = true;
+            led_fade_time = timer_read32();
+        }
+    }
+
 }
 
 

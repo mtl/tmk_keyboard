@@ -66,12 +66,14 @@ extern uint8_t led_trackpoint_value;
 
 void led_init( void );
 //void led_set( uint8_t );
+void led_set_layer_indicator( uint32_t );
 void led_set_one( pwm_rgb_led_t *, bool, bool );
 void led_set_teensy_led( pwm_rgb_led_t * );
 void led_set_teensy_channel( uint8_t, uint8_t );
 void led_set_trackpoint( bool );
 void led_teensy_pwm_init( void );
 void led_update( void );
+void led_fade( void );
 
 
 /***************************************************************************/

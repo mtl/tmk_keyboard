@@ -16,15 +16,8 @@
  ***************************************************************************/
 
 typedef struct pwm_rgb_led {
-    uint16_t on_r;
-    uint16_t on_g;
-    uint16_t on_b;
-    uint16_t off_r;
-    uint16_t off_g;
-    uint16_t off_b;
-    uint8_t channel_r;
-    uint8_t channel_g;
-    uint8_t channel_b;
+    uint16_t values[ 6 ];
+    uint8_t channels[ 3 ];
     uint8_t flags;
 } pwm_rgb_led_t;
 
@@ -47,20 +40,27 @@ typedef struct pwm_rgb_led {
 
 #define PWM_LED_FULL 0x1000
 
-#define PWM_MODE1            0x00
-#define PWM_MODE2            0x01
-#define PWM_SUBADR1          0x02
-#define PWM_SUBADR2          0x03
-#define PWM_SUBADR3          0x04
-#define PWM_LED0_ON_L        0x06
-#define PWM_LED0_ON_H        0x07
-#define PWM_LED0_OFF_L       0x08
-#define PWM_LED0_OFF_H       0x09
-#define PWM_ALLLED_ON_L      0xFA
-#define PWM_ALLLED_ON_H      0xFB
-#define PWM_ALLLED_OFF_L     0xFC
-#define PWM_ALLLED_OFF_H     0xFD
-#define PWM_PRE_SCALE        0xFE
+#define PWM_RED             0
+#define PWM_GREEN           2
+#define PWM_BLUE            4
+#define PWM_CH_RED          0
+#define PWM_CH_GREEN        1
+#define PWM_CH_BLUE         2
+
+#define PWM_MODE1           0x00
+#define PWM_MODE2           0x01
+#define PWM_SUBADR1         0x02
+#define PWM_SUBADR2         0x03
+#define PWM_SUBADR3         0x04
+#define PWM_LED0_ON_L       0x06
+#define PWM_LED0_ON_H       0x07
+#define PWM_LED0_OFF_L      0x08
+#define PWM_LED0_OFF_H      0x09
+#define PWM_ALLLED_ON_L     0xFA
+#define PWM_ALLLED_ON_H     0xFB
+#define PWM_ALLLED_OFF_L    0xFC
+#define PWM_ALLLED_OFF_H    0xFD
+#define PWM_PRE_SCALE       0xFE
 
 // MODE1 bits:
 #define PWM_RESTART          7
@@ -100,6 +100,7 @@ bool pwm_read_register( uint8_t, uint8_t * );
 bool pwm_reset( void );
 void pwm_rgb_led_off( pwm_rgb_led_t * );
 void pwm_rgb_led_on( pwm_rgb_led_t * );
+void pwm_rgb_led_set_percent( pwm_rgb_led_t *, int, int );
 void pwm_set_channel( uint8_t, uint16_t, uint16_t );
 bool pwm_set_prescaler( uint8_t );
 void pwm_set_rgb_led( pwm_rgb_led_t * );
