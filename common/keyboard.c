@@ -38,6 +38,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #   include "ps2_mouse.h"
 #endif
 
+#ifdef PS2_MOUSE_ENABLE
+static uint32_t ps2_mouse_poll_time = 0;
+static int ps2_mouse_poll_interval = 10; // milliseconds
+#endif
 
 #ifdef MATRIX_HAS_GHOST
 static bool has_ghost_in_row(uint8_t row)
@@ -63,6 +67,7 @@ void keyboard_init(void)
     matrix_init();
 #ifdef PS2_MOUSE_ENABLE
     ps2_mouse_init();
+	ps2_mouse_poll_time = timer_read32();
 #endif
 
 #ifdef BOOTMAGIC_ENABLE
@@ -73,6 +78,7 @@ void keyboard_init(void)
     backlight_init();
 #endif
 }
+
 
 /*
  * Do keyboard routine jobs: scan mantrix, light LEDs, ...
@@ -123,7 +129,10 @@ MATRIX_LOOP_END:
 #endif
 
 #ifdef PS2_MOUSE_ENABLE
-    ps2_mouse_task();
+	if ( timer_elapsed32( ps2_mouse_poll_time ) >= ps2_mouse_poll_interval ) {
+		ps2_mouse_task();
+		ps2_mouse_poll_time = timer_read32();
+	}
 #endif
 
     // update LED
