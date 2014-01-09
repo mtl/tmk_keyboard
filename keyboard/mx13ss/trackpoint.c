@@ -31,7 +31,7 @@
 
 #define RET_ON_ERROR() if ( status != TP_OK ) return status;
 
-void inhibit(void);
+void tp_inhibit(void);
 
 /***************************************************************************/
 
@@ -47,7 +47,7 @@ uint8_t tp_response[TP_RESPONSE_BUFFER_SIZE];
 
 /***************************************************************************/
 
-void inhibit() {
+void tp_inhibit() {
     PS2_CLOCK_PORT &= ~(1<<PS2_CLOCK_BIT);
     PS2_CLOCK_DDR  |=  (1<<PS2_CLOCK_BIT);
 }
@@ -84,7 +84,7 @@ TP_STATUS _tp_command( int num_bytes, ... ) {
     }
 
     va_end( ap );
-    inhibit();
+    tp_inhibit();
     return TP_OK;
 }
 
@@ -222,7 +222,8 @@ bool tp_ready() {
         print( "initialized = false\n" );
     }
 */
-    return ps2_mouse_enable && initialized;
+    //return ps2_mouse_enable && initialized;
+    return initialized;
 }
 
 
@@ -237,7 +238,7 @@ TP_STATUS tp_recv() {
         return TP_PS2_ERROR;
     }
 
-    inhibit();
+    tp_inhibit();
     print( "Received: " );
     phex( r );
     print( ".\n" );
@@ -279,7 +280,7 @@ TP_STATUS tp_recv_response( int num_bytes ) {
 TP_STATUS tp_reset() {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! ps2_mouse_enable ) return TP_DISABLED;
+//    if ( ! ps2_mouse_enable ) return TP_DISABLED;
 
     // Send reset command and get the response:
     status = tp_command( TP_CMD_RESET );
@@ -334,7 +335,7 @@ TP_STATUS tp_send( uint8_t message ) {
         return TP_PS2_ERROR;
     }
 
-    inhibit();
+    tp_inhibit();
     print( "ACK: " );
     phex( r );
     print( ".\n" );
@@ -397,7 +398,7 @@ void inline tp_zero_response() {
 TP_STATUS trackpoint_init() {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! ps2_mouse_enable ) return TP_DISABLED;
+//    if ( ! ps2_mouse_enable ) return TP_DISABLED;
 
     // Initialize the PS/2 host driver:
     ps2_host_init();
@@ -446,16 +447,16 @@ TP_STATUS trackpoint_poll() {
 //    _delay_ms( 100 );
 
     // Poll the TrackPoint for updates:
-    uint8_t result = ps2_mouse_read();
-    if ( result ) {
-        return TP_PS2_ERROR;
-    }
+//    uint8_t result = ps2_mouse_read();
+//    if ( result ) {
+//        return TP_PS2_ERROR;
+//    }
 
     /*print( "Sending report..\n" );*/
     /*_delay_ms( 100 );*/
 
     // Send any updates to the USB host:
-    ps2_mouse_usb_send();
+//    ps2_mouse_usb_send();
 
     /*print( "Report sent (maybe).\n" );*/
     /*_delay_ms( 100 );*/

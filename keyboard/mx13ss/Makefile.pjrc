@@ -92,7 +92,7 @@ CONSOLE_ENABLE = yes    # Console for debug
 COMMAND_ENABLE = yes    # Commands for debug and configuration
 #SLEEP_LED_ENABLE = yes  # Breathing sleep LED during USB suspend
 #NKRO_ENABLE = yes	# USB Nkey Rollover(+500)
-#TRACKPOINT_ENABLE = yes # TrackPoint support enable/disable
+TRACKPOINT_ENABLE = yes # TrackPoint support enable/disable
 LED_CONTROLLER_ENABLE = yes # Enable the external LED controller
 DISPLAY_ENABLE = yes # Enable the display
 
@@ -102,7 +102,7 @@ ifdef TRACKPOINT_ENABLE
 
 	# Enable AVR to talk to the mouse:
     PS2_MOUSE_ENABLE = yes
-    PS2_USE_USART = yes    # uses hardware USART engine for PS/2 signal receive(recomened)
+    PS2_USE_USART = yes    # uses hardware USART engine for PS/2 signal receive (recommend)
     #PS2_USE_INT = yes      # uses external interrupt for falling edge of PS/2 clock pin
     #PS2_USE_BUSYWAIT = yes # uses primitive reference code
     OPT_DEFS += -DPS2_MOUSE_DEBUG
@@ -151,4 +151,12 @@ $(OBJDIR)/%.o : %.rgb
 	@echo "extern const char" $(*)_end"[] PROGMEM;" >> $(*).h
 	@echo "extern const char" $(*)_size_sym"[];" >> $(*).h
 	@echo "#define $(*)_size ((int)$(*)_size_sym)" >> $(*).h
+
+
+# Workaround for /usr/libexec/gcc/avr/ld: cannot open linker script file ldscripts/avr5.x: No such file or directory
+#CFLAGS += -L/usr/x86_64-pc-linux-gnu/avr/lib/
+#CFLAGS += -L/usr/i686-pc-linux-gnu/avr/lib/
+
+# # Workaround for /usr/libexec/gcc/avr/ld: crtm168.o: No such file: No such file or directory
+#CFLAGS += -B/usr/avr/lib/avr5/ 
 

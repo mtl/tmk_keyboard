@@ -74,7 +74,7 @@ void led_init() {
         if ( i >= LED_ARRAY_FIRST_TEENSY ) {
             led->flags |= PWM_LED_FLAGS_TEENSY;
             // Must set teensy flag before calling this:
-            pwm_rgb_led_set_percent( led, PWM_RED, 99 );
+            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
             led_set_teensy_led( led );
         } else {
             pwm_rgb_led_set_percent( led, PWM_RED, 10 );
@@ -154,10 +154,10 @@ void led_set_layer_indicator( uint32_t state ) {
         }
 
         if ( state & 2 ) {
-            pwm_rgb_led_set_percent( led, PWM_RED, 80 );
+            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
         }
         if ( state & 4 ) {
-            pwm_rgb_led_set_percent( led, PWM_BLUE, 80 );
+            pwm_rgb_led_set_percent( led, PWM_BLUE, 10 );
         }
 
     }
@@ -444,7 +444,7 @@ void led_teensy_pwm_init() {
 // Invoke this in the main keyboard loop to commit pending changes.
 void led_update() {
 
-    led_fade();
+    //led_fade();
 
     if ( led_update_pending ) {
         led_update_pending = false;

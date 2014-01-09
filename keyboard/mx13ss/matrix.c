@@ -93,12 +93,12 @@ void matrix_init(void)
 
     // Initialize the TrackPoint:
 #ifdef TRACKPOINT_ENABLE
-    print( "TP initializing...\n" );
-    _delay_ms(100);
-    TP_STATUS status = trackpoint_init();
-    print( "TP init status: " );
-    phex( status );
-    print( "\n" );
+//    print( "TP initializing...\n" );
+//    _delay_ms(100);
+//    TP_STATUS status = trackpoint_init();
+//    print( "TP init status: " );
+//    phex( status );
+//    print( "\n" );
 #endif
 }
 
@@ -111,10 +111,10 @@ uint8_t matrix_scan(void)
 
     // Poll the TrackPoint for updates:
 #ifdef TRACKPOINT_ENABLE
-    TP_STATUS status = trackpoint_poll();
-    print( "TrackPoint poll result: " );
-    phex( status );
-    print( "\n" );
+//    TP_STATUS status = trackpoint_poll();
+//    print( "TrackPoint poll result: " );
+//    phex( status );
+//    print( "\n" );
 #endif
 
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {

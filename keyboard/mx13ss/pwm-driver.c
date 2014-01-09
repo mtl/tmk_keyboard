@@ -157,7 +157,7 @@ bool pwm_reset() {
     if (
         ! pwm_write_register(
             PWM_MODE2,
-            mode_2 | (0<<PWM_INVRT) | (1<<PWM_OCH) | (0<<PWM_OUTDRV),
+            mode_2 | (1<<PWM_INVRT) | (1<<PWM_OCH) | (0<<PWM_OUTDRV),
             true
         )
     ) {
