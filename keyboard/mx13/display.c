@@ -52,7 +52,8 @@ void display_init() {
     //for(;;) {  
         u8g_FirstPage( &u8g );
         do {
-            display_draw();
+            display_draw_menu();
+//            display_draw();
         } while ( u8g_NextPage( &u8g ) );
         u8g_Delay( 100 );
     //} 
@@ -63,6 +64,7 @@ void display_init() {
 
 void display_draw() {
 
+/*
     u8g_DrawColorBitmapP(
         &u8g,
         0, 0, // x, y
@@ -70,8 +72,8 @@ void display_draw() {
         124, // height
         dt_logo
     );
+*/
 
-/*
     u8g_SetRGB(&u8g, 0, 0, 255 );
     display_draw_logo(2);
     u8g_SetRGB(&u8g, 0, 255, 0 );
@@ -81,7 +83,6 @@ void display_draw() {
 
     u8g_SetRGB(&u8g, 0, 255, 255 );
     display_draw_url();
-*/
 
 }
 
@@ -107,18 +108,75 @@ void display_draw_logo( uint8_t d ) {
 
 /***************************************************************************/
 
+void display_draw_menu() {
+
+    int display_menu_title_font_vsize = 0;
+    int display_menu_title_font_height = 0;
+    int display_menu_title_gap = 4;
+    int display_menu_title_pad = 2;
+    u8g_pgm_uint8_t * display_menu_title_font = u8g_font_profont12; 
+
+    int display_menu_list_font_vsize = 0;
+    int display_menu_list_font_height = 0;
+    int display_menu_list_hpad = 2;
+    int display_menu_list_vpad = 1;
+    u8g_pgm_uint8_t * display_menu_list_font = u8g_font_profont12; 
+
+    // When we query font dimensions, base them on the largest extent of all
+    // the glyphs in the font:
+    u8g_SetFontRefHeightAll( &u8g );
+
+    // Calculate title bar font dimensions:
+    u8g_SetFont( &u8g, display_menu_title_font );
+    display_menu_title_font_height = u8g_GetFontAscent( &u8g );
+    display_menu_title_font_vsize = display_menu_title_font_height - u8g_GetFontDescent( &u8g );
+
+    // Draw title bar:
+    u8g_SetRGB( &u8g, 100, 100, 200 ); // Title bar color
+    int title_bar_height = display_menu_title_font_vsize + ( display_menu_title_pad << 1 );
+    u8g_DrawBox( &u8g, 0, 0, 128, title_bar_height );
+    u8g_SetRGB( &u8g, 255, 255, 255 ); // Title font color
+    u8g_DrawStr(
+        &u8g,
+        display_menu_title_pad + 1,
+        display_menu_title_font_height + display_menu_title_pad,
+        "MX13 Config" // Title.  If in PROGMEM use DrawStrP.
+    );
+
+    // Draw list background:
+    u8g_SetRGB( &u8g, 0, 0, 128 ); // Background color
+    int y = title_bar_height + display_menu_title_gap;
+    u8g_DrawBox( &u8g, 0, y, 128, 128 - y );
+
+    // Calculate list font dimensions:
+    u8g_SetFont( &u8g, display_menu_list_font );
+    display_menu_list_font_height = u8g_GetFontAscent( &u8g );
+    display_menu_list_font_vsize = display_menu_list_font_height - u8g_GetFontDescent( &u8g );
+
+    // Draw list:
+    u8g_SetRGB( &u8g, 255, 255, 255 ); // Unselected list item color
+    y += display_menu_list_vpad + display_menu_list_font_height + 1;
+    int step = display_menu_list_font_vsize + ( display_menu_list_vpad << 1 ) + 1;
+    u8g_DrawStr( &u8g, display_menu_list_hpad + 1, y,"Keyboard" );
+    y += step;
+    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"TrackPoint" );
+    y += step;
+    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Lights" );
+    y += step;
+    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Firmware" );
+    y += step;
+    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Save..." );
+}
+
+
+/***************************************************************************/
+
 void display_draw_url() {
 
 	//uint8_t ybase = 10;
 
     u8g_SetFont( &u8g, u8g_font_4x6 );
-    if ( u8g_GetHeight(&u8g) < 59 ) {
-        u8g_DrawStr( &u8g, 53, 9,"code.google.com" );
-        u8g_DrawStr( &u8g, 77, 18,"/p/u8glib" );
-    }
-    else {
-        u8g_DrawStr( &u8g, 1, 54,"code.google.com/p/u8glib" );
-    }
+    u8g_DrawStr( &u8g, 1, 54,"code.google.com/p/u8glib" );
 }
 
 /***************************************************************************/

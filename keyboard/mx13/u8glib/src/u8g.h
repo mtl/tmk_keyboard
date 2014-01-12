@@ -1327,6 +1327,16 @@ void chess_Step(uint8_t keycode);
 
 /*===============================================================*/
 /* font definitions */
+extern const u8g_fntpgm_uint8_t u8g_font_inconsolata10[1174] U8G_FONT_SECTION("u8g_font_inconsolata10");
+extern const u8g_fntpgm_uint8_t u8g_font_inconsolata11[1261] U8G_FONT_SECTION("u8g_font_inconsolata11");
+extern const u8g_fntpgm_uint8_t u8g_font_inconsolata12[1326] U8G_FONT_SECTION("u8g_font_inconsolata12");
+extern const u8g_fntpgm_uint8_t u8g_font_inconsolata13[1374] U8G_FONT_SECTION("u8g_font_inconsolata13");
+extern const u8g_fntpgm_uint8_t u8g_font_inconsolata14[1446] U8G_FONT_SECTION("u8g_font_inconsolata14");
+extern const u8g_fntpgm_uint8_t u8g_font_profont10[1106] U8G_FONT_SECTION("u8g_font_profont10");
+extern const u8g_fntpgm_uint8_t u8g_font_profont11[1200] U8G_FONT_SECTION("u8g_font_profont11");
+extern const u8g_fntpgm_uint8_t u8g_font_profont12[1258] U8G_FONT_SECTION("u8g_font_profont12");
+extern const u8g_fntpgm_uint8_t u8g_font_profont15[1372] U8G_FONT_SECTION("u8g_font_profont15");
+
 extern const u8g_fntpgm_uint8_t u8g_font_m2icon_5[] U8G_FONT_SECTION("u8g_font_m2icon_5");
 extern const u8g_fntpgm_uint8_t u8g_font_m2icon_7[] U8G_FONT_SECTION("u8g_font_m2icon_7");
 extern const u8g_fntpgm_uint8_t u8g_font_m2icon_9[] U8G_FONT_SECTION("u8g_font_m2icon_9");
