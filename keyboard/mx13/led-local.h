@@ -4,8 +4,8 @@
  *
  ***************************************************************************/
 
-#ifndef LED_LOCAL_H
-#define LED_LOCAL_H
+#ifndef MX13_LED_LOCAL_H
+#define MX13_LED_LOCAL_H
 
 #include <stdbool.h>
 #include "pwm-driver.h"

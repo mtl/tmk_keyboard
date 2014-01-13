@@ -4,8 +4,8 @@
  *
  ***************************************************************************/
 
-#ifndef TRACKPOINT_H
-#define TRACKPOINT_H
+#ifndef MX13_TRACKPOINT_H
+#define MX13_TRACKPOINT_H
 
 #include <stdbool.h>
 #include "report.h"

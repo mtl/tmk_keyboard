@@ -5,8 +5,8 @@
  *
  ***************************************************************************/
 
-#ifndef MX13SS_DISPLAY_H
-#define MX13SS_DISPLAY_H
+#ifndef MX13_DISPLAY_H
+#define MX13_DISPLAY_H
 
 #include <stdbool.h>
 
