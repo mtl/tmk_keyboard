@@ -55,7 +55,8 @@ TARGET_DIR = .
 SRC =				\
 	keymap.c		\
 	matrix.c		\
-	led.c
+	led.c 			\
+	ui.c
 
 CONFIG_H = config.h
 

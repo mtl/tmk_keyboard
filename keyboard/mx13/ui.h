@@ -1,15 +1,14 @@
 /****************************************************************************
  *
- *  SSD1351 support
- *  128 x 128 262-color (?) OLED
+ *  User Interface
  *
  ***************************************************************************/
 
-#ifndef MX13_DISPLAY_H
-#define MX13_DISPLAY_H
+#ifndef MX13_UI_H
+#define MX13_UI_H
 
 #include <stdbool.h>
-#include "u8g.h"
+#include "keymap.h"
 
 
 /****************************************************************************
@@ -31,14 +30,10 @@
  * Prototypes
  ***************************************************************************/
 
-void display_init( void );
-void display_clear( void );
-void display_draw( void );
-void display_draw_bitmap( u8g_uint_t, u8g_uint_t, u8g_uint_t, u8g_uint_t, const u8g_pgm_uint8_t * );
-void display_draw_menu( void );
-void display_draw_u8g_logo( void );
-void display_draw_u8g_name( uint8_t );
-void display_draw_u8g_url( void );
+void ui_draw( void );
+void ui_enter( void );
+void ui_handle_key( key_t, bool );
+void ui_leave( void );
 
 
 /***************************************************************************/

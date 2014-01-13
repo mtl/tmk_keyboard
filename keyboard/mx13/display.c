@@ -8,19 +8,11 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h> 
-#include "dt_logo.h"
 #include "display.h"
-#include "u8g.h"
+#include "ui.h"
 
 
 /***************************************************************************/
-
-// Globals:
-u8g_t u8g;
-
-
-/***************************************************************************/
-
 
 //  text    data    bss     dec    hex
 //  15968     16      289   16273   3f91   (tmk    )
@@ -33,30 +25,17 @@ u8g_t u8g;
 //  EEPROM:   4096
 
 
-void display_init() {
+/***************************************************************************/
 
-//    u8g_InitSPI(
-//        &u8g,
-//        &u8g_dev_ssd1351_128x128_262k_sw_spi,
-//        // sck, mosi, cs, a0 (C/D), reset
-//        PN(1, 1), PN(1, 2), PN(1, 0), PN(0, 6), PN(0, 7)
-//    );
+// Globals:
+u8g_t u8g;
 
-    u8g_InitHWSPI(
-        &u8g,
-        &u8g_dev_ssd1351_128x128_262k_hw_spi,
-        // cs, a0 (C/D), reset
-        PN(1, 0), PN(0, 6), PN(0, 7)
-    );
 
-    //for(;;) {  
-        u8g_FirstPage( &u8g );
-        do {
-            display_draw_menu();
-//            display_draw();
-        } while ( u8g_NextPage( &u8g ) );
-        u8g_Delay( 100 );
-    //} 
+/***************************************************************************/
+
+void display_clear() {
+    u8g_SetRGB( &u8g, 0, 0, 0 );
+    u8g_DrawBox( &u8g, 0, 0, 128, 128 );
 }
 
 
@@ -64,45 +43,27 @@ void display_init() {
 
 void display_draw() {
 
-/*
-    u8g_DrawColorBitmapP(
-        &u8g,
-        0, 0, // x, y
-        128, // width
-        124, // height
-        dt_logo
-    );
-*/
-
-    u8g_SetRGB(&u8g, 0, 0, 255 );
-    display_draw_logo(2);
-    u8g_SetRGB(&u8g, 0, 255, 0 );
-    display_draw_logo(1);
-    u8g_SetRGB(&u8g, 255, 0, 0 );
-    display_draw_logo(0);
-
-    u8g_SetRGB(&u8g, 0, 255, 255 );
-    display_draw_url();
-
+    u8g_FirstPage( &u8g );
+    do {
+        ui_draw();
+    } while ( u8g_NextPage( &u8g ) );
+    u8g_Delay( 100 );
 }
 
 
 /***************************************************************************/
 
-void display_draw_logo( uint8_t d ) {
-
-	uint8_t ybase = 10;
-	//uint8_t ybase = 100;
-
-    u8g_SetFont(&u8g, u8g_font_gdr25r);
-    u8g_DrawStr(&u8g, 0+d, ybase + 20+d, "U");
-    u8g_SetFont(&u8g, u8g_font_gdr30n);
-    u8g_DrawStr90(&u8g, 23+d,ybase+d,"8");
-    u8g_SetFont(&u8g, u8g_font_gdr25r);
-    u8g_DrawStr(&u8g, 53+d,ybase+20+d,"g");
-
-    u8g_DrawHLine(&u8g, 2+d, ybase+25+d, 47);
-    u8g_DrawVLine(&u8g, 45+d, ybase + 22+d, 12);
+void display_draw_bitmap(
+    u8g_uint_t x, u8g_uint_t y, u8g_uint_t width, u8g_uint_t height,
+    const u8g_pgm_uint8_t *image
+) {
+    u8g_DrawColorBitmapP(
+        &u8g,
+        0, 0, // x, y
+        128, // width
+        124, // height
+        image
+    );
 }
 
 
@@ -171,13 +132,70 @@ void display_draw_menu() {
 
 /***************************************************************************/
 
-void display_draw_url() {
+void display_draw_u8g_logo() {
+
+    u8g_SetRGB(&u8g, 0, 0, 255 );
+    display_draw_u8g_name(2);
+    u8g_SetRGB(&u8g, 0, 255, 0 );
+    display_draw_u8g_name(1);
+    u8g_SetRGB(&u8g, 255, 0, 0 );
+    display_draw_u8g_name(0);
+
+    u8g_SetRGB(&u8g, 0, 255, 255 );
+    display_draw_u8g_url();
+}
+
+
+/***************************************************************************/
+
+void display_draw_u8g_name( uint8_t d ) {
+
+	uint8_t ybase = 10;
+	//uint8_t ybase = 100;
+
+    u8g_SetFont(&u8g, u8g_font_gdr25r);
+    u8g_DrawStr(&u8g, 0+d, ybase + 20+d, "U");
+    u8g_SetFont(&u8g, u8g_font_gdr30n);
+    u8g_DrawStr90(&u8g, 23+d,ybase+d,"8");
+    u8g_SetFont(&u8g, u8g_font_gdr25r);
+    u8g_DrawStr(&u8g, 53+d,ybase+20+d,"g");
+
+    u8g_DrawHLine(&u8g, 2+d, ybase+25+d, 47);
+    u8g_DrawVLine(&u8g, 45+d, ybase + 22+d, 12);
+}
+
+
+/***************************************************************************/
+
+void display_draw_u8g_url() {
 
 	//uint8_t ybase = 10;
 
     u8g_SetFont( &u8g, u8g_font_4x6 );
     u8g_DrawStr( &u8g, 1, 54,"code.google.com/p/u8glib" );
 }
+
+/***************************************************************************/
+
+void display_init() {
+
+//    u8g_InitSPI(
+//        &u8g,
+//        &u8g_dev_ssd1351_128x128_262k_sw_spi,
+//        // sck, mosi, cs, a0 (C/D), reset
+//        PN(1, 1), PN(1, 2), PN(1, 0), PN(0, 6), PN(0, 7)
+//    );
+
+    u8g_InitHWSPI(
+        &u8g,
+        &u8g_dev_ssd1351_128x128_262k_hw_spi,
+        // cs, a0 (C/D), reset
+        PN(1, 0), PN(0, 6), PN(0, 7)
+    );
+
+    display_draw();
+}
+
 
 /***************************************************************************/
 

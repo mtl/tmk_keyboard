@@ -74,15 +74,17 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
     // Handle UI lock key:
     if ( keycode == MX13_UI_LOCK ) {
         keymap_ui_lock = keymap_is_pressed( key );
+        if ( keymap_ui_lock ) {
+            ui_enter();
+        } else {
+            ui_leave();
+        }
         return KC_NO;
     }
 
     // Redirect keypresses during UI lock:
     if ( keymap_ui_lock ) {
-
-        // call UI...
-        // ui_handle_key( key, keymap_is_pressed( key ) );
-
+        ui_handle_key( key, keymap_is_pressed( key ) );
         return KC_NO;
     }
 
