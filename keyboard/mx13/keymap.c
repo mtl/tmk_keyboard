@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "print.h"
 #include "debug.h"
 #include "keymap.h"
+#include "matrix.h"
 
 
 #define KEYMAP( \
@@ -47,17 +48,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define KEYMAPS_SIZE    (sizeof(keymaps) / sizeof(keymaps[0]))
 #define FN_ACTIONS_SIZE (sizeof(fn_actions) / sizeof(fn_actions[0]))
 
+#define MX13_UI_LOCK KC_FN1
+bool keymap_ui_lock = false;
+
+bool keymap_is_pressed( key_t key ) {
+    matrix_row_t matrix_row = matrix_get_row( key.row );
+    return matrix_row & ((matrix_row_t)1<<key.col);
+}
+
 /* translates key to keycode */
 uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
 {
+
+    uint8_t keycode = 0;
+
     if (layer < KEYMAPS_SIZE) {
-        return pgm_read_byte(&keymaps[(layer)][(key.row)][(key.col)]);
+        keycode = pgm_read_byte(&keymaps[(layer)][(key.row)][(key.col)]);
     } else {
         // XXX: this may cuaes bootlaoder_jump inconsistent fail.
         //debug("key_to_keycode: base "); debug_dec(layer); debug(" is invalid.\n");
         // fall back to layer 0
-        return pgm_read_byte(&keymaps[0][(key.row)][(key.col)]);
+        keycode = pgm_read_byte(&keymaps[0][(key.row)][(key.col)]);
     }
+
+    // Handle UI lock key:
+    if ( keycode == MX13_UI_LOCK ) {
+        keymap_ui_lock = keymap_is_pressed( key );
+        return KC_NO;
+    }
+
+    // Redirect keypresses during UI lock:
+    if ( keymap_ui_lock ) {
+
+        // call UI...
+        // ui_handle_key( key, keymap_is_pressed( key ) );
+
+        return KC_NO;
+    }
+
+    // Let TMK handle the keycode:
+    return keycode;
 }
 
 /* translates Fn keycode to action */
