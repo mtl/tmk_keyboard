@@ -84,7 +84,10 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
 
     // Redirect keypresses during UI lock:
     if ( keymap_ui_lock ) {
-        ui_handle_key( key, keymap_is_pressed( key ) );
+        ui_handle_key(
+            pgm_read_byte(&keymaps[3][(key.row)][(key.col)]),
+            keymap_is_pressed( key )
+        );
         return KC_NO;
     }
 

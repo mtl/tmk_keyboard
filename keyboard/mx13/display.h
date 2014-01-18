@@ -16,6 +16,20 @@
  * Typedefs
  ***************************************************************************/
 
+typedef union display_color {
+    uint8_t channels[ 3 ];
+    struct {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+    };
+    struct {
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+    };
+} display_color_t;
+
 
 /****************************************************************************
  * Constants and macros
@@ -39,6 +53,7 @@ void display_draw_menu( void );
 void display_draw_u8g_logo( void );
 void display_draw_u8g_name( uint8_t );
 void display_draw_u8g_url( void );
+void display_set_draw_color( display_color_t * );
 
 
 /***************************************************************************/

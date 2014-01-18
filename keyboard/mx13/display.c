@@ -45,7 +45,7 @@ void display_draw() {
 
     u8g_FirstPage( &u8g );
     do {
-        ui_draw();
+        ui_draw( &u8g );
     } while ( u8g_NextPage( &u8g ) );
     u8g_Delay( 100 );
 }
@@ -64,69 +64,6 @@ void display_draw_bitmap(
         124, // height
         image
     );
-}
-
-
-/***************************************************************************/
-
-void display_draw_menu() {
-
-    int display_menu_title_font_vsize = 0;
-    int display_menu_title_font_height = 0;
-    int display_menu_title_gap = 4;
-    int display_menu_title_pad = 2;
-    u8g_pgm_uint8_t * display_menu_title_font = u8g_font_profont12; 
-
-    int display_menu_list_font_vsize = 0;
-    int display_menu_list_font_height = 0;
-    int display_menu_list_hpad = 2;
-    int display_menu_list_vpad = 1;
-    u8g_pgm_uint8_t * display_menu_list_font = u8g_font_profont12; 
-
-    // When we query font dimensions, base them on the largest extent of all
-    // the glyphs in the font:
-    u8g_SetFontRefHeightAll( &u8g );
-
-    // Calculate title bar font dimensions:
-    u8g_SetFont( &u8g, display_menu_title_font );
-    display_menu_title_font_height = u8g_GetFontAscent( &u8g );
-    display_menu_title_font_vsize = display_menu_title_font_height - u8g_GetFontDescent( &u8g );
-
-    // Draw title bar:
-    u8g_SetRGB( &u8g, 100, 100, 200 ); // Title bar color
-    int title_bar_height = display_menu_title_font_vsize + ( display_menu_title_pad << 1 );
-    u8g_DrawBox( &u8g, 0, 0, 128, title_bar_height );
-    u8g_SetRGB( &u8g, 255, 255, 255 ); // Title font color
-    u8g_DrawStr(
-        &u8g,
-        display_menu_title_pad + 1,
-        display_menu_title_font_height + display_menu_title_pad,
-        "MX13 Config" // Title.  If in PROGMEM use DrawStrP.
-    );
-
-    // Draw list background:
-    u8g_SetRGB( &u8g, 0, 0, 128 ); // Background color
-    int y = title_bar_height + display_menu_title_gap;
-    u8g_DrawBox( &u8g, 0, y, 128, 128 - y );
-
-    // Calculate list font dimensions:
-    u8g_SetFont( &u8g, display_menu_list_font );
-    display_menu_list_font_height = u8g_GetFontAscent( &u8g );
-    display_menu_list_font_vsize = display_menu_list_font_height - u8g_GetFontDescent( &u8g );
-
-    // Draw list:
-    u8g_SetRGB( &u8g, 255, 255, 255 ); // Unselected list item color
-    y += display_menu_list_vpad + display_menu_list_font_height + 1;
-    int step = display_menu_list_font_vsize + ( display_menu_list_vpad << 1 ) + 1;
-    u8g_DrawStr( &u8g, display_menu_list_hpad + 1, y,"Keyboard" );
-    y += step;
-    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"TrackPoint" );
-    y += step;
-    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Lights" );
-    y += step;
-    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Firmware" );
-    y += step;
-    u8g_DrawStr( &u8g, display_menu_list_hpad, y,"Save..." );
 }
 
 
@@ -194,6 +131,13 @@ void display_init() {
     );
 
     display_draw();
+}
+
+
+/***************************************************************************/
+
+void display_set_draw_color( display_color_t * color ) {
+    u8g_SetRGB( &u8g, color->r, color->g, color->b );
 }
 
 

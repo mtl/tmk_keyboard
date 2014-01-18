@@ -20,7 +20,7 @@
  * Constants and macros
  ***************************************************************************/
 
-enum led_indices {
+typedef enum {
 
     // LEDs wired to the PWM controller:
 #ifdef LED_CONTROLLER_ENABLE
@@ -37,7 +37,7 @@ enum led_indices {
 
     // Wired directly to the Teensy; not in the array because it's not RGB:
     LED_TRACKPOINT
-};
+} led_indices_t;
 
 #define LED_ARRAY_SIZE LED_TRACKPOINT
 #define LED_ARRAY_FIRST_TEENSY LED_NUM_LOCK_1

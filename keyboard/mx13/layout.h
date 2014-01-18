@@ -17,13 +17,29 @@ static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                        TRNS,TRNS,TRNS,CALC,TRNS,TRNS,TRNS,MAIL,TRNS,TRNS,TRNS,          TRNS,           TRNS,      \
                        WBAK,MENU,WFWD,               TRNS,               TRNS,TRNS,     TRNS,      MPRV,MPLY,MNXT ),
 
-    /* 2: num-lock */
+    /* 2: Num-lock */
     KEYMAP(\
         TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,P7  ,P8  ,P9  ,PSLS,TRNS,PEQL,TRNS,      TRNS,TRNS,TRNS, \
         TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,P4  ,P5  ,P6  ,PAST,TRNS,TRNS,TRNS,      TRNS,TRNS,TRNS, \
         TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,P1  ,P2  ,P3  ,PMNS,TRNS,     TRNS,                      \
                        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,P0  ,PCMM,PDOT,PPLS,          TRNS,           TRNS,      \
-                       TRNS,TRNS,TRNS,               TRNS,               TRNS,TRNS,     TRNS,      TRNS,TRNS,TRNS )
+                       TRNS,TRNS,TRNS,               TRNS,               TRNS,TRNS,     TRNS,      TRNS,TRNS,TRNS ),
+
+    /* 3: Keyboard configuration UI */
+    KEYMAP(\
+        ESC, NO,       NO,  1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   NO,  NO,  NO,        NO, HOME,PGUP,  \
+        NO,  NO,       TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   NO,  NO,  NO,        NO, NO,  PGDN,  \
+        FN1, NO,       CAPS,A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,     ENT,                       \
+                       LSFT,Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,          RSFT,           UP,        \
+                       NO,  NO,  NO,                 SPC,                NO,  NO,       NO,        LEFT,DOWN,RGHT ),
+
+    /* n: Transparent */
+//    KEYMAP(\
+//        TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,      TRNS,TRNS,TRNS, \
+//        TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,      TRNS,TRNS,TRNS, \
+//        TRNS,TRNS,     TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,     TRNS,                      \
+//                       TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,          TRNS,           TRNS,      \
+//                       TRNS,TRNS,TRNS,               TRNS,               TRNS,TRNS,     TRNS,      TRNS,TRNS,TRNS )
 
 //    KEYMAP(\
 //        ESC, NLCK,     V,   M,   K,   X,   E,   H,   C,   D,   LSFT,BRK, 0,   MINS,EQL, BSPC,      INS, HOME,PGUP, \
