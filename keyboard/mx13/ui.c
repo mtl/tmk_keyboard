@@ -114,11 +114,11 @@ void ui_draw( u8g_t * u8g_ref ) {
     if ( ui_active ) {
         switch ( input_mode ) {
             case UI_INPUT_MENU:
-                ui_draw_menu( u8g, menu_stack[ menu_stack_pos ] );
+                ui_draw_menu( menu_stack[ menu_stack_pos ] );
                 break;
 
             case UI_INPUT_LOG:
-                ui_draw_log( u8g );
+                ui_draw_log();
                 break;
 
             case UI_INPUT_YES_NO:
@@ -134,33 +134,10 @@ void ui_draw( u8g_t * u8g_ref ) {
 
 /***************************************************************************/
 
-void ui_draw_log( u8g_t * u8g ) {
+void ui_draw_log() {
 
-    // When we query font dimensions, base them on the largest extent of all
-    // the glyphs in the font:
-    u8g_SetFontRefHeightAll( u8g );
-
-    // Calculate title bar font dimensions:
-    u8g_SetFont( u8g, ui_menu_title_font );
-    ui_menu_title_font_height = u8g_GetFontAscent( u8g );
-    ui_menu_title_font_vsize = ui_menu_title_font_height - u8g_GetFontDescent( u8g );
-
-    // Draw title bar:
-    display_set_draw_color( &ui_menu_title_color_bg );
-    int title_bar_height = ui_menu_title_font_vsize + ( ui_menu_title_pad << 1 );
-    u8g_DrawBox( u8g, 0, 0, 128, title_bar_height );
-    display_set_draw_color( &ui_menu_title_color_fg );
-    u8g_DrawStr(
-        u8g,
-        ui_menu_title_pad + 1,
-        ui_menu_title_font_height + ui_menu_title_pad,
-        "Log"
-    );
-
-    // Draw list background:
-    display_set_draw_color( &ui_menu_list_color_bg );
-    int y = title_bar_height + ui_menu_title_gap;
-    u8g_DrawBox( u8g, 0, y, 128, 128 - y );
+    // Render title bar and background:
+    int y = ui_draw_page( "Log" );
 
     // Calculate list font dimensions:
     u8g_SetFont( u8g, ui_menu_list_font );
@@ -182,34 +159,10 @@ void ui_draw_log( u8g_t * u8g ) {
 
 /***************************************************************************/
 
-void ui_draw_menu( u8g_t * u8g, ui_menu_t * menu ) {
+void ui_draw_menu( ui_menu_t * menu ) {
 
-    // When we query font dimensions, base them on the largest extent of all
-    // the glyphs in the font:
-    u8g_SetFontRefHeightAll( u8g );
-
-    // Calculate title bar font dimensions:
-    u8g_SetFont( u8g, ui_menu_title_font );
-    ui_menu_title_font_height = u8g_GetFontAscent( u8g );
-    ui_menu_title_font_vsize = ui_menu_title_font_height - u8g_GetFontDescent( u8g );
-
-    // Draw title bar:
-    display_set_draw_color( &ui_menu_title_color_bg );
-    int title_bar_height = ui_menu_title_font_vsize + ( ui_menu_title_pad << 1 );
-    u8g_DrawBox( u8g, 0, 0, 128, title_bar_height );
-    display_set_draw_color( &ui_menu_title_color_fg );
-    u8g_DrawStr(
-        u8g,
-        ui_menu_title_pad + 1,
-        ui_menu_title_font_height + ui_menu_title_pad,
-        //(u8g_pgm_uint8_t *) pgm_read_word( &menu->title )
-        menu->title
-    );
-
-    // Draw list background:
-    display_set_draw_color( &ui_menu_list_color_bg );
-    int y = title_bar_height + ui_menu_title_gap;
-    u8g_DrawBox( u8g, 0, y, 128, 128 - y );
+    // Render title bar and background:
+    int y = ui_draw_page( menu->title );
 
     // Calculate list font dimensions:
     u8g_SetFont( u8g, ui_menu_list_font );
@@ -243,15 +196,50 @@ void ui_draw_menu( u8g_t * u8g, ui_menu_t * menu ) {
 
 /***************************************************************************/
 
+int ui_draw_page( char * title ) {
+
+    // When we query font dimensions, base them on the largest extent of all
+    // the glyphs in the font:
+    u8g_SetFontRefHeightAll( u8g );
+
+    // Calculate title bar font dimensions:
+    u8g_SetFont( u8g, ui_menu_title_font );
+    ui_menu_title_font_height = u8g_GetFontAscent( u8g );
+    ui_menu_title_font_vsize = ui_menu_title_font_height - u8g_GetFontDescent( u8g );
+
+    // Draw title bar:
+    display_set_draw_color( &ui_menu_title_color_bg );
+    int title_bar_height = ui_menu_title_font_vsize + ( ui_menu_title_pad << 1 );
+    u8g_DrawBox( u8g, 0, 0, 128, title_bar_height );
+    display_set_draw_color( &ui_menu_title_color_fg );
+    u8g_DrawStr(
+        u8g,
+        ui_menu_title_pad + 1,
+        ui_menu_title_font_height + ui_menu_title_pad,
+        title
+    );
+
+    // Draw list background:
+    display_set_draw_color( &ui_menu_list_color_bg );
+    int y = title_bar_height + ui_menu_title_gap;
+    u8g_DrawBox( u8g, 0, y, 128, 128 - y );
+
+    return y;
+}
+
+
+/***************************************************************************/
+
 
 void ui_enter() {
     ui_active = true;
 
-//    menu_stack[ 0 ] = &menu;
-//    menu_stack_pos = 0;
-//    input_mode = UI_INPUT_MENU;
+    menu_stack[ 0 ] = &menu;
+    menu_stack_pos = 0;
+    input_mode = UI_INPUT_MENU;
 
-    input_mode = UI_INPUT_LOG;
+//    input_mode = UI_INPUT_LOG;
+
     display_draw();
 }
 
@@ -350,17 +338,8 @@ uint8_t ui_log_nibchar( uint8_t nibble ) {
 
 void ui_menu_select( int item_no ) {
 
-    // Get current menu:
-    ui_menu_t * menu = menu_stack[ menu_stack_pos ];
-
-    // Ignore invalid item numbers:
-    if ( item_no > menu->num_items ) {
-        return;
-    }
-
     // If 0, navigate back/up:
     if ( ! item_no ) {
-
         if ( menu_stack_pos ) {
             menu_stack_pos--;
             display_draw();
@@ -368,7 +347,23 @@ void ui_menu_select( int item_no ) {
         return;
     }
 
-    ui_menu_item_t * item = &menu->items[ item_no - 1 ];
+    // Navigate to the root menu if requested:
+    if ( item_no < 0 ) {
+        menu_stack[ 0 ] = &menu;
+        menu_stack_pos = 0;
+        display_draw();
+        return;
+    }
+
+    // Get current menu:
+    ui_menu_t * current_menu = menu_stack[ menu_stack_pos ];
+
+    // Ignore invalid item numbers:
+    if ( item_no > current_menu->num_items ) {
+        return;
+    }
+
+    ui_menu_item_t * item = &current_menu->items[ item_no - 1 ];
     switch ( item->type ) {
 
         case UI_SUBMENU:
@@ -411,6 +406,8 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 
             switch ( keycode ) {
                 case KC_0:
+                case KC_ESC:
+                case KC_PGUP:
                     ui_menu_select( 0 );
                     break;
                 case KC_1:
@@ -423,6 +420,9 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                 case KC_8:
                 case KC_9:
                     ui_menu_select( keycode - KC_1 + 1 );
+                    break;
+                case KC_HOME:
+                    ui_menu_select( -1 );
                     break;
             }
             break;
