@@ -12,8 +12,6 @@
 #include "keycode.h"
 #include "ui.h"
 
-#   include "print.h"
-#   include "debug.h"
 
 /***************************************************************************/
 
@@ -401,13 +399,7 @@ void ui_menu_select( int item_no ) {
 
 /***************************************************************************/
 
-void ui_handle_key( int keycode, bool is_pressed ) {
-
-    print( "Handle key: " );
-    phex( keycode );
-    print( ", " );
-    phex( is_pressed );
-    print( "\n" );
+void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 
     switch ( input_mode ) {
 
@@ -436,6 +428,8 @@ void ui_handle_key( int keycode, bool is_pressed ) {
 
         case UI_INPUT_LOG:
             ui_log_append_str( "Key:[" );
+            ui_log_append_byte( layer );
+            ui_log_append_str( "," );
             ui_log_append_byte( keycode );
             ui_log_append_str( "," );
             ui_log_append_byte( is_pressed );

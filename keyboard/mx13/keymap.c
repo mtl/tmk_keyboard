@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "debug.h"
 #include "keymap.h"
 #include "matrix.h"
+#include "ui.h"
 
 
 #define KEYMAP( \
@@ -49,12 +50,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FN_ACTIONS_SIZE (sizeof(fn_actions) / sizeof(fn_actions[0]))
 
 #define MX13_UI_LOCK KC_FN1
-bool keymap_ui_lock = false;
-
+#define MX13_UI_LAYER 3
 bool keymap_is_pressed( key_t key ) {
     matrix_row_t matrix_row = matrix_get_row( key.row );
     return matrix_row & ((matrix_row_t)1<<key.col);
 }
+
+static bool first = true;
 
 /* translates key to keycode */
 uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
@@ -73,21 +75,26 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
 
     // Handle UI lock key:
     if ( keycode == MX13_UI_LOCK ) {
-        keymap_ui_lock = keymap_is_pressed( key );
-        if ( keymap_ui_lock ) {
+        if ( keymap_is_pressed( key ) ) {
             ui_enter();
         } else {
             ui_leave();
         }
-        return KC_NO;
+        return keycode;
     }
 
     // Redirect keypresses during UI lock:
-    if ( keymap_ui_lock ) {
-        ui_handle_key(
-            pgm_read_byte(&keymaps[3][(key.row)][(key.col)]),
-            keymap_is_pressed( key )
-        );
+    if ( layer == MX13_UI_LAYER ) {
+        if ( first ) {
+            ui_handle_key(
+                layer,
+                pgm_read_byte(&keymaps[MX13_UI_LAYER][(key.row)][(key.col)]),
+                keymap_is_pressed( key )
+            );
+            first = false;
+        } else {
+            first = true;
+        }
         return KC_NO;
     }
 

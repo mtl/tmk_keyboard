@@ -50,7 +50,7 @@ static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 static const uint16_t PROGMEM fn_actions[] = {
     [0] = ACTION_LAYER_MOMENTARY(1),
-    [1] = ACTION_LAYER_MOMENTARY(2)
+    [1] = ACTION_LAYER_MOMENTARY(3)
 };
 
 /* vi: set et sts=4 sw=4 ts=4: */

@@ -98,7 +98,7 @@ void ui_draw( u8g_t * );
 void ui_draw_log( u8g_t * );
 void ui_draw_menu( u8g_t *, ui_menu_t * );
 void ui_enter( void );
-void ui_handle_key( int, bool );
+void ui_handle_key( uint8_t, int, bool );
 void ui_leave( void );
 
 void ui_log_append_byte( uint8_t );
