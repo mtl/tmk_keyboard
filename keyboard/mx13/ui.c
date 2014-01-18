@@ -7,7 +7,8 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h> 
-#include "dt_logo.h"
+//#include "dt_logo.h"
+#include "mx13_logo.h"
 #include "display.h"
 #include "keycode.h"
 #include "ui.h"
@@ -126,7 +127,7 @@ void ui_draw( u8g_t * u8g_ref ) {
                 break;
         }
     } else {
-        display_draw_bitmap( 0, 0, 128, 124, (u8g_pgm_uint8_t *) dt_logo );
+        display_draw_bitmap( 0, 0, 128, 124, (u8g_pgm_uint8_t *) mx13_logo );
     }
 }
 

@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="ibm-logo.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.25"
+     inkscape:cx="234.35947"
+     inkscape:cy="1281.8136"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showborder="false"
+     inkscape:window-width="1802"
+     inkscape:window-height="901"
+     inkscape:window-x="46"
+     inkscape:window-y="60"
+     inkscape:window-maximized="0"
+     inkscape:object-nodes="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:snap-global="false">
+    <inkscape:grid
+       type="xygrid"
+       id="grid4003" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       id="rect3865"
+       width="1257.1428"
+       height="1257.1428"
+       x="-579.99994"
+       y="-753.35211"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <g
+       id="g3867"
+       transform="translate(-894.28509,1030.9404)">
+      <path
+         sodipodi:nodetypes="cccccccccccccccccccccccccccccccccccccccc"
+         style="fill:#f62a16;fill-opacity:1"
+         inkscape:connector-curvature="0"
+         d="m -432.86982,-355.67355 0,27.367 194.64844,0 0,-27.367 z m 0,53.22221 0,27.367 194.64844,0 0,-27.367 z m 55.9375,53.22225 0,27.40575 84.29687,0 0,-27.40575 z m 0,53.26098 0,27.36698 84.29687,0 0,-27.36698 z m 0,53.22221 0,27.36698 84.29687,0 0,-27.36698 z m 0,53.22221 0,27.36698 84.29687,0 0,-27.36698 z m -54.41407,53.22221 0,27.4057498 194.64844,0 0,-27.4057498 z m 0,53.26096 0,27.367 194.64844,0 0,-27.367 z"
+         id="path3035-8" />
+      <path
+         sodipodi:nodetypes="cccsccccccccccccccccccccccccccccccccccccccccccccscc"
+         style="fill:#069a1b;fill-opacity:1"
+         inkscape:connector-curvature="0"
+         d="m -210.61307,-355.63479 0,27.367 277.382821,0 c 0,0 -28.3331,-27.367 -65.85939981,-27.367 z m 0,53.261 0,27.32823 309.570321,0 c 0,1e-5 -3.6156,-21.06281 -9.9219,-27.32823 z m 55.93753,53.18346 0,27.40575 84.296797,0 0,-27.40575 z m 166.288991,0 0,27.40575 84.2969,0 c 0,0 5.351599,-14.47302 5.351599,-27.40575 z m -166.288991,53.26098 0,27.36698 215.312491,0 c 0,-1e-5 18.0112,-14.04228 23.75,-27.36698 z m 0,53.22221 0,27.36698 239.062491,0 c -5.74,-13.28128 -23.75,-27.36698 -23.75,-27.36698 z m 0,53.22221 0,27.36698 84.296797,0 0,-27.36698 z m 166.288991,0 0,27.36698 89.648499,0 c 0,-12.91536 -5.351599,-27.36701 -5.351599,-27.36701 l -84.2969,0 z m -222.226521,53.22221 0,27.4057498 299.648421,0 c 6.3063,-6.2753298 9.9219,-27.4057498 9.9219,-27.4057498 z m 0,53.26096 0,27.32824 211.52342119,0 C 38.436551,44.32646 66.769751,16.99824 66.769751,16.99824 z"
+         id="path3035-6" />
+      <path
+         sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+         style="fill:#0845c3;fill-opacity:1"
+         inkscape:connector-curvature="0"
+         d="m 121.16627,-355.67355 0,27.367 167.8125,0 -9.9609,-27.367 z m 288.125,0 -9.9609,27.367 166.289,0 0,-27.367 z m -288.125,53.26101 0,27.32823 186.211,0 -9.2188,-27.32823 z m 268.2031,0 -9.2187,27.32823 185.4687,0 0,-27.32823 z m -212.2656,53.18345 0,27.40575 149.4532,0 -9.961,-27.40575 z m 193.9063,0 -10,27.40575 150.1953,0 0,-27.40575 z m -193.9063,53.26098 0,27.36698 84.2969,0 0,-15.23403 5.3516,15.23403 154.414,0 5.7422,-15.23403 0,15.23403 84.2969,0 0,-27.36698 -158.2422,0 -8.3984,23.18053 -8.4375,-23.18053 z m 0,53.22221 0,27.36698 84.2969,0 0,-27.36698 z m 99.6094,0 10.1953,27.36698 115.7813,0 9.6875,-27.36698 z m 150.1953,0 0,27.36698 84.2969,0 0,-27.36698 z m -249.8047,53.22221 0,27.36698 84.2969,0 0,-27.36698 z m 118.75,0 9.8828,27.36698 77.6172,0 9.961,-27.36698 z m 131.0547,0 0,27.36698 84.2969,0 0,-27.36698 z m -304.2187,53.22221 0,27.4057498 138.7109,0 0,-27.4057498 z m 192.3437,0 10.1563,27.4057498 39.4921,0 9.5313,-27.4057498 z m 111.875,0 0,27.4057498 140.2344,0 0,-27.4057498 z m -304.2187,53.26096 0,27.367 138.7109,0 0,-27.367 z m 211.6015,0 9.7657,27.28946 1.6796,0.0388 9.9219,-27.32824 -21.3672,0 z m 92.6172,0 0,27.367 140.2344,0 0,-27.367 z"
+         id="path3035-0" />
+    </g>
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       id="rect3865-3"
+       width="1257.1428"
+       height="1257.1428"
+       x="-3089.303"
+       y="-1681.3672" />
+    <text
+       xml:space="preserve"
+       style="font-size:72px;font-style:normal;font-variant:normal;font-weight:900;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Blippo;-inkscape-font-specification:Blippo Heavy"
+       x="-2894.4004"
+       y="-1418.1703"
+       id="text3004-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3006-2"
+         x="-2894.4004"
+         y="-1418.1703">MX13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:72px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Brushstroke;-inkscape-font-specification:Brushstroke Medium"
+       x="-2845.8291"
+       y="-1321.0275"
+       id="text3004-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3006-3"
+         x="-2845.8291"
+         y="-1321.0275">MX13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:72px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:cmmi10;-inkscape-font-specification:cmmi10 Bold"
+       x="-2868.6863"
+       y="-1236.7417"
+       id="text3004-4"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3006-1"
+         x="-2868.6863"
+         y="-1236.7417">MX13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:72px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea"
+       x="-2867.8672"
+       y="-1032.6045"
+       id="text3004-44-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-5"
+         x="-2867.8672"
+         y="-1032.6045">MX13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:189.58457947px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DavysBigKeyCaps;-inkscape-font-specification:DavysBigKeyCaps"
+       x="-2882.4983"
+       y="-504.53354"
+       id="text3004"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3006"
+         x="-2882.4983"
+         y="-504.53354">MX13</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:144px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:MeninBlue;-inkscape-font-specification:MeninBlue"
+       x="-2457.1692"
+       y="-1379.4004"
+       id="text3899"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3002"
+         x="-2457.1692"
+         y="-1379.4004">M X13</tspan></text>
+    <rect
+       style="fill:#000000;fill-opacity:1;stroke:none"
+       id="rect3865-3-5"
+       width="1257.1428"
+       height="1257.1428"
+       x="-2907.4756"
+       y="-319.68149" />
+    <rect
+       style="fill:#2a2a2a;fill-opacity:1;stroke:#cacaca;stroke-width:15;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3954"
+       width="392.85623"
+       height="258.57141"
+       x="-2720"
+       y="52.362183"
+       ry="30" />
+    <rect
+       style="fill:#2a2a2a;fill-opacity:1;stroke:#cacaca;stroke-width:14.00367928000000006;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3954-9"
+       width="393.85345"
+       height="259.56732"
+       x="-2327.6411"
+       y="51.864464"
+       ry="26.080925" />
+    <rect
+       style="fill:#2a2a2a;fill-opacity:1;stroke:#cacaca;stroke-width:14.00367832000000057;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3954-2"
+       width="393.85345"
+       height="259.56732"
+       x="-2524.0696"
+       y="310.43604"
+       ry="27.322863" />
+    <g
+       id="g4269">
+      <path
+         transform="matrix(0.65836298,0,0,0.65836298,-1404.9647,455.60671)"
+         d="m -1200,-268.35211 c 0,110.85143 -89.8628,200.714277 -200.7142,200.714277 -110.8515,0 -200.7143,-89.862847 -200.7143,-200.714277 0,-110.85144 89.8628,-200.71428 200.7143,-200.71428 110.8514,0 200.7142,89.86284 200.7142,200.71428 z"
+         sodipodi:ry="200.71428"
+         sodipodi:rx="200.71428"
+         sodipodi:cy="-268.35211"
+         sodipodi:cx="-1400.7142"
+         id="path3008"
+         style="fill:#b30000;fill-opacity:1;stroke:#4f0000;stroke-width:22.78378487000000163;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         sodipodi:type="arc" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text3004-44"
+         y="308.39316"
+         x="-2434.4795"
+         style="font-size:95.03072357000000636px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#febfbf;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+         xml:space="preserve"><tspan
+           y="308.39316"
+           x="-2434.4795"
+           id="tspan3006-5"
+           sodipodi:role="line">MX13</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:238.27687073px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#707070;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="-2307.9324"
+       y="283.61502"
+       id="text4005"
+       sodipodi:linespacing="125%"
+       transform="scale(1.1547005,0.86602543)"><tspan
+         sodipodi:role="line"
+         id="tspan4009"
+         x="-2307.9324"
+         y="283.61502">G</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:238.27687073px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#707070;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="-1872.9121"
+       y="283.61502"
+       id="text4005-0"
+       sodipodi:linespacing="125%"
+       transform="scale(1.1547005,0.86602543)"><tspan
+         sodipodi:role="line"
+         id="tspan4009-2"
+         x="-1872.9121"
+         y="283.61502">H</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:206.3538208px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#707070;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="-1746.5261"
+       y="716.37518"
+       id="text4005-0-9"
+       sodipodi:linespacing="125%"
+       transform="scale(1.3333333,0.75000002)"><tspan
+         sodipodi:role="line"
+         id="tspan4009-2-3"
+         x="-1746.5261"
+         y="716.37518">B</tspan></text>
+    <g
+       id="g4354"
+       transform="translate(-633.56768,-147.07821)">
+      <path
+         transform="matrix(0.65836298,0,0,0.65836298,-109.25018,-180.25044)"
+         d="m -1200,-268.35211 c 0,110.85143 -89.8628,200.714277 -200.7142,200.714277 -110.8515,0 -200.7143,-89.862847 -200.7143,-200.714277 0,-110.85144 89.8628,-200.71428 200.7143,-200.71428 110.8514,0 200.7142,89.86284 200.7142,200.71428 z"
+         sodipodi:ry="200.71428"
+         sodipodi:rx="200.71428"
+         sodipodi:cy="-268.35211"
+         sodipodi:cx="-1400.7142"
+         id="path3008-8"
+         style="fill:#b30000;fill-opacity:1;stroke:none"
+         sodipodi:type="arc" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text3004-44-5"
+         y="-316.64972"
+         x="-1174.2383"
+         style="font-size:129.91549683px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+         xml:space="preserve"><tspan
+           y="-316.64972"
+           x="-1174.2383"
+           id="tspan3006-5-3"
+           sodipodi:role="line">MX13</tspan></text>
+    </g>
+    <path
+       sodipodi:type="arc"
+       style="fill:#b30000;fill-opacity:1;stroke:none"
+       id="path3008-4"
+       sodipodi:cx="-1400.7142"
+       sodipodi:cy="-268.35211"
+       sodipodi:rx="200.71428"
+       sodipodi:ry="200.71428"
+       d="m -1200,-268.35211 a 200.71428,200.71428 0 1 1 -401.4285,0 200.71428,200.71428 0 1 1 401.4285,0 z"
+       transform="matrix(0.8328078,-0.48082182,0.48082182,0.8328078,1778.8631,-377.73579)"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143432999999504px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#d6d6d6;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="-268.76358"
+       y="385.37854"
+       id="text3004-44-3-5"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-9"
+         x="-268.76358"
+         y="385.37854">MX</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143433px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#febfbf;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="227.66829"
+       y="385.38281"
+       id="text3004-44-3-3"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-2"
+         x="227.66829"
+         y="385.38281">1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143433px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#febfbf;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="341.08371"
+       y="385.38281"
+       id="text3004-44-3-31"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-91"
+         x="341.08371"
+         y="385.38281">3</tspan></text>
+    <path
+       id="path3035-8-2"
+       d="m -579.99993,-169.84773 15.99292,27.70056 197.0209,-113.75007 -15.99293,-27.70056 z m 31.10238,53.87091 15.99292,27.700555 197.0209,-113.750065 -15.99293,-27.70056 z m 87.72169,21.181777 16.01557,27.739782 85.32432,-49.262019 -16.01557,-27.73978 z m 31.12504,53.910146 15.99291,27.70054 85.32432,-49.262017 -15.99292,-27.70054 z m 31.10238,53.870904 15.99292,27.700539 85.32431,-49.2620166 -15.99292,-27.7005394 z m 31.10238,53.870903 15.99292,27.70054 85.32431,-49.262017 -15.99291,-27.70054 z m -23.97491,85.66979 16.01557,27.73979 197.0209,-113.750073 -16.01557,-27.739783 z m 31.12503,53.91013 15.99293,27.70056 197.02089,-113.75007 -15.99293,-27.70056 z"
+       inkscape:connector-curvature="0"
+       style="fill:#f62a16;fill-opacity:1"
+       sodipodi:nodetypes="cccccccccccccccccccccccccccccccccccccccc"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <path
+       id="path3035-6-0"
+       d="m -355.01158,-299.69251 15.99293,27.70056 280.763671,-162.09899 c 0,0 -44.671361,-11.14305 -82.655051,10.78684 z m 31.12505,53.91017 15.97027,27.66131 313.3434884,-180.90895 c 5.8e-6,1e-5 -15.9685064,-19.20662 -26.0131014,-21.86308 z m 87.69906,21.1425 16.01557,27.73978 85.32424,-49.26197 -16.01557,-27.73979 z m 168.315784,-97.17717 16.015571,27.73978 85.324345,-49.26203 c 0,0 -3.041022,-17.77683 -10.598745,-30.86719 z m -137.190754,151.08731 15.99292,27.70054 217.936805,-125.82587 c -6e-6,-10e-6 10.024598,-24.73895 8.04656,-41.57974 z m 31.10239,53.87091 15.99291,27.700538 L 84.009141,-228.86333 C 70.437769,-238.9521 43.976752,-242.68467 43.976752,-242.68467 z m 31.10238,53.870902 15.99291,27.70054 85.324242,-49.261975 -15.992914,-27.700537 z m 168.315785,-97.177172 15.992915,27.70054 90.74117,-52.38944 c -7.54757,-13.07277 -21.40976,-24.57316 -21.40976,-24.57316 l -85.324342,49.26203 z M -168.37461,23.572195 -152.35904,51.311977 150.94162,-123.79874 c 2.71594,-10.03714 -5.97274,-33.53802 -5.97274,-33.53802 z m 31.12503,53.910126 15.97027,27.661329 214.101555,-123.611594 c 37.983575,-21.929853 50.691845,-66.148721 50.691845,-66.148721 z"
+       inkscape:connector-curvature="0"
+       style="fill:#07b820;fill-opacity:1"
+       sodipodi:nodetypes="cccsccccccccccccccccccccccccccccccccccccccccccccscc"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <path
+       id="path3035-0-9"
+       d="m -19.21103,-493.61936 15.9929258,27.70056 169.8578642,-98.06749 -26.07523,-21.87954 z m 291.63678,-168.37658 5.91062,33.52158 168.3158,-97.17717 -15.99293,-27.70056 z m -260.511725,222.28676 15.97027,27.66131 188.480615,-108.81933 -25.30143,-22.27397 z m 271.472065,-156.73448 6.63921,33.04861 187.72927,-108.38555 -15.97027,-27.66131 z m -183.773045,177.87698 16.015575,27.73979 151.27479,-87.33855 -26.09798,-21.9187 z m 196.269705,-113.31637 5.89369,33.58366 152.02594,-87.77222 -16.01557,-27.73978 z m -165.14467,167.22652 15.99292,27.70054 85.32434,-49.26203 -8.90257,-15.41971 14.3194,12.2923 156.29606,-90.23758 -3.09039,-18.77537 8.90258,15.41971 85.32434,-49.26204 -15.99291,-27.70054 -160.17092,92.47473 5.04564,28.37098 -22.08675,-18.5323 z m 31.10238,53.8709 15.99292,27.70054 85.32434,-49.26203 -15.99291,-27.70054 z m 100.82348,-58.21046 26.31248,21.74254 117.19249,-67.66112 -6.18734,-33.36179 z m 152.02594,-87.77222 15.99292,27.70054 85.32434,-49.26203 -15.99291,-27.70054 z m -221.74703,199.85359 15.99291,27.70054 85.32434,-49.26204 -15.99291,-27.70054 z m 120.19737,-69.39599 25.99617,21.92516 78.56323,-45.35851 -5.91051,-33.52162 z m 132.65205,-76.5867 15.99291,27.70054 85.32434,-49.26203 -15.99291,-27.70054 z m -276.82426,231.65244 16.01557,27.73978 140.40156,-81.06088 -16.01557,-27.73978 z m 194.68806,-112.40321 26.29566,21.80457 39.97345,-23.07868 -6.3681,-33.30975 z m 113.23858,-65.37832 16.01557,27.73978 141.94363,-81.9512 -16.01557,-27.73978 z m -276.80162,231.69166 15.99293,27.700555 140.40156,-81.060885 -15.99292,-27.70056 z m 214.18059,-123.65723 25.83234,21.91513 1.72274,-0.94227 -5.92744,-33.45955 -21.62763,12.48671 z m 93.74605,-54.12431 15.99293,27.70056 141.94363,-81.95119 -15.99292,-27.70056 z"
+       inkscape:connector-curvature="0"
+       style="fill:#0951e5;fill-opacity:1"
+       sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+       inkscape:export-filename="/home/mike/Desktop/kbd/ibm-logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+  </g>
+</svg>

@@ -121,7 +121,7 @@ endif
 ifdef DISPLAY_ENABLE
     SRC += \
 		$(shell ls u8glib/src/*.c 2>/dev/null) \
-		dt_logo.rgb \
+		mx13_logo.rgb \
 		display.c
     VPATH += u8glib/src
     OPT_DEFS += -DDISPLAY_ENABLE
