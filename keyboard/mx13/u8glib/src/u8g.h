@@ -564,7 +564,7 @@ struct _u8g_dev_arg_irgb_t
 /* com options */
 
 /* uncomment the following line for Atmega HW SPI double speed, issue 89 */
-/* #define U8G_HW_SPI_2X 1 */
+#define U8G_HW_SPI_2X 1 
 
 /* com messages */
 
