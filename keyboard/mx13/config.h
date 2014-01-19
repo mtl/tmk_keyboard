@@ -18,10 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <stdbool.h>
-
-extern bool ui_active;
-
 /* USB Device descriptor parameter */
 #define VENDOR_ID       0x04b3
 #define PRODUCT_ID      0x1300

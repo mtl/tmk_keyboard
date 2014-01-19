@@ -13,6 +13,7 @@
 #include "trackpoint.h"
 #include "led-local.h"
 #include "timer.h"
+#include "ui.h"
 
 
 /***************************************************************************/
