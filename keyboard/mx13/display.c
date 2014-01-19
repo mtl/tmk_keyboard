@@ -9,6 +9,8 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h> 
 #include "display.h"
+#include "led-local.h"
+#include "pwm-driver.h"
 #include "ui.h"
 
 
@@ -43,11 +45,43 @@ void display_clear() {
 
 void display_draw() {
 
+#ifdef LED_CONTROLLER_ENABLE
+
+    // Save LED state:
+    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+    uint16_t values[ 6 ];
+    uint8_t rgb_prior_flags = led->flags;
+    for ( int i = 0; i < 6; i++ ) {
+        values[ i ] = led->values[ i ];
+    }
+
+    // Turn on LED:
+    led->flags |= PWM_LED_FLAGS_ON;
+    pwm_rgb_led_set_percent( led, PWM_RED, 3 );
+    pwm_rgb_led_set_percent( led, PWM_GREEN, 0 );
+    pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+    pwm_set_rgb_led( led );
+    pwm_commit( true );
+#endif
+
     u8g_FirstPage( &u8g );
     do {
         ui_draw( &u8g );
     } while ( u8g_NextPage( &u8g ) );
     u8g_Delay( 100 );
+
+
+#ifdef LED_CONTROLLER_ENABLE
+
+    // Restore LED state:
+    led->flags = rgb_prior_flags;
+    for ( int i = 0; i < 6; i++ ) {
+        led->values[ i ] = values[ i ];
+    }
+    pwm_set_rgb_led( led );
+    pwm_commit( true );
+#endif
+
 }
 
 

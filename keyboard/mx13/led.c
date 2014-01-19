@@ -20,10 +20,10 @@
 // Globals:
 static bool led_trackpoint_on = true;
 uint8_t led_trackpoint_value = 0x11;
+pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
 
 #ifdef LED_CONTROLLER_ENABLE
 static volatile bool led_update_pending = false;
-static pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
 #endif
 
 /***************************************************************************/
@@ -77,7 +77,14 @@ void led_init() {
             pwm_rgb_led_set_percent( led, PWM_RED, 10 );
             led_set_teensy_led( led );
         } else {
-            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
+
+            if ( i == LED_DISPLAY ) {
+                pwm_rgb_led_set_percent( led, PWM_RED, 0 );
+                pwm_rgb_led_set_percent( led, PWM_GREEN, 5 );
+                pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+            } else {
+                pwm_rgb_led_set_percent( led, PWM_RED, 10 );
+            }
 #ifdef LED_CONTROLLER_ENABLE
             pwm_set_rgb_led( led );
 #endif
@@ -142,13 +149,17 @@ void led_set( uint8_t usb_led ) {
 
 void led_set_layer_indicator( uint32_t state ) {
 
+    if ( ui_active ) {
+        return;
+    }
+
     pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
 
     if ( state == 1 ) {
-        led->flags &= ~PWM_LED_FLAGS_ENABLED;
+        led->flags &= ~PWM_LED_FLAGS_ON;
     } else {
 
-        led->flags |= PWM_LED_FLAGS_ENABLED | PWM_LED_FLAGS_ON;
+        led->flags |= PWM_LED_FLAGS_ON;
         for ( int v = 0; v < 6; v++ ) {
             led->values[ v ] = 0;
         }

@@ -11,25 +11,28 @@
 #include "mx13_logo.h"
 #include "display.h"
 #include "keycode.h"
+#include "led-local.h"
+#include "pwm-driver.h"
 #include "ui.h"
 
 
 /***************************************************************************/
 
 // Globals:
-static bool ui_active = false;
+bool ui_active = false;
 
 static ui_input_mode_t input_mode = UI_INPUT_MENU;
 static ui_menu_t * menu_stack[ UI_MAX_MENU_DEPTH ] = { 0 };
 static int menu_stack_pos = 0;
 
 static ui_menu_t led_menu = UI_MENU( "", 3,
-    UI_MENU_ITEM_DUMMY( "Color - on" ),
-    UI_MENU_ITEM_DUMMY( "Color - off" ),
+    UI_MENU_ITEM_RGB_SELECTOR( "Color - on", 0 ),
+    UI_MENU_ITEM_RGB_SELECTOR( "Color - off", 0 ),
     UI_MENU_ITEM_DUMMY( "Master control" ),
 );
 
-static ui_menu_t menu = UI_MENU( "MX13 Config", 5,
+static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
+    UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_0 ),
     UI_MENU_ITEM_SUBMENU( "Lights", NULL, 5,
         UI_MENU_ITEM_SUBMENU( "Caps lock", NULL, 2,
             UI_MENU_ITEM_LED_CONFIG( "Panel", LED_CAPS_LOCK_0 ),
@@ -76,6 +79,8 @@ static int ui_menu_list_font_height = 0;
 static int ui_menu_list_hpad = 3;
 static int ui_menu_list_vpad = 1;
 
+static int ui_widget_focus_frame_pad = 1;
+
 // Fonts:
 static u8g_pgm_uint8_t const * ui_menu_title_font = u8g_font_profont12; 
 static u8g_pgm_uint8_t const * ui_menu_list_font = u8g_font_profont12; 
@@ -85,6 +90,9 @@ static display_color_t ui_menu_title_color_bg = {{ 100, 100, 200 }};
 static display_color_t ui_menu_title_color_fg = {{ 255, 255, 255 }};
 static display_color_t ui_menu_list_color_bg = {{ 0, 0, 128 }};
 static display_color_t ui_menu_list_color_fg = {{ 255, 255, 255 }};
+static display_color_t ui_rgb_red = {{ 128, 0, 0 }};
+static display_color_t ui_rgb_green = {{ 0, 128, 0 }};
+static display_color_t ui_rgb_blue = {{ 0, 0, 64 }};
 
 static u8g_t * u8g = NULL;
 
@@ -123,11 +131,153 @@ void ui_draw( u8g_t * u8g_ref ) {
 
             case UI_INPUT_YES_NO:
             case UI_INPUT_EDIT:
+                break;
+
             case UI_INPUT_RGB:
+                ui_draw_rgb_config();
                 break;
         }
     } else {
         display_draw_bitmap( 0, 0, 128, 124, (u8g_pgm_uint8_t *) mx13_logo );
+    }
+}
+
+
+/***************************************************************************/
+
+static display_color_t rgb_focus_color = {{ 255, 255, 0 }};
+static bool rgb_focus_locked = false;
+static pwm_rgb_led_t * rgb_led = NULL;
+static uint16_t rgb_max_value = 0xfff;
+static uint8_t rgb_prior_flags = 0;
+static uint16_t rgb_widget_color[ 3 ] = { 0, 0, 0 };
+static ui_rgb_widgets_t rgb_widget_focus = UI_RGB_BAR_RED;
+static char * rgb_widget_title = NULL;
+
+void ui_draw_rgb_config() {
+
+    int frame_width = 1;
+
+    // Render title bar and background:
+    int y = ui_draw_page( rgb_widget_title );
+
+    // Calculate list font dimensions:
+    u8g_SetFont( u8g, ui_menu_list_font );
+    ui_menu_list_font_height = u8g_GetFontAscent( u8g );
+    ui_menu_list_font_vsize = ui_menu_list_font_height - u8g_GetFontDescent( u8g );
+
+    // Compute first line y pos and line height:
+    y += frame_width + ui_widget_focus_frame_pad + ui_menu_list_font_height + ui_menu_list_hpad - 1;
+    int step = ( frame_width << 1 ) + ( ui_widget_focus_frame_pad << 1 ) + ui_menu_list_font_vsize - 1;
+
+    // Compute x pos for numbers:
+    int char_width = u8g_GetStrWidth( u8g, "w" );
+    int num_chars = 3;
+    if ( rgb_max_value > 255 ) {
+        num_chars = 4;
+    }
+    int num_x = 128 - ui_menu_list_hpad - frame_width - num_chars * char_width;
+
+    // Compute bar dimensions:
+    int bar_frame_x = ui_menu_list_hpad;
+    int bar_x = bar_frame_x + frame_width + ui_widget_focus_frame_pad;
+    uint16_t max_bar_width = num_x - bar_x - ( ui_widget_focus_frame_pad << 1 ) - 1;
+    uint32_t bar_width = 0;
+
+    // Draw bars:
+    display_set_draw_color( &ui_rgb_red );
+    int y_red = y;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 0 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_red - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    display_set_draw_color( &ui_rgb_green );
+    int y_green = y_red + step;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 1 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_green - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    display_set_draw_color( &ui_rgb_blue );
+    int y_blue = y_green + step;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 2 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_blue - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    // Draw numbers:
+    display_set_draw_color( &ui_menu_title_color_fg );
+    char digits[] = "   ";
+    if ( rgb_max_value < 256 ) {
+        digits[ 2 ] = 0;
+    }
+    int d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 0 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 0 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 0 ] );
+    u8g_DrawStr( u8g, num_x, y_red, digits );
+    d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 1 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 1 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 1 ] );
+    u8g_DrawStr( u8g, num_x, y_green, digits );
+    d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 2 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 2 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 2 ] );
+    u8g_DrawStr( u8g, num_x, y_blue, digits );
+
+    // Draw focus:
+    if ( rgb_focus_locked ) {
+        display_set_draw_color( &rgb_focus_color );
+    }
+    int color = rgb_widget_focus >> 1;
+    if ( ! color ) {
+        y = y_red;
+    } else if ( color == 1 ) {
+        y = y_green;
+    } else {
+        y = y_blue;
+    }
+    if ( rgb_widget_focus % 2 ) {
+        u8g_DrawFrame(
+            u8g, num_x - ui_widget_focus_frame_pad - 1,
+            y - ui_menu_list_font_height - ui_widget_focus_frame_pad - frame_width,
+            128 - ui_menu_list_hpad - frame_width - ui_widget_focus_frame_pad - num_x + 4,
+            ui_menu_list_font_vsize + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
+        );
+    } else {
+        u8g_DrawFrame(
+            u8g, ui_menu_list_hpad,
+            y - ui_menu_list_font_height - ui_widget_focus_frame_pad - frame_width,
+            max_bar_width + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 ),
+            ui_menu_list_font_vsize + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
+        );
     }
 }
 
@@ -241,6 +391,38 @@ void ui_enter() {
 //    input_mode = UI_INPUT_LOG;
 
     display_draw();
+
+#ifdef LED_CONTROLLER_ENABLE
+
+    // Turn on LED:
+    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+    led->flags |= PWM_LED_FLAGS_ON;
+    pwm_rgb_led_set_percent( led, PWM_RED, 0 );
+    pwm_rgb_led_set_percent( led, PWM_GREEN, 1 );
+    pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+    pwm_set_rgb_led( led );
+    pwm_commit( true );
+#endif
+}
+
+
+/***************************************************************************/
+
+bool ui_enter_menu( ui_menu_t * menu, char * default_title ) {
+
+    // Enforce menu stack limit:
+    if ( menu_stack_pos >= UI_MAX_MENU_DEPTH - 1 ) {
+        return false;
+    }
+
+    // Copy lable if needed:
+    if ( menu->title == NULL ) {
+        menu->title = default_title;
+    }
+
+    menu_stack[ ++menu_stack_pos ] = menu;
+    display_draw();
+    return true;
 }
 
 
@@ -324,6 +506,8 @@ void ui_log_newline() {
 /***************************************************************************/
 
 uint8_t ui_log_nibchar( uint8_t nibble ) {
+
+    nibble &= 0xf;
     if ( nibble <= 9 ) {
         return 0x30 + nibble;
     } else {
@@ -334,7 +518,6 @@ uint8_t ui_log_nibchar( uint8_t nibble ) {
 
 
 /***************************************************************************/
-
 
 void ui_menu_select( int item_no ) {
 
@@ -367,18 +550,7 @@ void ui_menu_select( int item_no ) {
     switch ( item->type ) {
 
         case UI_SUBMENU:
-            // Enforce menu stack limit:
-            if ( menu_stack_pos >= UI_MAX_MENU_DEPTH - 1 ) {
-                return;
-            }
-
-            // Copy lable if needed:
-            if ( item->submenu.title == NULL ) {
-                item->submenu.title = item->label;
-            }
-
-            menu_stack[ ++menu_stack_pos ] = &item->submenu;
-            display_draw();
+            ui_enter_menu( &item->submenu, item->label );
             break;
 
         case UI_CONFIRM:
@@ -386,8 +558,39 @@ void ui_menu_select( int item_no ) {
         case UI_EDITOR:
         case UI_EXIT:
         case UI_LED_CONFIG:
+            led_menu.title = item->label;
+            ui_enter_menu( &led_menu, NULL );
+
         case UI_NAV_PREV:
+            break;
+
         case UI_RGB_SELECTOR:
+            
+            rgb_led = &leds[ item->led_channel ];
+            if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                rgb_max_value = 255;
+            } else {
+                rgb_max_value = 4095;
+            }
+
+            rgb_widget_color[ 0 ] = 0;
+            rgb_widget_color[ 1 ] = 0;
+            rgb_widget_color[ 2 ] = 0;
+            rgb_focus_locked = false;
+
+            // Configure the LED:
+            rgb_prior_flags = rgb_led->flags;
+            rgb_led->flags |= PWM_LED_FLAGS_ON | PWM_LED_FLAGS_ENABLED;
+            for ( int i = 0; i < 6; i++ ) {
+                rgb_led->values[ i ] = 0;
+            }
+            pwm_set_rgb_led( rgb_led );
+            pwm_commit( true );
+
+            rgb_widget_focus = UI_RGB_BAR_RED;
+            rgb_widget_title = item->label;
+            input_mode = UI_INPUT_RGB;
+            display_draw();
             break;
     }
 }
@@ -396,6 +599,10 @@ void ui_menu_select( int item_no ) {
 /***************************************************************************/
 
 void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
+
+    bool rgb_adjust = false;
+    int rgb_bit = 0;
+    bool rgb_inc = false;
 
     switch ( input_mode ) {
 
@@ -440,7 +647,119 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 
         case UI_INPUT_YES_NO:
         case UI_INPUT_EDIT:
+            break;
+
         case UI_INPUT_RGB:
+            if ( ! is_pressed ) {
+                break;
+            }
+
+            switch ( keycode ) {
+                case KC_ESC:
+                    if ( rgb_focus_locked ) {
+                        rgb_focus_locked = false;
+                    } else {
+                        input_mode = UI_INPUT_MENU;
+                        rgb_led->flags = rgb_prior_flags;
+                        pwm_set_rgb_led( rgb_led );
+                        pwm_commit( true );
+                    }
+                    display_draw();
+                    break;
+                case KC_UP:
+                    if ( ! rgb_focus_locked && rgb_widget_focus > 1 ) {
+                        rgb_widget_focus -= 2;
+                        display_draw();
+                    }
+                    break;
+                case KC_DOWN:
+                    if ( ! rgb_focus_locked && rgb_widget_focus < 4 ) {
+                        rgb_widget_focus += 2;
+                        display_draw();
+                    }
+                    break;
+                case KC_LEFT:
+                    if ( ! rgb_focus_locked && rgb_widget_focus % 2 ) {
+                        rgb_widget_focus -= 1;
+                        display_draw();
+                    }
+                    break;
+                case KC_RIGHT:
+                    if ( ! rgb_focus_locked && ! ( rgb_widget_focus % 2 ) ) {
+                        rgb_widget_focus += 1;
+                        display_draw();
+                    }
+                    break;
+                case KC_ENTER:
+                    rgb_focus_locked = ! rgb_focus_locked;
+                    display_draw();
+                    break;
+                case KC_INSERT:
+                    if ( rgb_max_value > 255 ) {
+                        rgb_bit = 8;
+                        rgb_inc = true;
+                        rgb_adjust = true;
+                    }
+                    break;
+                case KC_DELETE:
+                    if ( rgb_max_value > 255 ) {
+                        rgb_bit = 8;
+                        rgb_inc = false;
+                        rgb_adjust = true;
+                    }
+                    break;
+                case KC_HOME:
+                    rgb_bit = 4;
+                    rgb_inc = true;
+                    rgb_adjust = true;
+                    break;
+                case KC_END:
+                    rgb_bit = 4;
+                    rgb_inc = false;
+                    rgb_adjust = true;
+                    break;
+                case KC_PGUP:
+                    rgb_bit = 0;
+                    rgb_inc = true;
+                    rgb_adjust = true;
+                    break;
+                case KC_PGDN:
+                    rgb_bit = 0;
+                    rgb_inc = false;
+                    rgb_adjust = true;
+                    break;
+
+            }
+            if ( rgb_adjust ) {
+                int color = rgb_widget_focus >> 1;
+                uint8_t nibble = 0xf & ( rgb_widget_color[ color ] >> rgb_bit );
+                if ( rgb_inc ) {
+                    if ( nibble < 0xf ) {
+                        rgb_widget_color[ color ] += 1 << rgb_bit;
+                    } else {
+                        rgb_adjust = false;
+                    }
+                } else {
+                    if ( nibble > 0 ) {
+                        rgb_widget_color[ color ] -= 1 << rgb_bit;
+                    } else {
+                        rgb_adjust = false;
+                    }
+                }
+                if ( rgb_adjust ) {
+
+                    int index = color << 1;
+                    if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                        rgb_led->values[ index + 0 ] = rgb_widget_color[ color ];
+                    } else {
+                        rgb_led->values[ index + 0 ] = 0;
+                        rgb_led->values[ index + 1 ] = rgb_widget_color[ color ];
+                    }
+                    pwm_set_rgb_led( rgb_led );
+                    pwm_commit( true );
+                    display_draw();
+                }
+            }
             break;
     }
 }
@@ -450,6 +769,16 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 
 void ui_leave() {
     ui_active = false;
+
+#ifdef LED_CONTROLLER_ENABLE
+
+    // Turn off LED:
+    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+    led->flags &= ~PWM_LED_FLAGS_ON;
+    pwm_set_rgb_led( led );
+    pwm_commit( true );
+#endif
+
     display_draw();
 }
 

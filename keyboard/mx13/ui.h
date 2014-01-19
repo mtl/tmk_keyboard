@@ -48,7 +48,7 @@ typedef struct ui_menu_item {
     //u8g_pgm_uint8_t label;
 
     union {
-        led_indices_t led_channel;  // UI_LED_CONFIG
+        led_indices_t led_channel;  // UI_LED_CONFIG, UI_RGB_SELECTOR
         ui_menu_t submenu;          // UI_SUBMENU
     };
 } ui_menu_item_t;
@@ -62,6 +62,17 @@ typedef enum {
     UI_INPUT_RGB              // Editing an RGB value
 } ui_input_mode_t;
 
+// RGB config widgets:
+typedef enum {
+    UI_RGB_BAR_RED,
+    UI_RGB_NUM_RED,
+    UI_RGB_BAR_GREEN,
+    UI_RGB_NUM_GREEN,
+    UI_RGB_BAR_BLUE,
+    UI_RGB_NUM_BLUE
+//    UI_RGB_HEX,
+} ui_rgb_widgets_t;
+
 
 /****************************************************************************
  * Constants and macros
@@ -74,6 +85,9 @@ typedef enum {
 
 #define UI_MENU_ITEM_LED_CONFIG( name, led_ch ) \
     { UI_LED_CONFIG, name, .led_channel = led_ch }
+
+#define UI_MENU_ITEM_RGB_SELECTOR( name, led_ch ) \
+    { UI_RGB_SELECTOR, name, .led_channel = led_ch }
 
 #define UI_MENU_ITEM_SUBMENU( name, title, num_items, ... ) \
     { UI_SUBMENU, name, .submenu = UI_MENU( title, num_items, __VA_ARGS__ ) }
@@ -98,15 +112,17 @@ void ui_draw( u8g_t * );
 void ui_draw_log( void );
 void ui_draw_menu( ui_menu_t * );
 int ui_draw_page( char * );
+void ui_draw_rgb_config( void );
 void ui_enter( void );
+bool ui_enter_menu( ui_menu_t *, char * );
 void ui_handle_key( uint8_t, int, bool );
 void ui_leave( void );
-
 void ui_log_append_byte( uint8_t );
 void ui_log_append_char( uint8_t );
 void ui_log_append_str( char * );
 void ui_log_newline( void );
 uint8_t ui_log_nibchar( uint8_t );
+
 
 /***************************************************************************/
 
