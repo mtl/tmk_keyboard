@@ -384,6 +384,11 @@ int ui_draw_page( char * title ) {
 
 
 void ui_enter() {
+
+    if ( ui_active ) {
+        return;
+    }
+
     ui_active = true;
 
     menu_stack[ 0 ] = &menu;
@@ -771,6 +776,11 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 /***************************************************************************/
 
 void ui_leave() {
+
+    if ( ! ui_active ) {
+        return;
+    }
+
     ui_active = false;
 
 #ifdef LED_CONTROLLER_ENABLE
