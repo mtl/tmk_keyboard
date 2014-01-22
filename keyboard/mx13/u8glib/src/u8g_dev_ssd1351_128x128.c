@@ -406,7 +406,7 @@ static const uint8_t u8g_dev_ssd1351_128x128gh_init_seq[] PROGMEM = {
 	U8G_ESC_END						/* end of sequence */
 };
 
-static const uint8_t u8g_dev_ssd1351_128x128_262k_init_seq[] PROGMEM = {
+static const uint8_t u8g_dev_ssd1351_128x128_18bpp_init_seq[] PROGMEM = {
 
 	U8G_ESC_CS(0),					/* disable chip */
 	U8G_ESC_DLY(50),
@@ -415,122 +415,101 @@ static const uint8_t u8g_dev_ssd1351_128x128_262k_init_seq[] PROGMEM = {
 	U8G_ESC_CS(1),					/* enable chip */
 	U8G_ESC_DLY(50),
 
-// 262K
 	0xfd,							/* Command Lock */
 	U8G_ESC_ADR(1),
 	0x12,						
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xfd,
 	U8G_ESC_ADR(1),
 	0xb1,							/* Command Lock */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xae,							/* Set Display Off */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb3,
 	U8G_ESC_ADR(1),
 	0xf1,							/* Front Clock Div */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xca,
 	U8G_ESC_ADR(1),
 	0x7f,							/* Set Multiplex Ratio */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xa0,
 	U8G_ESC_ADR(1),
 	0xb4,							/* Set Colour Depth */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0x15,
 	U8G_ESC_ADR(1),
 	0x00, 0x7f,						/* Set Column Address */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0x75,
 	U8G_ESC_ADR(1),
 	0x00, 0x7f,						/* Set Row Address */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xa1,
 	U8G_ESC_ADR(1),
 	0x00,							/* Set Display Start Line */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xa2,
 	U8G_ESC_ADR(1),
 	0x00,							/* Set Display Offset */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb5,
 	U8G_ESC_ADR(1),
 	0x0a,							/* Set GPIO */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xab,
 	U8G_ESC_ADR(1),
 	0x01,							/* Set Function Selection */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb1,
 	U8G_ESC_ADR(1),
 	0x32,							/* Set Phase Length */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb4,
 	U8G_ESC_ADR(1),
 	0xa0, 0xb5, 0x55,				/* Set Segment Low Voltage */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xbb,
 	U8G_ESC_ADR(1),
 	0x17,							/* Set Precharge Voltage */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xbe,
 	U8G_ESC_ADR(1),
 	0x05,							/* Set VComH Voltage */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xc1,
 	U8G_ESC_ADR(1),
 	0xc8, 0x80, 0xc8,				/* Set Contrast */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xc7,
 	U8G_ESC_ADR(1),
 	0x0f,							/* Set Master Contrast */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb6,
 	U8G_ESC_ADR(1),
 	0x01,							/* Set Second Precharge Period */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xa6,							/* Set Display Mode Reset */
 
-// 262K
 	U8G_ESC_ADR(0),					/* instruction mode */
 	0xb8,							/* Set CMD Grayscale Lookup */
 	U8G_ESC_ADR(1),
@@ -598,7 +577,6 @@ static const uint8_t u8g_dev_ssd1351_128x128_262k_init_seq[] PROGMEM = {
 	0xAF,
 	0xB4,
 
-// 262K
 	U8G_ESC_ADR(0),
 	0xaf,							/* Set Display On */
 	0x5c,
@@ -856,28 +834,13 @@ void u8g_ssd1351_hicolor_to_stream(uint8_t *ptr)
   } 
 }
 
-void u8g_ssd1351_262k_to_stream(uint8_t *ptr) {
-
-	register uint8_t cnt, r, g, b;
-	uint8_t *dest = u8g_ssd1351_stream_bytes;
-	for( cnt = 0; cnt < RGB332_STREAM_BYTES; cnt++ ) {
-
-		r = *ptr++;
-		g = *ptr++;
-		b = *ptr++;
-		*dest++ = r >> 2;
-		*dest++ = g >> 2;
-		*dest++ = b >> 2;
-	} 
-}
-
-uint8_t u8g_dev_ssd1351_128x128_262k_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg, void *arg)
+uint8_t u8g_dev_ssd1351_128x128_18bpp_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg, void *arg)
 {
   switch(msg)
   {
     case U8G_DEV_MSG_INIT:
       u8g_InitCom(u8g, dev, U8G_SPI_CLK_CYCLE_50NS);
-      u8g_WriteEscSeqP(u8g, dev, u8g_dev_ssd1351_128x128_262k_init_seq);
+      u8g_WriteEscSeqP(u8g, dev, u8g_dev_ssd1351_128x128_18bpp_init_seq);
       break;
     case U8G_DEV_MSG_STOP:
       break;
@@ -888,7 +851,7 @@ uint8_t u8g_dev_ssd1351_128x128_262k_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg,
 	{
 
 		u8g_pb_t *pb = (u8g_pb_t *)(dev->dev_mem);
-		uint8_t i, j;
+		uint8_t i, j, k;
 		uint8_t page_height;
 		uint8_t *ptr = pb->buf;
 
@@ -897,23 +860,32 @@ uint8_t u8g_dev_ssd1351_128x128_262k_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg,
 		page_height = pb->p.page_y1;
 		page_height -= pb->p.page_y0;
 		page_height++;
-		for( j = 0; j < page_height; j++ ) {
-			for (i = 0; i < pb->width; i+= RGB332_STREAM_BYTES ) {
-				u8g_ssd1351_262k_to_stream(ptr);
+		for( j = 0; j < page_height; j++ ) { /* for each line in the page... */
+
+			for (i = 0; i < pb->width; i+= RGB332_STREAM_BYTES ) { /* for each stream in the line... */
+
+				/* Convert the pixel data from 24bpp to 18bpp. This discards the
+				 * lower two bits of source data for each color channel, so any
+				 * 18-bpp source data must be left-shifted to accommodate.
+				 */
+				uint8_t *dest = u8g_ssd1351_stream_bytes;
+				for ( k = 0; k < RGB332_STREAM_BYTES*3; k++ ) { /* for each pixel in the stream... */
+					*dest++ = *ptr++ >> 2;
+				}
+
+				/* Write the stream out to the display: */
 				u8g_WriteSequence(
 					u8g, dev, RGB332_STREAM_BYTES*3, u8g_ssd1351_stream_bytes
 				);
-				ptr += RGB332_STREAM_BYTES*3;
 			}
 		}
 
 		u8g_SetChipSelect(u8g, dev, 0);
-
 		break;    /* continue to base fn */
 
 	}
     case U8G_DEV_MSG_GET_MODE:
-     return U8G_MODE_262K;
+     return U8G_MODE_18BPP;
   }
   return u8g_dev_pbxh24_base_fn(u8g, dev, msg, arg);
 }
@@ -1055,22 +1027,22 @@ U8G_PB_DEV(u8g_dev_ssd1351_128x128_idx_hw_spi, WIDTH, HEIGHT, PAGE_HEIGHT, u8g_d
 */
 
 
-uint8_t u8g_dev_ssd1351_128x128_262k_byte_buf[WIDTH*PAGE_HEIGHT*3] U8G_NOCOMMON ; 
+uint8_t u8g_dev_ssd1351_128x128_18bpp_byte_buf[WIDTH*PAGE_HEIGHT*3] U8G_NOCOMMON ; 
 
-u8g_pb_t u8g_dev_ssd1351_128x128_262k_byte_pb = {
+u8g_pb_t u8g_dev_ssd1351_128x128_18bpp_byte_pb = {
 	// page_height, total_height, page_y0, page_y1, page (number?)
 	{PAGE_HEIGHT, HEIGHT, 0, 0, 0},       // page
 	WIDTH,                                // width
-	u8g_dev_ssd1351_128x128_262k_byte_buf // buf
+	u8g_dev_ssd1351_128x128_18bpp_byte_buf // buf
 }; 
-u8g_dev_t u8g_dev_ssd1351_128x128_262k_sw_spi = {
-	u8g_dev_ssd1351_128x128_262k_fn,
-	&u8g_dev_ssd1351_128x128_262k_byte_pb,
+u8g_dev_t u8g_dev_ssd1351_128x128_18bpp_sw_spi = {
+	u8g_dev_ssd1351_128x128_18bpp_fn,
+	&u8g_dev_ssd1351_128x128_18bpp_byte_pb,
 	U8G_COM_SW_SPI
 };
-u8g_dev_t u8g_dev_ssd1351_128x128_262k_hw_spi = {
-	u8g_dev_ssd1351_128x128_262k_fn,
-	&u8g_dev_ssd1351_128x128_262k_byte_pb,
+u8g_dev_t u8g_dev_ssd1351_128x128_18bpp_hw_spi = {
+	u8g_dev_ssd1351_128x128_18bpp_fn,
+	&u8g_dev_ssd1351_128x128_18bpp_byte_pb,
 	U8G_COM_HW_SPI
 };
 

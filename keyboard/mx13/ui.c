@@ -115,7 +115,7 @@ static int log_cursor_column = 0;
 
 /***************************************************************************/
 
-void ui_draw( u8g_t * u8g_ref ) {
+bool ui_draw( u8g_t * u8g_ref ) {
 
     u8g = u8g_ref;
 
@@ -137,8 +137,10 @@ void ui_draw( u8g_t * u8g_ref ) {
                 ui_draw_rgb_config();
                 break;
         }
+        return true;
     } else {
-        display_draw_bitmap( 0, 0, 128, 124, (u8g_pgm_uint8_t *) mx13_logo );
+        display_draw_full_screen_bitmap( (u8g_pgm_uint8_t *) mx13_logo );
+        return false;
     }
 }
 

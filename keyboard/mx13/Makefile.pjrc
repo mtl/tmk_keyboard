@@ -125,6 +125,9 @@ ifdef DISPLAY_ENABLE
 		display.c
     VPATH += u8glib/src
     OPT_DEFS += -DDISPLAY_ENABLE
+	# Tell u8glib how to support hardware SPI:
+    OPT_DEFS += -D__AT_AT90USB1286__
+
 endif
 
 # Search Path

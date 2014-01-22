@@ -110,7 +110,7 @@ extern bool ui_active;
  * Prototypes
  ***************************************************************************/
 
-void ui_draw( u8g_t * );
+bool ui_draw( u8g_t * );
 void ui_draw_log( void );
 void ui_draw_menu( ui_menu_t * );
 int ui_draw_page( char * );

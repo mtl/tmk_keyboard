@@ -449,8 +449,8 @@ extern u8g_dev_t u8g_dev_ssd1351_128x128gh_hicolor_hw_spi;
 extern u8g_dev_t u8g_dev_ssd1351_128x128gh_4x_hicolor_sw_spi;
 extern u8g_dev_t u8g_dev_ssd1351_128x128gh_4x_hicolor_hw_spi;
 
-extern u8g_dev_t u8g_dev_ssd1351_128x128_262k_hw_spi;
-extern u8g_dev_t u8g_dev_ssd1351_128x128_262k_sw_spi;
+extern u8g_dev_t u8g_dev_ssd1351_128x128_18bpp_hw_spi;
+extern u8g_dev_t u8g_dev_ssd1351_128x128_18bpp_sw_spi;
 
 /* HT1632 */
 extern u8g_dev_t u8g_dev_ht1632_24x16;
@@ -550,7 +550,7 @@ struct _u8g_dev_arg_irgb_t
 #define U8G_MODE_INDEX  U8G_MODE(1, 1, 8)
 /* hicolor is R5G6B5 */
 #define U8G_MODE_HICOLOR  U8G_MODE(0, 1, 16)
-#define U8G_MODE_262K  U8G_MODE(0, 1, 18)
+#define U8G_MODE_18BPP  U8G_MODE(0, 1, 18)
 /* truecolor  */
 #define U8G_MODE_TRUECOLOR  U8G_MODE(0, 1, 24)
 
@@ -1021,6 +1021,7 @@ uint8_t u8g_call_dev_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg, void *arg);
 uint8_t u8g_InitLL(u8g_t *u8g, u8g_dev_t *dev);
 void u8g_FirstPageLL(u8g_t *u8g, u8g_dev_t *dev);
 uint8_t u8g_NextPageLL(u8g_t *u8g, u8g_dev_t *dev);
+void u8g_DrawFullScreenBitmapPLL(u8g_t *u8g, u8g_dev_t *dev, uint8_t *bitmap);
 uint8_t u8g_SetContrastLL(u8g_t *u8g, u8g_dev_t *dev, uint8_t contrast);
 void u8g_DrawPixelLL(u8g_t *u8g, u8g_dev_t *dev, u8g_uint_t x, u8g_uint_t y);
 void u8g_Draw8PixelLL(u8g_t *u8g, u8g_dev_t *dev, u8g_uint_t x, u8g_uint_t y, uint8_t dir, uint8_t pixel);
@@ -1043,6 +1044,7 @@ uint8_t u8g_InitRW8Bit(u8g_t *u8g, u8g_dev_t *dev, uint8_t d0, uint8_t d1, uint8
   uint8_t cs, uint8_t a0, uint8_t wr, uint8_t rd, uint8_t reset);
 void u8g_FirstPage(u8g_t *u8g);
 uint8_t u8g_NextPage(u8g_t *u8g);
+void u8g_DrawFullScreenBitmapP(u8g_t *u8g, uint8_t *bitmap);
 uint8_t u8g_SetContrast(u8g_t *u8g, uint8_t contrast);
 void u8g_SleepOn(u8g_t *u8g);
 void u8g_SleepOff(u8g_t *u8g);
@@ -1210,7 +1212,6 @@ void u8g_DrawBitmapP(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t cnt, u8g
 void u8g_DrawXBM(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const uint8_t *bitmap);
 void u8g_DrawXBMP(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const u8g_pgm_uint8_t *bitmap);
 
-void u8g_DrawColorBitmap(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const uint8_t *bitmap);
 void u8g_DrawColorBitmapP(u8g_t *u8g, u8g_uint_t x, u8g_uint_t y, u8g_uint_t w, u8g_uint_t h, const u8g_pgm_uint8_t *bitmap);
 
 /* u8g_line.c */

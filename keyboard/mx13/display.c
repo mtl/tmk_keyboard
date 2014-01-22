@@ -66,7 +66,9 @@ void display_draw() {
 
     u8g_FirstPage( &u8g );
     do {
-        ui_draw( &u8g );
+        if ( ! ui_draw( &u8g ) ) {
+            break;
+        }
     } while ( u8g_NextPage( &u8g ) );
     u8g_Delay( 100 );
 
@@ -98,6 +100,14 @@ void display_draw_bitmap(
         124, // height
         image
     );
+}
+
+
+/***************************************************************************/
+
+void display_draw_full_screen_bitmap( const u8g_pgm_uint8_t *image ) {
+
+    u8g_DrawFullScreenBitmapP( &u8g, image );
 }
 
 
@@ -152,14 +162,14 @@ void display_init() {
 
 //    u8g_InitSPI(
 //        &u8g,
-//        &u8g_dev_ssd1351_128x128_262k_sw_spi,
+//        &u8g_dev_ssd1351_128x128_18bpp_sw_spi,
 //        // sck, mosi, cs, a0 (C/D), reset
 //        PN(1, 1), PN(1, 2), PN(1, 0), PN(0, 6), PN(0, 7)
 //    );
 
     u8g_InitHWSPI(
         &u8g,
-        &u8g_dev_ssd1351_128x128_262k_hw_spi,
+        &u8g_dev_ssd1351_128x128_18bpp_hw_spi,
         // cs, a0 (C/D), reset
         PN(1, 0), PN(0, 6), PN(0, 7)
     );

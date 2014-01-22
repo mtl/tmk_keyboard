@@ -79,6 +79,36 @@ uint8_t u8g_NextPageLL(u8g_t *u8g, u8g_dev_t *dev)
   return r;
 }
 
+void u8g_DrawFullScreenBitmapPLL(u8g_t *u8g, u8g_dev_t *dev, uint8_t *bitmap)
+{  
+	u8g_pb_t *pb = (u8g_pb_t *)(dev->dev_mem);
+	uint8_t i, j;
+	uint8_t page_height;
+	uint8_t *ptr;
+
+	u8g->state_cb(U8G_STATE_MSG_BACKUP_ENV);
+	u8g->state_cb(U8G_STATE_MSG_RESTORE_U8G);
+
+	u8g_FirstPageLL( u8g, dev );
+    do {
+		page_height = pb->p.page_y1;
+		page_height -= pb->p.page_y0;
+		page_height++;
+		ptr = pb->buf;
+
+		for( i = 0; i < page_height; i++ ) { /* for each line in the page... */
+			for ( j = 0; j < pb->width; j++ ) { /* for each pixel in the line... */
+				*ptr++ = u8g_pgm_read( bitmap++ );
+				*ptr++ = u8g_pgm_read( bitmap++ );
+				*ptr++ = u8g_pgm_read( bitmap++ );
+			}
+		}
+
+    } while ( u8g_NextPageLL( u8g, dev ) );
+
+	u8g->state_cb(U8G_STATE_MSG_RESTORE_ENV);
+}
+
 uint8_t u8g_SetContrastLL(u8g_t *u8g, u8g_dev_t *dev, uint8_t contrast)
 {  
   return u8g_call_dev_fn(u8g, dev, U8G_DEV_MSG_CONTRAST, &contrast);
@@ -392,6 +422,11 @@ uint8_t u8g_NextPage(u8g_t *u8g)
     u8g->cursor_fn(u8g);
   }
   return u8g_NextPageLL(u8g, u8g->dev);
+}
+
+void u8g_DrawFullScreenBitmapP(u8g_t *u8g, uint8_t *bitmap)
+{
+  u8g_DrawFullScreenBitmapPLL(u8g, u8g->dev, bitmap);
 }
 
 uint8_t u8g_SetContrast(u8g_t *u8g, uint8_t contrast)

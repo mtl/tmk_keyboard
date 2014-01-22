@@ -96,18 +96,23 @@ uint8_t u8g_com_atmega_hw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void 
       
       U8G_ATOMIC_START();
       
-      //DDRB |= _BV(3);          /* D0, MOSI */
+/* Support Teensy++ 2.0: */
+#ifdef __AT_AT90USB1286__
       DDRB |= _BV(2);          /* D0, MOSI */
-      //DDRB |= _BV(5);          /* SCK */
       DDRB |= _BV(1);          /* SCK */
-      //DDRB |= _BV(2);		/* slave select */
       DDRB |= _BV(0);		/* slave select */
-    
-      //PORTB &= ~_BV(3);        /* D0, MOSI = 0 */
-      PORTB &= ~_BV(2);        /* D0, MOSI = 0 */
-      //PORTB &= ~_BV(5);        /* SCK = 0 */
-      PORTB &= ~_BV(1);        /* SCK = 0 */
       
+      PORTB &= ~_BV(2);        /* D0, MOSI = 0 */
+      PORTB &= ~_BV(1);        /* SCK = 0 */
+#else
+	  DDRB |= _BV(3);          /* D0, MOSI */
+	  DDRB |= _BV(5);          /* SCK */
+	  DDRB |= _BV(2);		/* slave select */
+
+	  PORTB &= ~_BV(3);        /* D0, MOSI = 0 */
+	  PORTB &= ~_BV(5);        /* SCK = 0 */
+#endif
+    
       U8G_ATOMIC_END();
       
       u8g_SetPILevel(u8g, U8G_PI_CS, 1);
@@ -140,8 +145,13 @@ uint8_t u8g_com_atmega_hw_spi_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void 
       }
       else
       {
-        //PORTB &= ~_BV(5);        /* SCK = 0 */
+
+/* Support Teensy++ 2.0: */
+#ifdef __AT_AT90USB1286__
         PORTB &= ~_BV(1);        /* SCK = 0 */
+#else
+		PORTB &= ~_BV(5);        /* SCK = 0 */
+#endif
         /* enable */
         u8g_SetPILevel(u8g, U8G_PI_CS, 0); /* CS = 0 (low active) */
       }
