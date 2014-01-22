@@ -43,7 +43,7 @@ void display_clear() {
 
 /***************************************************************************/
 
-void display_draw() {
+void display_draw( bool sleep ) {
 
 #ifdef LED_CONTROLLER_ENABLE
 
@@ -64,6 +64,10 @@ void display_draw() {
     pwm_commit( true );
 #endif
 
+    if ( sleep ) {
+        u8g_SleepOn( &u8g );
+    }
+
     u8g_FirstPage( &u8g );
     do {
         if ( ! ui_draw( &u8g ) ) {
@@ -71,6 +75,10 @@ void display_draw() {
         }
     } while ( u8g_NextPage( &u8g ) );
     u8g_Delay( 100 );
+
+    if ( sleep ) {
+        u8g_SleepOff( &u8g );
+    }
 
 
 #ifdef LED_CONTROLLER_ENABLE
@@ -107,7 +115,9 @@ void display_draw_bitmap(
 
 void display_draw_full_screen_bitmap( const u8g_pgm_uint8_t *image ) {
 
+    u8g_SleepOn( &u8g );
     u8g_DrawFullScreenBitmapP( &u8g, image );
+    u8g_SleepOff( &u8g );
 }
 
 
@@ -174,7 +184,7 @@ void display_init() {
         PN(1, 0), PN(0, 6), PN(0, 7)
     );
 
-    display_draw();
+    display_draw( true );
 }
 
 

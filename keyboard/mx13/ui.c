@@ -110,8 +110,6 @@ static uint8_t log[ UI_LOG_ROWS ][ UI_LOG_COLS + 1 ] = {
 static int log_cursor_row = 0;
 static int log_cursor_column = 0;
 
-/***************************************************************************/
-
 
 /***************************************************************************/
 
@@ -120,6 +118,7 @@ bool ui_draw( u8g_t * u8g_ref ) {
     u8g = u8g_ref;
 
     if ( ui_active ) {
+
         switch ( input_mode ) {
             case UI_INPUT_MENU:
                 ui_draw_menu( menu_stack[ menu_stack_pos ] );
@@ -137,6 +136,7 @@ bool ui_draw( u8g_t * u8g_ref ) {
                 ui_draw_rgb_config();
                 break;
         }
+
         return true;
     } else {
         display_draw_full_screen_bitmap( (u8g_pgm_uint8_t *) mx13_logo );
@@ -392,7 +392,7 @@ void ui_enter() {
 
 //    input_mode = UI_INPUT_LOG;
 
-    display_draw();
+    display_draw( true );
 
 #ifdef LED_CONTROLLER_ENABLE
 
@@ -423,7 +423,7 @@ bool ui_enter_menu( ui_menu_t * menu, char * default_title ) {
     }
 
     menu_stack[ ++menu_stack_pos ] = menu;
-    display_draw();
+    display_draw( true );
     return true;
 }
 
@@ -527,7 +527,7 @@ void ui_menu_select( int item_no ) {
     if ( ! item_no ) {
         if ( menu_stack_pos ) {
             menu_stack_pos--;
-            display_draw();
+            display_draw( true );
         }
         return;
     }
@@ -536,7 +536,7 @@ void ui_menu_select( int item_no ) {
     if ( item_no < 0 ) {
         menu_stack[ 0 ] = &menu;
         menu_stack_pos = 0;
-        display_draw();
+        display_draw( true );
         return;
     }
 
@@ -592,7 +592,7 @@ void ui_menu_select( int item_no ) {
             rgb_widget_focus = UI_RGB_BAR_RED;
             rgb_widget_title = item->label;
             input_mode = UI_INPUT_RGB;
-            display_draw();
+            display_draw( true );
             break;
     }
 }
@@ -644,7 +644,7 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
             ui_log_append_str( "," );
             ui_log_append_byte( is_pressed );
             ui_log_append_str( "]\n" );
-            display_draw();
+            display_draw( false );
             break;
 
         case UI_INPUT_YES_NO:
@@ -660,41 +660,42 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                 case KC_ESC:
                     if ( rgb_focus_locked ) {
                         rgb_focus_locked = false;
+                        display_draw( false );
                     } else {
                         input_mode = UI_INPUT_MENU;
                         rgb_led->flags = rgb_prior_flags;
                         pwm_set_rgb_led( rgb_led );
                         pwm_commit( true );
+                        display_draw( true );
                     }
-                    display_draw();
                     break;
                 case KC_UP:
                     if ( ! rgb_focus_locked && rgb_widget_focus > 1 ) {
                         rgb_widget_focus -= 2;
-                        display_draw();
+                        display_draw( false );
                     }
                     break;
                 case KC_DOWN:
                     if ( ! rgb_focus_locked && rgb_widget_focus < 4 ) {
                         rgb_widget_focus += 2;
-                        display_draw();
+                        display_draw( false );
                     }
                     break;
                 case KC_LEFT:
                     if ( ! rgb_focus_locked && rgb_widget_focus % 2 ) {
                         rgb_widget_focus -= 1;
-                        display_draw();
+                        display_draw( false );
                     }
                     break;
                 case KC_RIGHT:
                     if ( ! rgb_focus_locked && ! ( rgb_widget_focus % 2 ) ) {
                         rgb_widget_focus += 1;
-                        display_draw();
+                        display_draw( false );
                     }
                     break;
                 case KC_ENTER:
                     rgb_focus_locked = ! rgb_focus_locked;
-                    display_draw();
+                    display_draw( false );
                     break;
                 case KC_INSERT:
                     if ( rgb_max_value > 255 ) {
@@ -759,7 +760,7 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                     }
                     pwm_set_rgb_led( rgb_led );
                     pwm_commit( true );
-                    display_draw();
+                    display_draw( false );
                 }
             }
             break;
@@ -781,7 +782,7 @@ void ui_leave() {
     pwm_commit( true );
 #endif
 
-    display_draw();
+    display_draw( true );
 }
 
 
