@@ -301,7 +301,7 @@ TP_STATUS tp_reset() {
             _delay_ms(100);
 
             // Read POST results:
-            status = tp_ram_read( TP_RAM_POST_REG );
+            status = tp_ram_read( TP_RAM_POST );
             if ( status == TP_OK ) {
                 printf( "%sPOST results: x%02X.\n", tp_prefix, tp_response[ 0 ] );
             }
