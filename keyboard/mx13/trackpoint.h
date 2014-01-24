@@ -15,43 +15,16 @@
  * Typedefs
  ***************************************************************************/
 
-typedef int TP_STATUS;
+typedef enum {
+    TP_OK = 0,
+    TP_DISABLED,
+    TP_FAIL,
+    TP_PS2_ERROR,
+    TP_BAD_RESPONSE,
+    TP_POST_FAIL,
+} tp_status_t;
 
-
-/****************************************************************************
- * Constants and macros
- ***************************************************************************/
-
-#define TP_RESPONSE_BUFFER_SIZE 4
-
-#define tp_ram_bit_toggle( location, bit ) tp_ram_xor( (location), (1<<(bit)) )
-
-// Status codes:
-#define TP_OK 0
-#define TP_DISABLED 1
-#define TP_FAIL 2
-#define TP_PS2_ERROR 3
-#define TP_BAD_RESPONSE 4
-#define TP_POST_FAIL 5
-
-#define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 7, 6, 5, 4, 3, 2, 1)
-#define VA_NUM_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, N, ...) N
-#define tp_command(...) \
-    _tp_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
-
-// Command byte responses:
-#define TP_CMD_ACK 0xfa
-#define TP_CMD_RESEND 0xfe
-#define TP_CMD_ERROR 0xfc
-
-// Commands:
-#define TP_CMD_SET_REMOTE_MODE 0xf0
-#define TP_CMD_SET_STREAM_MODE 0xea
-#define TP_CMD_ENABLE 0xf4
-#define TP_CMD_DISABLE 0xf5
-#define TP_CMD_READ_DATA 0xeb
-#define TP_CMD_RESET 0xff
-
+// RAM locations:
 typedef enum {
     TP_RAM_REG00 = 0x00,
     TP_RAM_REG01,
@@ -360,6 +333,51 @@ enum TP_RAM_REG2E_BITS {
 
 
 /****************************************************************************
+ * Constants and macros
+ ***************************************************************************/
+
+// Maximum command response size:
+#define TP_RESPONSE_BUFFER_SIZE 4
+
+#define TP_RAM_BIT_TOGGLE( location, bit ) tp_ram_xor( (location), (1<<(bit)) )
+
+#define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 7, 6, 5, 4, 3, 2, 1)
+#define VA_NUM_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, N, ...) N
+#define tp_command(...) \
+    _tp_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
+
+// Command byte responses:
+#define TP_CMD_ACK 0xfa
+#define TP_CMD_RESEND 0xfe
+#define TP_CMD_ERROR 0xfc
+
+// Commands:
+#define TP_CMD_READ_EXTENDED_ID 0xd0
+#define TP_CMD_READ_SECONDARY_ID 0xe1
+#define TP_CMD_RAM_READ_NEAR 0xe2
+#define TP_CMD_RAM_TOGGLE 0xe2, 0x47
+#define TP_CMD_RAM_XOR 0xe2, 0x47
+#define TP_CMD_RAM_READ_FAR 0xe2, 0x80
+#define TP_CMD_RAM_WRITE 0xe2, 0x81
+#define TP_CMD_RESET_SCALING_1_1 0xe6
+#define TP_CMD_SET_SCALING_2_1 0xe7
+#define TP_CMD_SET_RESOLUTION 0xe8
+#define TP_CMD_STATUS_REQUEST 0xe9
+#define TP_CMD_SET_STREAM_MODE 0xea
+#define TP_CMD_READ_DATA 0xeb
+#define TP_CMD_RESET_WRAP_MODE 0xec
+#define TP_CMD_SET_WRAP_MODE 0xee
+#define TP_CMD_SET_REMOTE_MODE 0xf0
+#define TP_CMD_READ_DEVICE_TYPE 0xf2
+#define TP_CMD_SET_SAMPLING_RATE 0xf3
+#define TP_CMD_ENABLE 0xf4
+#define TP_CMD_DISABLE 0xf5
+#define TP_CMD_SET_DEFAULT 0xf6
+#define TP_CMD_RESEND 0xfe
+#define TP_CMD_RESET 0xff
+
+
+/****************************************************************************
  * Externs
  ***************************************************************************/
 
@@ -371,19 +389,20 @@ extern uint8_t tp_response[];
  * Prototypes
  ***************************************************************************/
 
-TP_STATUS _tp_command( int, ... );
-TP_STATUS tp_init( void );
-TP_STATUS tp_ram_bit_clear( uint8_t, uint8_t );
-TP_STATUS tp_ram_bit_set( uint8_t, uint8_t );
-TP_STATUS tp_ram_read( uint8_t );
-TP_STATUS tp_ram_write( uint8_t, uint8_t );
-TP_STATUS tp_ram_xor( uint8_t, uint8_t );
-TP_STATUS tp_read_data( void );
-TP_STATUS tp_recv( void );
-TP_STATUS tp_recv_response( int );
-TP_STATUS tp_reset( void );
-TP_STATUS tp_send( uint8_t );
-TP_STATUS tp_send_command_byte( uint8_t );
+tp_status_t _tp_command( int, ... );
+tp_status_t tp_init( void );
+tp_status_t tp_ram_bit_clear( uint8_t, uint8_t );
+tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
+tp_status_t tp_ram_read( uint8_t );
+tp_status_t tp_ram_write( uint8_t, uint8_t );
+tp_status_t tp_ram_xor( uint8_t, uint8_t );
+tp_status_t tp_read_data( void );
+tp_status_t tp_recv_extended_id( void );
+tp_status_t tp_recv( void );
+tp_status_t tp_recv_response( int );
+tp_status_t tp_reset( void );
+tp_status_t tp_send( uint8_t );
+tp_status_t tp_send_command_byte( uint8_t );
 void tp_zero_response( void );
 
 

@@ -75,7 +75,7 @@ void keyboard_init(void)
 #endif
 
 #ifdef TRACKPOINT_ENABLE
-    TP_STATUS status = tp_init();
+    tp_status_t status = tp_init();
 #endif
 
 #ifdef BOOTMAGIC_ENABLE
