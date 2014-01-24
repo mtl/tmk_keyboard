@@ -156,22 +156,28 @@ void led_set_layer_indicator( uint32_t state ) {
 
     pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
 
+    // If layer 1 is the only one active, turn off the light:
     if ( state == 1 ) {
         led->flags &= ~PWM_LED_FLAGS_ON;
     } else {
 
+        // Turn on the led:
         led->flags |= PWM_LED_FLAGS_ON;
+
+        // Zero-out the color:
         for ( int v = 0; v < 6; v++ ) {
             led->values[ v ] = 0;
         }
 
-        if ( state & 2 ) {
-            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
-        }
-        if ( state & 4 ) {
-            pwm_rgb_led_set_percent( led, PWM_BLUE, 10 );
+        // If layer 1 is on, add blue:
+        if ( state & (1<<1) ) {
+            pwm_rgb_led_set_percent( led, PWM_BLUE, 3 );
         }
 
+        // If layer 2 is on, add green:
+//        if ( state & (1<<2) ) {
+//            pwm_rgb_led_set_percent( led, PWM_GREEN, 1 );
+//        }
     }
 
     pwm_set_rgb_led( led );
