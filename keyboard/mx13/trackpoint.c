@@ -49,6 +49,10 @@ uint8_t tp_last_response_byte = 0; // Most recent byte returned by the TP
 //static const char * tp_prefix = "[TP] ";
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
+// Middle-button-scroll is implemented by dividing cursor movement by these amounts:
+int tp_scroll_divisor_h = 4;
+int tp_scroll_divisor_v = 4;
+
 
 /***************************************************************************/
 
