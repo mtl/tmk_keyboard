@@ -8,7 +8,7 @@
 #define MX13_TRACKPOINT_H
 
 #include <stdbool.h>
-#include "report.h"
+//#include "report.h"
 
 
 /****************************************************************************
@@ -23,6 +23,8 @@ typedef int TP_STATUS;
  ***************************************************************************/
 
 #define TP_RESPONSE_BUFFER_SIZE 4
+
+#define tp_ram_bit_toggle( location, bit ) tp_ram_xor( (location), (1<<(bit)) )
 
 // Status codes:
 #define TP_OK 0
@@ -370,20 +372,19 @@ extern uint8_t tp_response[];
  ***************************************************************************/
 
 TP_STATUS _tp_command( int, ... );
-TP_STATUS tp_get_report( report_mouse_t * );
-TP_STATUS tp_read_data( void );
+TP_STATUS tp_init( void );
+TP_STATUS tp_ram_bit_clear( uint8_t, uint8_t );
+TP_STATUS tp_ram_bit_set( uint8_t, uint8_t );
 TP_STATUS tp_ram_read( uint8_t );
 TP_STATUS tp_ram_write( uint8_t, uint8_t );
 TP_STATUS tp_ram_xor( uint8_t, uint8_t );
-bool tp_ready( void );
+TP_STATUS tp_read_data( void );
 TP_STATUS tp_recv( void );
 TP_STATUS tp_recv_response( int );
 TP_STATUS tp_reset( void );
 TP_STATUS tp_send( uint8_t );
 TP_STATUS tp_send_command_byte( uint8_t );
 void tp_zero_response( void );
-TP_STATUS trackpoint_init( void );
-TP_STATUS trackpoint_poll( void );
 
 
 /***************************************************************************/

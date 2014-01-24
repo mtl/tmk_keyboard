@@ -37,6 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef PS2_MOUSE_ENABLE
 #   include "ps2_mouse.h"
 #endif
+#ifdef TRACKPOINT_ENABLE
+#   include "trackpoint.h"
+#endif
 
 #ifdef PS2_MOUSE_ENABLE
 static uint32_t ps2_mouse_poll_time = 0;
@@ -65,9 +68,14 @@ void keyboard_init(void)
 {
     timer_init();
     matrix_init();
+
 #ifdef PS2_MOUSE_ENABLE
     ps2_mouse_init();
 	ps2_mouse_poll_time = timer_read32();
+#endif
+
+#ifdef TRACKPOINT_ENABLE
+    TP_STATUS status = tp_init();
 #endif
 
 #ifdef BOOTMAGIC_ENABLE

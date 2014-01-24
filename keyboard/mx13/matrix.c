@@ -33,10 +33,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "display.h"
 #endif
 
-#ifdef TRACKPOINT_ENABLE
-#include "trackpoint.h"
-#endif
-
 
 #ifndef DEBOUNCE
 #   define DEBOUNCE    5
@@ -91,15 +87,6 @@ void matrix_init(void)
     display_init();
 #endif
 
-    // Initialize the TrackPoint:
-#ifdef TRACKPOINT_ENABLE
-//    print( "TP initializing...\n" );
-//    _delay_ms(100);
-//    TP_STATUS status = trackpoint_init();
-//    print( "TP init status: " );
-//    phex( status );
-//    print( "\n" );
-#endif
 }
 
 uint8_t matrix_scan(void)
@@ -107,14 +94,6 @@ uint8_t matrix_scan(void)
     // Update LED states if necessary:
 #ifdef LED_CONTROLLER_ENABLE
     led_update();
-#endif
-
-    // Poll the TrackPoint for updates:
-#ifdef TRACKPOINT_ENABLE
-//    TP_STATUS status = trackpoint_poll();
-//    print( "TrackPoint poll result: " );
-//    phex( status );
-//    print( "\n" );
 #endif
 
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {

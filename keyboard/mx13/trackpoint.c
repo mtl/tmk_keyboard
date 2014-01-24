@@ -15,6 +15,8 @@
 #include "trackpoint.h"
 #include "usb_mouse.h"
 #include "util.h"
+#include "display.h"
+#include "ui.h"
 
 
 /***************************************************************************/
@@ -31,7 +33,7 @@
 
 #define RET_ON_ERROR() if ( status != TP_OK ) return status;
 
-void tp_inhibit(void);
+//void tp_inhibit(void);
 
 /***************************************************************************/
 
@@ -39,26 +41,29 @@ void tp_inhibit(void);
 static uint8_t buttons_status = 0;
 static bool initialized = false;
 static const char * ps2_prefix = "[PS2] ";
-static int status = 0;
-uint8_t tp_last_response_byte = 0;
+static int status = 0; // TP_STATUS of last operation
+uint8_t tp_last_response_byte = 0; // Most recent byte returned by the TP
 static const char * tp_prefix = "[TP] ";
-uint8_t tp_response[TP_RESPONSE_BUFFER_SIZE];
+uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 
 /***************************************************************************/
 
+/*
 void tp_inhibit() {
     PS2_CLOCK_PORT &= ~(1<<PS2_CLOCK_BIT);
     PS2_CLOCK_DDR  |=  (1<<PS2_CLOCK_BIT);
 }
+*/
 
 
 /***************************************************************************/
 
+// Send a sequence of command bytes.
 TP_STATUS _tp_command( int num_bytes, ... ) {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    if ( ! initialized ) return TP_DISABLED;
 
     va_list ap;
     va_start( ap, num_bytes );
@@ -67,11 +72,15 @@ TP_STATUS _tp_command( int num_bytes, ... ) {
 
         status = tp_send_command_byte( va_arg( ap, int ) );
         switch ( status ) {
-            case TP_OK: break;
+            case TP_OK: continue;
             case TP_BAD_RESPONSE:
                 if ( tp_last_response_byte == 0xfe ) {
                     printf( "%sCommand not supported.\n", tp_prefix );
                 }
+
+            // tp_send_command_byte() also returns TP_FAIL.
+            //case TP_FAIL:
+
             default:
                 printf(
                     "%sFailed to send command byte %i of %i.\n",
@@ -84,52 +93,61 @@ TP_STATUS _tp_command( int num_bytes, ... ) {
     }
 
     va_end( ap );
-    tp_inhibit();
+    //tp_inhibit();
     return TP_OK;
 }
 
 
 /***************************************************************************/
 
-/*
-typedef struct {
-    uint8_t buttons;
-    int8_t x;
-    int8_t y;
-    int8_t v;
-    int8_t h;
-} __attribute__ ((packed)) report_mouse_t;
-*/
+// Initialize the TrackPoint.
+TP_STATUS tp_init() {
 
-// Read the TP status.  If status hasn't changed, report.buttons will be 0xff.
-TP_STATUS tp_get_report( report_mouse_t * report ) {
+    // Clear response buffer:
+    tp_zero_response();
 
-/*
-    // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    /*ui_log_append_byte( layer );*/
+    ui_log_append_str( "TP: Resetting\n" );
+    display_draw( false );
 
-    uint8_t prev_buttons_status = buttons_status;
+    // Reset the TrackPoint:
+    tp_reset();
+    initialized = true;
+    //debug_config.mouse = true;
 
-    status = tp_read_data();
+    ui_log_append_str( "TP: Enabling reports\n" );
+    display_draw( false );
+
+    // Enable the TrackPoint (starts data reporting):
+    status = tp_command( TP_CMD_ENABLE );
     RET_ON_ERROR();
 
-    // Return if no change:
-    if (
-        buttons_status == prev_buttons_status &&
-        ! ( tp_response[ 0 ] & 0xf0 ) ||
-        ! tp_response[ 1 ] ||
-        ! tp_response[ 2 ]
-    ) {
-        report->buttons = 0xff;
-        return TP_OK;
-    }
+    ui_log_append_str( "TP: Set remote\n" );
+    display_draw( false );
+
+    // Set remote mode:
+    status = tp_command( TP_CMD_SET_REMOTE_MODE );
+    RET_ON_ERROR();
+
+    ui_log_append_str( "TP: Init ok\n" );
+    display_draw( false );
+    return TP_OK;
+}
 
 
+/***************************************************************************/
 
+// TP Command: Clear a bit in controller RAM
+TP_STATUS tp_ram_bit_clear( uint8_t location, uint8_t bit ) {
 
+    // Ensure the TrackPoint is enabled:
+    if ( ! initialized ) return TP_DISABLED;
 
+    status = tp_ram_read( location );
+    RET_ON_ERROR();
 
-*/
+    status = tp_ram_write( location, tp_response[ 0 ] & ~(1<<bit) );
+    RET_ON_ERROR();
 
     return TP_OK;
 }
@@ -137,18 +155,18 @@ TP_STATUS tp_get_report( report_mouse_t * report ) {
 
 /***************************************************************************/
 
-// TP Command: Read data
-TP_STATUS tp_read_data() {
+// TP Command: Set a bit in controller RAM
+TP_STATUS tp_ram_bit_set( uint8_t location, uint8_t bit ) {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    if ( ! initialized ) return TP_DISABLED;
 
-    status = tp_command( TP_CMD_READ_DATA );
-    RET_ON_ERROR();
-    status = tp_recv_response( 3 );
+    status = tp_ram_read( location );
     RET_ON_ERROR();
 
-    buttons_status = tp_response[ 0 ] & 7;
+    status = tp_ram_write( location, tp_response[ 0 ] | (1<<bit) );
+    RET_ON_ERROR();
+
     return TP_OK;
 }
 
@@ -159,7 +177,7 @@ TP_STATUS tp_read_data() {
 TP_STATUS tp_ram_read( uint8_t location ) {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    if ( ! initialized ) return TP_DISABLED;
 
     if ( location <= 0x3f ) {
         status = tp_command( 0xe2, location );
@@ -182,7 +200,7 @@ TP_STATUS tp_ram_read( uint8_t location ) {
 TP_STATUS tp_ram_write( uint8_t location, uint8_t value ) {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    if ( ! initialized ) return TP_DISABLED;
 
     status = tp_command( 0xe2, 0x81, location, value );
     RET_ON_ERROR();
@@ -197,7 +215,7 @@ TP_STATUS tp_ram_write( uint8_t location, uint8_t value ) {
 TP_STATUS tp_ram_xor( uint8_t location, uint8_t bitmask ) {
 
     // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
+    if ( ! initialized ) return TP_DISABLED;
 
     status = tp_command( 0xe2, 0x47, location, bitmask );
     RET_ON_ERROR();
@@ -208,22 +226,19 @@ TP_STATUS tp_ram_xor( uint8_t location, uint8_t bitmask ) {
 
 /***************************************************************************/
 
-// Check to see if the TrackPoint can be used.
-bool tp_ready() {
-/*
-    if ( ps2_mouse_enable ) {
-        print( "ps2_mouse_enable = true\n" );
-    } else {
-        print( "ps2_mouse_enable = false\n" );
-    }
-    if ( initialized ) {
-        print( "initialized = true\n" );
-    } else {
-        print( "initialized = false\n" );
-    }
-*/
-    //return ps2_mouse_enable && initialized;
-    return initialized;
+// TP Command: Read data
+TP_STATUS tp_read_data() {
+
+    // Ensure the TrackPoint is enabled:
+    if ( ! initialized ) return TP_DISABLED;
+
+    status = tp_command( TP_CMD_READ_DATA );
+    RET_ON_ERROR();
+    status = tp_recv_response( 3 );
+    RET_ON_ERROR();
+
+    buttons_status = tp_response[ 0 ] & 7;
+    return TP_OK;
 }
 
 
@@ -233,12 +248,12 @@ TP_STATUS tp_recv() {
 
     uint8_t r = ps2_host_recv_response();
 
-    if ( ps2_error ) {
+    if ( ps2_error != PS2_ERR_NONE ) {
         printf( "%sRecv error: x%02X.\n", ps2_prefix, ps2_error );
         return TP_PS2_ERROR;
     }
 
-    tp_inhibit();
+    //tp_inhibit();
     print( "Received: " );
     phex( r );
     print( ".\n" );
@@ -321,6 +336,7 @@ TP_STATUS tp_reset() {
 
 /***************************************************************************/
 
+// Send a single byte and indicate whether the PS/2 transmission succeeded.
 TP_STATUS tp_send( uint8_t message ) {
 
     print( "Sending " );
@@ -330,12 +346,12 @@ TP_STATUS tp_send( uint8_t message ) {
 
     uint8_t r = ps2_host_send( message );
 
-    if ( ps2_error ) {
+    if ( ps2_error != PS2_ERR_NONE ) {
         printf( "%sSend error: x%02X.\n", ps2_prefix, ps2_error );
         return TP_PS2_ERROR;
     }
 
-    tp_inhibit();
+    //tp_inhibit();
     print( "ACK: " );
     phex( r );
     print( ".\n" );
@@ -348,38 +364,42 @@ TP_STATUS tp_send( uint8_t message ) {
 
 /***************************************************************************/
 
-// Send a single command byte, handle resend, verify ack, etc.
+// Send a single command byte, verify ack, handle resend, etc.
 TP_STATUS tp_send_command_byte( uint8_t message ) {
 
-    status = tp_send( message );
-    RET_ON_ERROR();
+    for ( int tries = 2; tries > 0; tries-- ) {
 
-    // Resend the byte if the TP returned the resend command:
-    if ( tp_last_response_byte == TP_CMD_RESEND ) {
+        // Send the command byte:
         status = tp_send( message );
         RET_ON_ERROR();
 
-        // Handle the error code:
-        if ( tp_last_response_byte == TP_CMD_ERROR ) {
+        switch ( tp_last_response_byte ) {
 
-            printf(
-                "%sFailed to send command byte x%02X.\n",
-                tp_prefix, message
-            );
-            return TP_BAD_RESPONSE;
-        }
+            case TP_CMD_ACK:
+                return TP_OK;
+                
+            case TP_CMD_ERROR:
+                printf(
+                    "%sFailed to send command byte x%02X.\n",
+                    tp_prefix, message
+                );
+                return TP_BAD_RESPONSE;
 
-        // This shouldn't occur, but verify ACK just to be sure:
-        else if ( tp_last_response_byte != TP_CMD_ACK ) {
-            printf(
-                "%sFailed to send command byte x%02X (controller returned x%02X).\n",
-                tp_prefix, message, tp_last_response_byte
-            );
-            return TP_BAD_RESPONSE;
+            case TP_CMD_RESEND:
+                continue;
         }
+        break;
     }
 
-    return TP_OK;
+    // Shouldn't get here because the TrackPoint is only supposed
+    // to return the resend response once.  At this point, maybe it
+    // makes sense to reset the TrackPoint.
+
+    printf(
+        "%sFailed to send command byte x%02X (controller returned x%02X).\n",
+        tp_prefix, message, tp_last_response_byte
+    );
+    return TP_FAIL;
 }
 
 
@@ -389,79 +409,6 @@ void inline tp_zero_response() {
     for ( int i = 0; i < TP_RESPONSE_BUFFER_SIZE; i++ ) {
         tp_response[ i ] = 0;
     }
-}
-
-
-/***************************************************************************/
-
-// Initialize the TrackPoint.
-TP_STATUS trackpoint_init() {
-
-    // Ensure the TrackPoint is enabled:
-//    if ( ! ps2_mouse_enable ) return TP_DISABLED;
-
-    // Initialize the PS/2 host driver:
-    ps2_host_init();
-
-    // Clear response buffer:
-    tp_zero_response();
-
-    // Reset the TrackPoint:
-    tp_reset();
-    initialized = true;
-    debug_config.mouse = true;
-
-    // Enable the TrackPoint (starts data reporting):
-    status = tp_command( TP_CMD_ENABLE );
-    RET_ON_ERROR();
-
-    // Set remote mode:
-    status = tp_command( TP_CMD_SET_REMOTE_MODE );
-    RET_ON_ERROR();
-
-    return TP_OK;
-}
-
-
-/***************************************************************************/
-
-// Poll the TrackPoint for updates.
-TP_STATUS trackpoint_poll() {
-
-    // Ensure the TrackPoint is enabled:
-    if ( ! tp_ready() ) return TP_DISABLED;
-
-//    print( "Poll..\n" );
-//    _delay_ms( 100 );
-//    status = tp_command( TP_CMD_READ_DATA );
-//    RET_ON_ERROR();
-//    status = tp_recv_response( 3 );
-//    RET_ON_ERROR();
-//    print( "Response: " );
-//    phex( tp_response[ 0 ] );
-//    print( ", " );
-//    phex( tp_response[ 1 ] );
-//    print( ", " );
-//    phex( tp_response[ 2 ] );
-//    print( ".\n" );
-//    _delay_ms( 100 );
-
-    // Poll the TrackPoint for updates:
-//    uint8_t result = ps2_mouse_read();
-//    if ( result ) {
-//        return TP_PS2_ERROR;
-//    }
-
-    /*print( "Sending report..\n" );*/
-    /*_delay_ms( 100 );*/
-
-    // Send any updates to the USB host:
-//    ps2_mouse_usb_send();
-
-    /*print( "Report sent (maybe).\n" );*/
-    /*_delay_ms( 100 );*/
-
-    return TP_OK;
 }
 
 

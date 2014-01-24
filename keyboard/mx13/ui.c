@@ -49,10 +49,50 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
         UI_MENU_ITEM_LED_CONFIG( "TrackPoint", LED_TRACKPOINT ),
         UI_MENU_ITEM_LED_CONFIG( "Layer", LED_DISPLAY )
     ),
-    UI_MENU_ITEM_SUBMENU( "TrackPoint", NULL, 3,
-        UI_MENU_ITEM_DUMMY( "Acceleration" ),
-        UI_MENU_ITEM_DUMMY( "Middle scroll" ),
-        UI_MENU_ITEM_DUMMY( "Debug" )
+    UI_MENU_ITEM_SUBMENU( "TrackPoint", NULL, 5,
+        // tactile output pulse commands?
+        UI_MENU_ITEM_SUBMENU( "Motion", NULL, 6,
+            UI_MENU_ITEM_DUMMY( "Sensitivity" ), // 0-255
+            UI_MENU_ITEM_DUMMY( "Negative Inertia" ), // 0-255
+            UI_MENU_ITEM_DUMMY( "Xfer Up Plateau" ), // default: 0x61
+            UI_MENU_ITEM_DUMMY( "Invert X axis" ),
+            UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
+            UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
+        ),
+        UI_MENU_ITEM_SUBMENU( "Press-to-select", NULL, 9,
+            UI_MENU_ITEM_DUMMY( "Enable/disable" ),
+            UI_MENU_ITEM_DUMMY( "Backup range" ), // default: 0x0a
+            UI_MENU_ITEM_DUMMY( "Drag hysteresis" ), // default: 0xff
+            UI_MENU_ITEM_DUMMY( "Minimum drag" ), // default: 0x14
+            UI_MENU_ITEM_DUMMY( "Down threshold" ), // default: 0x08
+            UI_MENU_ITEM_DUMMY( "Up threshold" ), // default: 0xff (disabled)
+            UI_MENU_ITEM_DUMMY( "Z time constant" ), // default: 0x26
+            UI_MENU_ITEM_DUMMY( "Jenks Curvature" ), // default: 0x87
+            UI_MENU_ITEM_DUMMY( "Skip backups on/off" ) // default: 0
+        ),
+        UI_MENU_ITEM_SUBMENU( "Drift control", NULL, 7,
+            UI_MENU_ITEM_DUMMY( "Counter 1 reset val." ), // default: 0x05
+            UI_MENU_ITEM_DUMMY( "XY avg. time const." ), // default: 0x40 or 0x80 (hw dep)
+            UI_MENU_ITEM_DUMMY( "Z drift limit" ), // default: 0x03
+            UI_MENU_ITEM_DUMMY( "Z drift reload val." ), // default: 0x64
+            UI_MENU_ITEM_DUMMY( "XY avg. threshold" ), // default: 0xff
+            UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
+            UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
+        ),
+        UI_MENU_ITEM_SUBMENU( "Calibration", NULL, 7,
+            UI_MENU_ITEM_DUMMY( "XY avg. origin time" ), // default: 0x80
+            UI_MENU_ITEM_DUMMY( "Pot. enable/disable" ), // default: 0 (enabled)
+            UI_MENU_ITEM_DUMMY( "Pot. recalib. now" ),
+            UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
+            UI_MENU_ITEM_DUMMY( "Skip Z step on/off" ), // default: 0
+            UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
+            UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
+        ),
+        UI_MENU_ITEM_SUBMENU( "Debug", NULL, 3,
+            UI_MENU_ITEM_DUMMY( "POST" ),
+            UI_MENU_ITEM_DUMMY( "Reset" ),
+            UI_MENU_ITEM_DUMMY( "Reset to defaults" )
+        )
     ),
     UI_MENU_ITEM_SUBMENU( "Keyboard", NULL, 2,
         UI_MENU_ITEM_SUBMENU( "Key repeat", NULL, 2,
@@ -116,6 +156,9 @@ static int log_cursor_column = 0;
 bool ui_draw( u8g_t * u8g_ref ) {
 
     u8g = u8g_ref;
+
+    ui_draw_log();
+    return true;
 
     if ( ui_active ) {
 
@@ -393,9 +436,9 @@ void ui_enter() {
 
     menu_stack[ 0 ] = &menu;
     menu_stack_pos = 0;
-    input_mode = UI_INPUT_MENU;
+//    input_mode = UI_INPUT_MENU;
 
-//    input_mode = UI_INPUT_LOG;
+    input_mode = UI_INPUT_LOG;
 
     display_draw( true );
 
@@ -782,6 +825,13 @@ void ui_leave() {
     }
 
     ui_active = false;
+
+    // Reset LED if one was being configured:
+    if ( input_mode == UI_INPUT_RGB ) {
+        rgb_led->flags = rgb_prior_flags;
+        pwm_set_rgb_led( rgb_led );
+        pwm_commit( true );
+    }
 
 #ifdef LED_CONTROLLER_ENABLE
 
