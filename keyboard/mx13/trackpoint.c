@@ -50,8 +50,9 @@ uint8_t tp_last_response_byte = 0; // Most recent byte returned by the TP
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
-int tp_scroll_divisor_h = 4;
-int tp_scroll_divisor_v = 4;
+int tp_sensitivity = 0xc0;
+int tp_scroll_divisor_h = 2;
+int tp_scroll_divisor_v = 2;
 
 
 /***************************************************************************/
@@ -132,7 +133,7 @@ tp_status_t tp_init() {
 
     tp_log( "TP: Sens. factor\n" );
 
-    status = tp_ram_write( TP_RAM_SNSTVTY, 0xc0 );
+    status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
     RET_ON_ERROR();
 
     //--------------------
@@ -159,12 +160,12 @@ tp_status_t tp_init() {
 
     //--------------------
 
-//    tp_log( "TP: Extended ID:\n" );
-//
-//    status = tp_command( TP_CMD_READ_EXTENDED_ID );
-//    RET_ON_ERROR();
-//    status = tp_recv_extended_id();
-//    RET_ON_ERROR();
+    tp_log( "TP: Extended ID:\n" );
+
+    status = tp_command( TP_CMD_READ_EXTENDED_ID );
+    RET_ON_ERROR();
+    status = tp_recv_extended_id();
+    RET_ON_ERROR();
 
     //--------------------
 
@@ -303,6 +304,26 @@ tp_status_t tp_recv() {
 
 /***************************************************************************/
 
+uint8_t tp_charnib( uint8_t c ) {
+
+    if ( c >= 0x30 && c <= 0x39 ) {
+        return c - 0x30;
+    }
+
+    if ( c >= 0x41 && c <= 0x46 ) {
+        return c - 0x41 + 10;
+    }
+
+    if ( c >= 0x61 && c <= 0x66 ) {
+        return c - 0x61 + 10;
+    }
+
+    return -1;
+}
+
+
+/***************************************************************************/
+
 /* Extended ID for my TrackPoint is as follows, though u8glib probably
  * skipped non-printable characters or character codes above 127.
  *
@@ -313,24 +334,186 @@ tp_status_t tp_recv_extended_id() {
 
     tp_zero_response();
 
-    char extended_id[ 256 ];
-    int i;
+    tp_extended_id_t extended_id;
+    uint8_t * eid;
+    
+    eid = (uint8_t*) &extended_id;
+    for ( int i = 0; i < sizeof( tp_extended_id_t ); i++ ) {
+        *eid++ = 0;
+    }
+
+    tp_extended_id_state_t state = TP_OTHER_ID;
+
+    uint8_t checksum = 0;
+    int field_pos = 0;
 
     for ( int i = 0; i < 256; i++ ) {
 
         status = tp_recv();
+        RET_ON_ERROR();
 
-        if ( status != TP_OK ) {
-            return status;
+        checksum += tp_last_response_byte;
+
+        switch ( state ) {
+
+            // "M 19980216 RSO"
+            case TP_OTHER_ID:
+                if ( tp_last_response_byte != '(' ) {
+                    extended_id.other_id[ field_pos++ ] = tp_last_response_byte;
+                } else {
+                    field_pos = 0;
+                    checksum = '(';
+                    state = TP_PNP_REVISION_LEVEL;
+                }
+                continue;
+
+            // 0x64 == 1.0
+            case TP_PNP_REVISION_LEVEL:
+                switch ( field_pos++ ) {
+                    case 0:
+                        extended_id.pnp_revision_level = tp_last_response_byte;
+                        break;
+                    case 1:
+                        extended_id.pnp_revision_level = (
+                            ( ( extended_id.pnp_revision_level & 0x3f ) << 6 ) |
+                            ( tp_last_response_byte & 0x3f )
+                        );
+                        field_pos = 0;
+                        state = TP_MANUFACTURER_ID;
+                }
+                continue;
+
+            // "IBM"
+            case TP_MANUFACTURER_ID:
+                extended_id.manufacturer_id[ field_pos++ ] = tp_last_response_byte;
+                if ( field_pos == 3 ) {
+                    field_pos = 0;
+                    state = TP_PRODUCT_NO;
+                }
+                continue;
+
+            // "378"
+            case TP_PRODUCT_NO:
+                extended_id.product_no[ field_pos++ ] = tp_last_response_byte;
+                if ( field_pos == 3 ) {
+                    field_pos = 0;
+                    state = TP_PRODUCT_REVISION;
+                }
+                continue;
+
+            // "0" or "1" depending on middle button config
+            case TP_PRODUCT_REVISION:
+                extended_id.product_revision = tp_last_response_byte;
+                state = TP_SERIAL_NO_OPTION;
+                continue;
+
+            case TP_SERIAL_NO_OPTION:
+                if ( tp_last_response_byte != '\\' ) {
+                    // this is invalid
+                    // read out until close parenthesis and return a failure code
+                }
+                state = TP_SERIAL_NO;
+                continue;
+
+            // "\" == not provided (optional field)
+            case TP_SERIAL_NO:
+                if ( field_pos == 0 && tp_last_response_byte == '\\' ) {
+                    state = TP_CLASS_ID;
+                } else {
+                    extended_id.serial_no = (
+                        ( extended_id.serial_no << 4 ) |
+                        tp_charnib( tp_last_response_byte )
+                    );
+                    if ( field_pos++ == 8 ) {
+                        field_pos = 0;
+                        state = TP_CLASS_ID_OPTION;
+                    }
+                }
+                continue;
+
+            case TP_CLASS_ID_OPTION:
+                if ( tp_last_response_byte != '\\' ) {
+                    // this is invalid
+                    // read out until close parenthesis and return a failure code
+                }
+                state = TP_CLASS_ID;
+                continue;
+
+            // "MOUSE"
+            case TP_CLASS_ID:
+                if ( field_pos >= 32 ) {
+                    // this is invalid
+                    // read out until close parenthesis and return a failure code
+                }
+                if ( tp_last_response_byte == '\\' ) {
+                    field_pos = 0;
+                    state = TP_DRIVER_ID;
+                } else {
+                    extended_id.class_id[ field_pos++ ] = tp_last_response_byte;
+                }
+                continue;
+
+            // "PNP0F19"
+            case TP_DRIVER_ID:
+                if ( field_pos >= 40 ) {
+                    // this is invalid
+                    // read out until close parenthesis and return a failure code
+                }
+                if ( tp_last_response_byte == '\\' ) {
+                    field_pos = 0;
+                    state = TP_USER_NAME;
+                } else {
+                    extended_id.driver_id[ field_pos++ ] = tp_last_response_byte;
+                }
+                continue;
+
+            // "IBM TrackPoint Version 4.0 YKT3B"
+            case TP_USER_NAME:
+                if ( field_pos >= 40 ) {
+                    // this is invalid
+                    // read out until close parenthesis and return a failure code
+                }
+                if ( tp_last_response_byte == '\\' ) {
+                    field_pos = 0;
+                    state = TP_CHECKSUM;
+                } else {
+                    extended_id.user_name[ field_pos++ ] = tp_last_response_byte;
+                }
+                continue;
+
+            // "7F"
+            case TP_CHECKSUM:
+
+                checksum -= tp_last_response_byte;
+                switch ( field_pos++ ) {
+                    case 0:
+                        extended_id.checksum = tp_charnib( tp_last_response_byte );
+                        break;
+                    case 1:
+                        extended_id.checksum = (
+                            ( extended_id.checksum << 4 ) |
+                            tp_charnib( tp_last_response_byte )
+                        );
+
+                        field_pos = 0;
+                        state = TP_END_PNP;
+                }
+                continue;
+
+            // ")"
+            case TP_END_PNP:
+                if ( tp_last_response_byte != ')' ) {
+                    // this is invalid
+                    // return a failure code
+                }
+                state = TP_EXTENDED_ID_DONE;
+                extended_id.checksum_counted = checksum;
+
+            case TP_EXTENDED_ID_DONE:
+                break;
         }
 
-        extended_id[ i ] = tp_last_response_byte;
-        
-        if ( tp_last_response_byte == ')' ) {
-            extended_id[ i++ ] = '\\';
-            extended_id[ i++ ] = 'n';
-            extended_id[ i++ ] = 0;
-            tp_log( extended_id );
+        if ( state == TP_EXTENDED_ID_DONE ) {
             break;
         }
     }
@@ -348,14 +531,15 @@ tp_status_t tp_recv_response( int num_bytes ) {
     for ( int i = 0; i < num_bytes; i++ ) {
 
         status = tp_recv();
+        RET_ON_ERROR();
 
-        if ( status != TP_OK ) {
+//        if ( status != TP_OK ) {
 //            printf(
 //                "%sRecv error: Failed to read byte %i of %i.\n",
 //                tp_prefix, i, num_bytes
 //            );
-            return status;
-        }
+//            return status;
+//        }
 
         tp_response[ i ] = tp_last_response_byte;
     }

@@ -15,17 +15,55 @@
  * Typedefs
  ***************************************************************************/
 
+typedef struct {
+
+    char other_id[ 17 ];
+    uint16_t pnp_revision_level;
+    char manufacturer_id[ 4 ];
+    char product_no[ 4 ];
+    uint8_t product_revision;
+    uint32_t serial_no;
+    char class_id[ 33 ];
+    char driver_id[ 41 ];
+    char user_name[ 41 ];
+    uint8_t checksum;
+    uint8_t checksum_counted;
+
+} tp_extended_id_t;
+
 typedef enum {
+
+    TP_OTHER_ID,
+    TP_PNP_REVISION_LEVEL,
+    TP_MANUFACTURER_ID,
+    TP_PRODUCT_NO,
+    TP_PRODUCT_REVISION,
+    TP_SERIAL_NO_OPTION,
+    TP_SERIAL_NO,
+    TP_CLASS_ID_OPTION,
+    TP_CLASS_ID,
+    TP_DRIVER_ID,
+    TP_USER_NAME,
+    TP_CHECKSUM,
+    TP_END_PNP,
+    TP_EXTENDED_ID_DONE
+
+} tp_extended_id_state_t;
+
+typedef enum {
+
     TP_OK = 0,
     TP_DISABLED,
     TP_FAIL,
     TP_PS2_ERROR,
     TP_BAD_RESPONSE,
     TP_POST_FAIL,
+
 } tp_status_t;
 
 // RAM locations:
 typedef enum {
+
     TP_RAM_REG00 = 0x00,
     TP_RAM_REG01,
     TP_RAM_STRCNT,
@@ -175,9 +213,11 @@ typedef enum {
     TP_RAM_XB = 0xa9,
     TP_RAM_YB = 0xc2,
     TP_RAM_SP = 0xdb
+
 } tp_ram_location_t;
 
 enum TP_RAM_REG20_BITS {
+
     TP_BIT_MSKIP = 0x00,
     TP_BIT_MMOVE,
     TP_BIT_INVLD,
@@ -186,9 +226,11 @@ enum TP_RAM_REG20_BITS {
     TP_BIT_CAUGHTUP,
     TP_BIT_REG20_6, // unassigned
     TP_BIT_TAGBIT // def:0
+
 };
 
 enum TP_RAM_REG21_BITS {
+
     TP_BIT_XSBIT = 0x00,
     TP_BIT_YSBIT,
     TP_BIT_MWAIT,
@@ -197,9 +239,11 @@ enum TP_RAM_REG21_BITS {
     TP_BIT_REG21_5, // unassigned
     TP_BIT_LXMIT,
     TP_BIT_SXMIT
+
 };
 
 enum TP_RAM_REG22_BITS {
+
     TP_BIT_WRAP = 0x00,
     TP_BIT_STRANSP,
     TP_BIT_FORCEB3, // def:0
@@ -208,9 +252,11 @@ enum TP_RAM_REG22_BITS {
     TP_BIT_MENB,
     TP_BIT_REMOTE,
     TP_BIT_REG22_7 // reserved
+
 };
 
 enum TP_RAM_REG23_BITS {
+
     TP_BIT_BLOCK3 = 0x00, // def:0
     TP_BIT_MCOMDIS, // def:0
     TP_BIT_POWERUP,
@@ -219,9 +265,11 @@ enum TP_RAM_REG23_BITS {
     TP_BIT_RERROR,
     TP_BIT_BYTE1X,
     TP_BIT_SKIPDRIFT // def:0
+
 };
 
 enum TP_RAM_POST_BITS {
+
     TP_BIT_RAMFAIL = 0x00,
     TP_BIT_ROMFAIL,
     TP_BIT_POST_2, // unassigned
@@ -230,9 +278,11 @@ enum TP_RAM_POST_BITS {
     TP_BIT_MOUFAIL,
     TP_BIT_POST_6, // unassigned
     TP_BIT_POST_7 // unassigned
+
 };
 
 enum TP_RAM_MOUSTAT_BITS {
+
     TP_BIT_MLEFT = 0x00,
     TP_BIT_MRGHT,
     TP_BIT_MMIDB,
@@ -241,9 +291,11 @@ enum TP_RAM_MOUSTAT_BITS {
     TP_BIT_MOUSTAT_5, // y sign bit
     TP_BIT_MOUSTAT_6, // overflow x bit
     TP_BIT_MOUSTAT_7  // overflow y bit
+
 };
 
 enum TP_RAM_CURSTAT_BITS {
+
     TP_BIT_LEFT = 0x00,
     TP_BIT_RIGHT,
     TP_BIT_MIDDLE,
@@ -252,9 +304,11 @@ enum TP_RAM_CURSTAT_BITS {
     TP_BIT_YACBIT,
     TP_BIT_OVERX,
     TP_BIT_OVERY
+
 };
 
 enum TP_RAM_REG28_BITS {
+
     TP_BIT_LSSIGN1 = 0x00,
     TP_BIT_LSSIGN2,
     TP_BIT_HYSFLG,
@@ -263,9 +317,11 @@ enum TP_RAM_REG28_BITS {
     TP_BIT_REL,
     TP_BIT_REG28_6, // unassigned
     TP_BIT_KBURST // def:0
+
 };
 
 enum TP_RAM_REG29_BITS {
+
     TP_BIT_REG29_0 = 0x00, // unassigned
     TP_BIT_DACDBB,
     TP_BIT_M_DIR,
@@ -274,9 +330,11 @@ enum TP_RAM_REG29_BITS {
     TP_BIT_QUIET,
     TP_BIT_TPTURN,
     TP_BIT_BACKING
+
 };
 
 enum TP_RAM_REG2A_BITS {
+
     TP_BIT_E2MATCH = 0x00,
     TP_BIT_MRESET,
     TP_BIT_DOS4FIX,
@@ -285,9 +343,11 @@ enum TP_RAM_REG2A_BITS {
     TP_BIT_YCIP,
     TP_BIT_PCIP,
     TP_BIT_SKIPZ
+
 };
 
 enum TP_RAM_REG2B_BITS {
+
     TP_BIT_MBIT1 = 0x00,
     TP_BIT_MBIT2,
     TP_BIT_MBIT3,
@@ -296,9 +356,11 @@ enum TP_RAM_REG2B_BITS {
     TP_BIT_MPENDING,
     TP_BIT_MBUSY,
     TP_BIT_MTIMEOUT
+
 };
 
 enum TP_RAM_CONFIG_BITS {
+
     TP_BIT_PTSON = 0x00, // def:0
     TP_BIT_HALFTAC, // def:0
     TP_BIT_BUTTON2,
@@ -307,9 +369,11 @@ enum TP_RAM_CONFIG_BITS {
     TP_BIT_FLIPZ, // def:0
     TP_BIT_REG2C_6, // unassigned
     TP_BIT_FTRANS
+
 };
 
 enum TP_RAM_REG2D_BITS {
+
     TP_BIT_TWO_HANDED = 0x00, // def:0
     TP_BIT_NMBBIT, // def:0
     TP_BIT_STICKY2, // def:0
@@ -318,9 +382,11 @@ enum TP_RAM_REG2D_BITS {
     TP_BIT_SKIPZSTEP, // def:0
     TP_BIT_MSFIX, // def:0
     TP_BIT_NOSYNC // def:0
+
 };
 
 enum TP_RAM_REG2E_BITS {
+
     TP_BIT_SAVEET1 = 0x00,
     TP_BIT_SAVETR1,
     TP_BIT_MPARITY,
@@ -329,6 +395,7 @@ enum TP_RAM_REG2E_BITS {
     TP_BIT_SKIPTAC, // def:0
     TP_BIT_BAD_COMMAND,
     TP_BIT_STOPF4 // def:0
+
 };
 
 

@@ -48,8 +48,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 // Configurable middle-button-scroll (defined in trackpoint.c):
-#define PS2_MOUSE_SCROLL_DIVISOR_H tp_scroll_divisor_h
-#define PS2_MOUSE_SCROLL_DIVISOR_V tp_scroll_divisor_v
+// 0x80 is the default TrackPoint sensitivity.
+#define PS2_MOUSE_SCROLL_DIVISOR_H ( ( tp_sensitivity * tp_scroll_divisor_h ) / 0x80 )
+#define PS2_MOUSE_SCROLL_DIVISOR_V ( ( tp_sensitivity * tp_scroll_divisor_v ) / 0x80 )
+//#define PS2_MOUSE_SCROLL_DIVISOR_V tp_scroll_divisor_v
+extern int tp_sensitivity;
 extern int tp_scroll_divisor_h;
 extern int tp_scroll_divisor_v;
 
