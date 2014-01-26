@@ -15,6 +15,8 @@
 #include <stdbool.h>
 //#include "report.h"
 
+// TP_CMD_READ_SECONDARY_ID: 0x0b01
+// TP_CMD_READ_ROM_VERSION: 0x3b
 
 /****************************************************************************
  * Typedefs
@@ -24,7 +26,7 @@
 #define TP_THREE_BUTTONS (1)
 
 //#define TP_MAX_CONFIG_LOCATIONS ( sizeof( tp_ram_medium_sets ) / sizeof( tp_ram_medium_sets[ 0 ] ) )
-#define TP_MAX_CONFIG_LOCATIONS (34)
+#define TP_MAX_CONFIG_LOCATIONS (28)
 
 typedef struct {
 
@@ -502,10 +504,8 @@ tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
 tp_status_t tp_ram_read( uint8_t );
 tp_status_t tp_ram_write( uint8_t, uint8_t );
 tp_status_t tp_ram_xor( uint8_t, uint8_t );
-tp_status_t tp_read_data( void );
 tp_status_t tp_recv_extended_id( tp_extended_id_t * );
 tp_status_t tp_recv_response( int );
-tp_status_t tp_reset( bool );
 tp_status_t tp_set_current_config( tp_config_t * );
 void tp_zero_response( void );
 

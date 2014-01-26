@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <avr/eeprom.h> 
 #include <avr/io.h>
 #include <util/delay.h>
 #include "ps2.h"
@@ -22,82 +23,30 @@
 #include "display.h"
 #include "ui.h"
 
+/***************************************************************************/
+// Static prototoypes:
+
 static uint8_t char_to_nib( uint8_t );
-static tp_status_t initialize( void );
+static tp_status_t initialize( bool );
 static tp_status_t lookup( tp_ram_location_info_t[], int, int, uint8_t * );
 static tp_status_t recv( void );
+static tp_status_t reset( bool );
 static tp_status_t send( uint8_t );
 static tp_status_t send_command_byte( uint8_t );
 
-/*
-
-Settings:
-
-    Hard set - Once configured, a hard reset is required to reconfigure
-        What about power-on-reset (e2 7f) command?
-    Medium set - Once configured, will persist across a soft reset
-    Soft set - Once configured, will revert to defaults on a soft reset
-    Unconfigurable - Either not a configurable setting or not documented
-
-    location - HS - MS - SS - UC - Default
-
-    location - value
-
-
-    Non-RAM config items:
-        trackpoint enabled/disabled
-        soft/hard transparent modes
-        data report modes?
-        sample rate (2 bytes)
-        stream mode
-        remote mode
-        wrap mode
-        resolution 02
-        scaling reset
-        burst mode (ram config)
-
-
-    Config interactions
-        reset command and sample rate, stream mode, disabled, resolution, scaling
-        set sample rate command, two_handed and sticky2 bits
-        soft/hard resets, cancel soft transparent mode command,  and soft/hard transparent modes
-
-    After hard reset, learn default value for TP_RAM_XYDRIFTAVG.
-
-
-*/
-
-/*
-
-
-    If hard reset, just apply default-to-config delta
-    If soft reset or defaults, set defaults for medium items, then apply default-to-config delta
-        Easier just to hard reset!
-
-
-*/
-
-/*
-typedef enum {
-    TP_HARD_RESET,
-    TP_SOFT_RESET,
-    TP_DEFAULTS,
-    TP_CONFIGURED
-} tp_config_state_t;
-*/
 
 /***************************************************************************/
 
-//#define RET_ON_ERROR() if ( status != TP_OK ) return status;
+#define RET_ON_ERROR() if ( status != TP_OK ) return status;
 
-#define RET_ON_ERROR() \
-    if ( status != TP_OK ) {\
-        ui_log_append_str( "Error: [" );\
-        ui_log_append_byte( status );\
-        ui_log_append_str( "]\n" );\
-        display_draw( false );\
-        return status;\
-    }
+//#define RET_ON_ERROR() \
+//    if ( status != TP_OK ) {\
+//        ui_log_append_str( "Error: [" );\
+//        ui_log_append_byte( status );\
+//        ui_log_append_str( "]\n" );\
+//        display_draw( false );\
+//        return status;\
+//    }
 
 #define tp_log( msg ) \
     ui_log_append_str( (msg) ); \
@@ -153,7 +102,7 @@ tp_ram_location_info_t tp_ram_medium_sets[] = {
         (1<<TP_BIT_SKIPTAC) |
         (1<<TP_BIT_STOPF4)
     },
-//    { TP_RAM_DELAYL, 0xff }, // DELAYH and DELAYHZ vary, so throwing this out too.
+//    { TP_RAM_DELAYL, 0xff }, // DELAYH and DELAYHZ vary, so commenting this out too.
 //    { TP_RAM_DELAYH, 0xff },
     { TP_RAM_XYAVG_FACTOR, 0xff },
     { TP_RAM_OPADELAY, 0xff },
@@ -184,8 +133,8 @@ tp_ram_location_info_t tp_ram_medium_sets[] = {
 
 };
 
-// Soft set - Once configured, will revert to defaults on a soft reset or
-// set defaults command.
+// Soft set - Once configured, will revert to default on a soft reset or
+// Set Defaults command.
 tp_ram_location_info_t tp_ram_soft_sets[] = {
 
     { TP_RAM_REG28, (1<<TP_BIT_KBURST) },
@@ -237,9 +186,8 @@ tp_ram_location_info_t tp_ram_defaults[] = {
     { TP_RAM_ZTC, 0x26 },
     { TP_RAM_RSTDFT1, 0x1b }, // Docs say 0x05; On my TP it's 0x1b.
     { TP_RAM_VALUE6, 0x61 },
-    { TP_RAM_MOVDEL, 0x26 },
+    { TP_RAM_MOVDEL, 0x26 }
 //    { TP_RAM_DELAYHZ, 0xfd }, Seen: 0x00
-
 
     // Docs say this is 0xfe.  Empirically, this varies.  Some values seen:
     // 0x12, 0x0e, 0x1f.
@@ -258,12 +206,9 @@ tp_ram_location_info_t tp_ram_defaults[] = {
 /***************************************************************************/
 
 // Globals:
-static uint8_t buttons_status = 0;
 static bool initialized = false;
-//static const char * ps2_prefix = "[PS2] ";
 static int status = 0; // tp_status_t of last operation
 uint8_t tp_last_response_byte = 0; // Most recent byte returned by the TP
-//static const char * tp_prefix = "[TP] ";
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
@@ -296,6 +241,8 @@ static int num_soft_sets = (
     sizeof( tp_ram_soft_sets[ 0 ] )
 );
 
+static tp_config_t EEMEM config;
+
 
 /***************************************************************************/
 
@@ -324,19 +271,14 @@ uint8_t char_to_nib( uint8_t c ) {
 /***************************************************************************/
 
 // Initialize the TrackPoint.
-static tp_status_t initialize() {
+static tp_status_t initialize( bool hard ) {
     
     // Clear response buffer:
     tp_zero_response();
 
-//    tp_log( "TP: Resetting\n" );
-
     // Reset the TrackPoint:
-    status = tp_reset( true );
+    status = reset( hard );
     RET_ON_ERROR();
-    //debug_config.mouse = true;
-
-//    tp_log( "TP: Set remote\n" );
 
     // Set remote mode:
     status = tp_command( TP_CMD_SET_REMOTE_MODE );
@@ -344,73 +286,36 @@ static tp_status_t initialize() {
 
     //--------------------
 
-//    tp_log( "TP: Enable PtS\n" );
+    // Load config.
 
+
+
+
+    // Set sensitivity:
+    status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
+    RET_ON_ERROR();
+
+    // Enable press-to-select:
     status = tp_ram_bit_set( TP_RAM_CONFIG, TP_BIT_PTSON );
     RET_ON_ERROR();
 
     //--------------------
 
-//    tp_log( "TP: Sens. factor\n" );
-
-    status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
-    RET_ON_ERROR();
-
-    //--------------------
-
-//    tp_log( "TP: Secondary ID\n" );
-//
-//    status = tp_command( TP_CMD_READ_SECONDARY_ID );
-//    RET_ON_ERROR();
-//    status = tp_recv_response( 2 ); // Mine reads: 0x0b01
-//    RET_ON_ERROR();
-//
-//    ui_log_append_str( "TP: ID2 is [" );
-//    ui_log_append_byte( tp_response[ 1 ] );
-//    ui_log_append_byte( tp_response[ 0 ] );
-//    ui_log_append_str( "]\n" );
-//    display_draw( false );
-
-    //--------------------
-
-//    tp_log( "TP: ROM version\n" );
-//
-//    status = tp_command( TP_CMD_READ_ROM_VERSION );
-//    RET_ON_ERROR();
-//    status = tp_recv_response( 1 ); // Mine reads: 0x3b
-//    RET_ON_ERROR();
-//
-//    ui_log_append_str( "TP: ROM ver is [" );
-//    ui_log_append_byte( tp_response[ 0 ] );
-//    ui_log_append_str( "]\n" );
-//    display_draw( false );
-
-    //--------------------
-
 //    tp_log( "TP: Extended ID:\n" );
-
+//
 //    tp_extended_id_t extended_id;
 //    status = tp_recv_extended_id( &extended_id );
 //    RET_ON_ERROR();
 
     //--------------------
 
-    tp_log( "TP: Get config\n" );
+//    tp_log( "TP: Init ok\n" );
 
-    tp_config_t config;
-    status = tp_get_current_config( &config );
-    RET_ON_ERROR();
-
-    //--------------------
-
-    tp_log( "TP: Init ok\n" );
     return TP_OK;
 }
 
 
 /***************************************************************************/
-
-static uint8_t lookup_result;
 
 static tp_status_t lookup(
     tp_ram_location_info_t list[],
@@ -433,10 +338,10 @@ static tp_status_t lookup(
         i++;
     }
 
-    ui_log_append_str( "LU fail(" );
-    ui_log_append_byte( location );
-    ui_log_append_str( ")\n" );
-    display_draw( false );
+//    ui_log_append_str( "LU fail(" );
+//    ui_log_append_byte( location );
+//    ui_log_append_str( ")\n" );
+//    display_draw( false );
 
     return TP_FAIL;
 }
@@ -460,6 +365,61 @@ static tp_status_t recv() {
 //    _delay_ms(100);
 
     tp_last_response_byte = r;
+    return TP_OK;
+}
+
+
+/***************************************************************************/
+
+// Reset the TrackPoint.
+static tp_status_t reset( bool hard ) {
+
+    // Send reset command and get the response:
+    if ( hard ) {
+        status = tp_command( TP_CMD_POWER_ON_RESET );
+        _delay_ms( 300 );
+    } else {
+        status = tp_command( TP_CMD_RESET );
+        _delay_ms( 100 );
+    }
+    RET_ON_ERROR();
+    status = tp_recv_response( 2 );
+    RET_ON_ERROR();
+
+    // Post completion code should be 0xAA on success or 0xFC on error.
+    switch ( tp_response[ 0 ] ) {
+        case 0xaa:
+//            print( "Reset 0xAA\n" );
+//            _delay_ms(100);
+            break;
+        case 0xfc:
+
+//            print( "Reset 0xFC\n" );
+//            _delay_ms(100);
+
+            // Read POST results:
+//            status = tp_ram_read( TP_RAM_POST );
+//            if ( status == TP_OK ) {
+//                printf( "%sPOST results: x%02X.\n", tp_prefix, tp_response[ 0 ] );
+//            }
+
+            return TP_POST_FAIL;
+        default:
+
+//            ui_log_append_str( "POST Fail:" );
+//            ui_log_append_byte( tp_response[ 0 ] );
+//            ui_log_append_str( "," );
+//            ui_log_append_byte( tp_response[ 1 ] );
+//            ui_log_append_str( "\n" );
+//            display_draw( false );
+
+//            printf(
+//                "%sUnknown POST completion code: x%02X.\n",
+//                tp_prefix, tp_response[ 0 ]
+//            );
+            return TP_POST_FAIL;
+    }
+
     return TP_OK;
 }
 
@@ -628,7 +588,7 @@ tp_status_t tp_init() {
     display_busy( true );
 
     initialized = true;
-    status = initialize();
+    status = initialize( false );
 
     if ( status != TP_OK ) {
         initialized = false;
@@ -730,24 +690,6 @@ tp_status_t tp_ram_xor( uint8_t location, uint8_t bitmask ) {
 
 /***************************************************************************/
 
-// TP Command: Read data
-tp_status_t tp_read_data() {
-
-    // Ensure the TrackPoint is enabled:
-    if ( ! initialized ) return TP_DISABLED;
-
-    status = tp_command( TP_CMD_READ_DATA );
-    RET_ON_ERROR();
-    status = tp_recv_response( 3 );
-    RET_ON_ERROR();
-
-    buttons_status = tp_response[ 0 ] & 7;
-    return TP_OK;
-}
-
-
-/***************************************************************************/
-
 // Read and parse the extended ID:
 tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
@@ -756,7 +698,7 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
     RET_ON_ERROR();
 
     // Initialize data structure:
-    uint8_t * eid = (uint8_t*) &extended_id;
+    uint8_t * eid = (uint8_t*) extended_id;
     for ( int i = 0; i < sizeof( tp_extended_id_t ); i++ ) {
         *eid++ = 0;
     }
@@ -975,67 +917,12 @@ tp_status_t tp_recv_response( int num_bytes ) {
 
 /***************************************************************************/
 
-// TP Command: Reset.
-tp_status_t tp_reset( bool hard ) {
-
-    // Send reset command and get the response:
-    if ( hard ) {
-        status = tp_command( TP_CMD_POWER_ON_RESET );
-        _delay_ms( 300 );
-    } else {
-        status = tp_command( TP_CMD_RESET );
-        _delay_ms( 100 );
-    }
-    RET_ON_ERROR();
-    status = tp_recv_response( 2 );
-    RET_ON_ERROR();
-
-    // Post completion code should be 0xAA on success or 0xFC on error.
-    switch ( tp_response[ 0 ] ) {
-        case 0xaa:
-//            print( "Reset 0xAA\n" );
-//            _delay_ms(100);
-            break;
-        case 0xfc:
-
-//            print( "Reset 0xFC\n" );
-//            _delay_ms(100);
-
-            // Read POST results:
-//            status = tp_ram_read( TP_RAM_POST );
-//            if ( status == TP_OK ) {
-//                printf( "%sPOST results: x%02X.\n", tp_prefix, tp_response[ 0 ] );
-//            }
-
-            return TP_POST_FAIL;
-        default:
-
-//            ui_log_append_str( "POST Fail:" );
-//            ui_log_append_byte( tp_response[ 0 ] );
-//            ui_log_append_str( "," );
-//            ui_log_append_byte( tp_response[ 1 ] );
-//            ui_log_append_str( "\n" );
-//            display_draw( false );
-
-//            printf(
-//                "%sUnknown POST completion code: x%02X.\n",
-//                tp_prefix, tp_response[ 0 ]
-//            );
-            return TP_POST_FAIL;
-    }
-
-    return TP_OK;
-}
-
-
-/***************************************************************************/
-
 tp_status_t tp_set_current_config( tp_config_t * config ) {
 
     uint8_t config_bitmask = 0;
 
     // Execute hard reset to put device config into known state:
-    status = tp_reset( true );
+    status = reset( true );
     RET_ON_ERROR();
 
     // Configure each provided RAM location:

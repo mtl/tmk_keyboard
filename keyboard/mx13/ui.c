@@ -33,7 +33,7 @@ static ui_menu_t led_menu = UI_MENU( "", 3,
 );
 
 static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
-    UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_0 ),
+    UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_1 ),
     UI_MENU_ITEM_SUBMENU( "Lights", NULL, 5,
         UI_MENU_ITEM_SUBMENU( "Caps lock", NULL, 2,
             UI_MENU_ITEM_LED_CONFIG( "Panel", LED_CAPS_LOCK_0 ),
@@ -158,8 +158,8 @@ bool ui_draw( u8g_t * u8g_ref ) {
 
     u8g = u8g_ref;
 
-    ui_draw_log();
-    return true;
+    /*ui_draw_log();*/
+    /*return true;*/
 
     if ( ui_active ) {
 
@@ -623,7 +623,7 @@ void ui_enter() {
     menu_stack_pos = 0;
     input_mode = UI_INPUT_MENU;
 
-    input_mode = UI_INPUT_LOG;
+//    input_mode = UI_INPUT_LOG;
 
     display_draw( true );
 
