@@ -22,6 +22,13 @@
 #include "display.h"
 #include "ui.h"
 
+static uint8_t char_to_nib( uint8_t );
+static tp_status_t initialize( void );
+static tp_status_t lookup( tp_ram_location_info_t[], int, int, uint8_t * );
+static tp_status_t recv( void );
+static tp_status_t send( uint8_t );
+static tp_status_t send_command_byte( uint8_t );
+
 /*
 
 Settings:
@@ -81,7 +88,16 @@ typedef enum {
 
 /***************************************************************************/
 
-#define RET_ON_ERROR() if ( status != TP_OK ) return status;
+//#define RET_ON_ERROR() if ( status != TP_OK ) return status;
+
+#define RET_ON_ERROR() \
+    if ( status != TP_OK ) {\
+        ui_log_append_str( "Error: [" );\
+        ui_log_append_byte( status );\
+        ui_log_append_str( "]\n" );\
+        display_draw( false );\
+        return status;\
+    }
 
 #define tp_log( msg ) \
     ui_log_append_str( (msg) ); \
@@ -137,8 +153,8 @@ tp_ram_location_info_t tp_ram_medium_sets[] = {
         (1<<TP_BIT_SKIPTAC) |
         (1<<TP_BIT_STOPF4)
     },
-    { TP_RAM_DELAYL, 0xff },
-    { TP_RAM_DELAYH, 0xff },
+//    { TP_RAM_DELAYL, 0xff }, // DELAYH and DELAYHZ vary, so throwing this out too.
+//    { TP_RAM_DELAYH, 0xff },
     { TP_RAM_XYAVG_FACTOR, 0xff },
     { TP_RAM_OPADELAY, 0xff },
     { TP_RAM_DACDELAY, 0xff },
@@ -160,11 +176,11 @@ tp_ram_location_info_t tp_ram_medium_sets[] = {
     { TP_RAM_ZTC, 0xff },
     { TP_RAM_RSTDFT1, 0xff },
     { TP_RAM_VALUE6, 0xff },
-    { TP_RAM_MOVDEL, 0xff },
-    { TP_RAM_DELAYHZ, 0xff },
-    { TP_RAM_DRIFT, 0xff },
-    { TP_RAM_XYDRIFTAVG, 0xff },
-    { TP_RAM_XYAVGTHR, 0xff }
+    { TP_RAM_MOVDEL, 0xff }
+//    { TP_RAM_DELAYHZ, 0xff },
+//    { TP_RAM_DRIFT, 0xff },
+//    { TP_RAM_XYDRIFTAVG, 0xff },
+//    { TP_RAM_XYAVGTHR, 0xff }
 
 };
 
@@ -198,8 +214,8 @@ tp_ram_location_info_t tp_ram_defaults[] = {
     { TP_RAM_REG2E, 0x00 },
 
     // Byte values:
-    { TP_RAM_DELAYL, 0x80 },
-    { TP_RAM_DELAYH, 0xfa },
+//    { TP_RAM_DELAYL, 0x80 },
+//    { TP_RAM_DELAYH, 0xfa }, Seen: 0x4d
     { TP_RAM_XYAVG_FACTOR, 0x80 },
     { TP_RAM_OPADELAY, 0x74 },
     { TP_RAM_DACDELAY, 0xc8 },
@@ -219,13 +235,21 @@ tp_ram_location_info_t tp_ram_defaults[] = {
     { TP_RAM_THR, 0x08 },
     { TP_RAM_JKCUR, 0x87 },
     { TP_RAM_ZTC, 0x26 },
-    { TP_RAM_RSTDFT1, 0x05 },
+    { TP_RAM_RSTDFT1, 0x1b }, // Docs say 0x05; On my TP it's 0x1b.
     { TP_RAM_VALUE6, 0x61 },
     { TP_RAM_MOVDEL, 0x26 },
-    { TP_RAM_DELAYHZ, 0xfd },
-    { TP_RAM_DRIFT, 0xfe },
-    { TP_RAM_XYDRIFTAVG, 0x40 }, // or 0x80
-    { TP_RAM_XYAVGTHR, 0xff }
+//    { TP_RAM_DELAYHZ, 0xfd }, Seen: 0x00
+
+
+    // Docs say this is 0xfe.  Empirically, this varies.  Some values seen:
+    // 0x12, 0x0e, 0x1f.
+//    { TP_RAM_DRIFT, 0xfe },
+
+    // Docs say this is either 0x40 or 0x80.  Empirically, this varies.  Some
+    // values seen: 0x0c, 0x00.
+//    { TP_RAM_XYDRIFTAVG, 0x40 },
+
+//    { TP_RAM_XYAVGTHR, 0xff } // Appears to be 0x00.  Depends on DRIFT, which varies.
 
 };
 
@@ -308,15 +332,9 @@ static tp_status_t initialize() {
 //    tp_log( "TP: Resetting\n" );
 
     // Reset the TrackPoint:
-    tp_reset( false );
-    initialized = true;
-    //debug_config.mouse = true;
-
-//    tp_log( "TP: Enabling reports\n" );
-
-    // Enable the TrackPoint (starts data reporting):
-    status = tp_command( TP_CMD_ENABLE );
+    status = tp_reset( true );
     RET_ON_ERROR();
+    //debug_config.mouse = true;
 
 //    tp_log( "TP: Set remote\n" );
 
@@ -340,22 +358,29 @@ static tp_status_t initialize() {
 
     //--------------------
 
-//    tp_log( "TP: Invert Y\n" );
+//    tp_log( "TP: Secondary ID\n" );
 //
-//    status = tp_ram_bit_clear( TP_RAM_CONFIG, TP_BIT_FLIPY );
+//    status = tp_command( TP_CMD_READ_SECONDARY_ID );
 //    RET_ON_ERROR();
+//    status = tp_recv_response( 2 ); // Mine reads: 0x0b01
+//    RET_ON_ERROR();
+//
+//    ui_log_append_str( "TP: ID2 is [" );
+//    ui_log_append_byte( tp_response[ 1 ] );
+//    ui_log_append_byte( tp_response[ 0 ] );
+//    ui_log_append_str( "]\n" );
+//    display_draw( false );
 
     //--------------------
 
-//    tp_log( "TP: Secondary ID\n" );
-
-    status = tp_command( TP_CMD_READ_SECONDARY_ID );
-    RET_ON_ERROR();
-    status = tp_recv_response( 2 ); // Mine reads: 0b01
-    RET_ON_ERROR();
-
-//    ui_log_append_str( "TP: ID2 is [" );
-//    ui_log_append_byte( tp_response[ 1 ] );
+//    tp_log( "TP: ROM version\n" );
+//
+//    status = tp_command( TP_CMD_READ_ROM_VERSION );
+//    RET_ON_ERROR();
+//    status = tp_recv_response( 1 ); // Mine reads: 0x3b
+//    RET_ON_ERROR();
+//
+//    ui_log_append_str( "TP: ROM ver is [" );
 //    ui_log_append_byte( tp_response[ 0 ] );
 //    ui_log_append_str( "]\n" );
 //    display_draw( false );
@@ -370,7 +395,15 @@ static tp_status_t initialize() {
 
     //--------------------
 
-//    tp_log( "TP: Init ok\n" );
+    tp_log( "TP: Get config\n" );
+
+    tp_config_t config;
+    status = tp_get_current_config( &config );
+    RET_ON_ERROR();
+
+    //--------------------
+
+    tp_log( "TP: Init ok\n" );
     return TP_OK;
 }
 
@@ -380,18 +413,30 @@ static tp_status_t initialize() {
 static uint8_t lookup_result;
 
 static tp_status_t lookup(
-    tp_ram_location_info_t ** list,
+    tp_ram_location_info_t list[],
     int size, int location, uint8_t * result
 ) {
     int i = 0;
     while ( i < size && i <= location ) {
 
-        if ( (*list)[ i ].location == location ) {
-            *result = (*list)[ i ].value;
+//        ui_log_append_str( "LU chk(" );
+//        ui_log_append_byte( location );
+//        ui_log_append_str( "," );
+//        ui_log_append_byte( list[ i ].location );
+//        ui_log_append_str( ")\n" );
+//        display_draw( false );
+
+        if ( list[ i ].location == location ) {
+            *result = list[ i ].value;
             return TP_OK;
         }
         i++;
     }
+
+    ui_log_append_str( "LU fail(" );
+    ui_log_append_byte( location );
+    ui_log_append_str( ")\n" );
+    display_draw( false );
 
     return TP_FAIL;
 }
@@ -543,7 +588,7 @@ tp_status_t tp_get_current_config( tp_config_t * config ) {
 
         // Look up the default value:
         status = lookup(
-            (tp_ram_location_info_t **) &tp_ram_defaults,
+            tp_ram_defaults,
             num_defaults, info->location, &default_value
         );
         RET_ON_ERROR();
@@ -558,6 +603,14 @@ tp_status_t tp_get_current_config( tp_config_t * config ) {
         // Store the current configuration if needed:
         uint8_t value = tp_last_response_byte & info->value;
         if ( value != default_value ) {
+
+//            ui_log_append_str( "TP: Config(" );
+//            ui_log_append_byte( info->location );
+//            ui_log_append_str( "," );
+//            ui_log_append_byte( value );
+//            ui_log_append_str( ")\n" );
+//            display_draw( false );
+
             config->items[ config->num_items ].location = info->location;
             config->items[ config->num_items++ ].value = value;
         }
@@ -573,7 +626,14 @@ tp_status_t tp_get_current_config( tp_config_t * config ) {
 tp_status_t tp_init() {
 
     display_busy( true );
+
+    initialized = true;
     status = initialize();
+
+    if ( status != TP_OK ) {
+        initialized = false;
+    }
+
     display_busy( false );
 
     return status;
@@ -921,8 +981,10 @@ tp_status_t tp_reset( bool hard ) {
     // Send reset command and get the response:
     if ( hard ) {
         status = tp_command( TP_CMD_POWER_ON_RESET );
+        _delay_ms( 300 );
     } else {
         status = tp_command( TP_CMD_RESET );
+        _delay_ms( 100 );
     }
     RET_ON_ERROR();
     status = tp_recv_response( 2 );
@@ -947,6 +1009,14 @@ tp_status_t tp_reset( bool hard ) {
 
             return TP_POST_FAIL;
         default:
+
+//            ui_log_append_str( "POST Fail:" );
+//            ui_log_append_byte( tp_response[ 0 ] );
+//            ui_log_append_str( "," );
+//            ui_log_append_byte( tp_response[ 1 ] );
+//            ui_log_append_str( "\n" );
+//            display_draw( false );
+
 //            printf(
 //                "%sUnknown POST completion code: x%02X.\n",
 //                tp_prefix, tp_response[ 0 ]
@@ -976,7 +1046,7 @@ tp_status_t tp_set_current_config( tp_config_t * config ) {
 
         // Look up the configurable bits:
         status = lookup(
-            (tp_ram_location_info_t **) &tp_ram_defaults,
+            tp_ram_defaults,
             num_defaults, info->location, &config_bitmask
         );
         RET_ON_ERROR();

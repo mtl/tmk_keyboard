@@ -495,6 +495,7 @@ extern uint8_t tp_response[];
  ***************************************************************************/
 
 tp_status_t tp_do_command( int, ... );
+tp_status_t tp_get_current_config( tp_config_t * );
 tp_status_t tp_init( void );
 tp_status_t tp_ram_bit_clear( uint8_t, uint8_t );
 tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
@@ -505,14 +506,8 @@ tp_status_t tp_read_data( void );
 tp_status_t tp_recv_extended_id( tp_extended_id_t * );
 tp_status_t tp_recv_response( int );
 tp_status_t tp_reset( bool );
+tp_status_t tp_set_current_config( tp_config_t * );
 void tp_zero_response( void );
-
-static uint8_t char_to_nib( uint8_t );
-static tp_status_t initialize( void );
-static tp_status_t lookup( tp_ram_location_info_t **, int, int, uint8_t * );
-static tp_status_t recv( void );
-static tp_status_t send( uint8_t );
-static tp_status_t send_command_byte( uint8_t );
 
 
 /***************************************************************************/
