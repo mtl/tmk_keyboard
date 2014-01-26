@@ -807,38 +807,48 @@ void ui_menu_select( int item_no ) {
         case UI_DUMMY:
         case UI_EDITOR:
         case UI_EXIT:
+            break;
+
         case UI_LED_CONFIG:
             led_menu.title = item->label;
             led_menu.items[ 1 ].led_channel = item->led_channel;
             ui_enter_menu( &led_menu, NULL );
+            break;
 
         case UI_NAV_PREV:
             break;
 
         case UI_RGB_SELECTOR:
             
+            // Get the LED parameters:
             rgb_led = &leds[ item->led_channel ];
+
+            // Start with current LED color:
             if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                rgb_widget_color[ 0 ] = rgb_led->values[ PWM_RED ];
+                rgb_widget_color[ 1 ] = rgb_led->values[ PWM_GREEN ];
+                rgb_widget_color[ 2 ] = rgb_led->values[ PWM_BLUE ];
+            } else {
+                rgb_widget_color[ 0 ] = rgb_led->values[ PWM_RED + 1 ];
+                rgb_widget_color[ 1 ] = rgb_led->values[ PWM_GREEN + 1 ];
+                rgb_widget_color[ 2 ] = rgb_led->values[ PWM_BLUE + 1 ];
+            }
+
+            // Light up the LED now:
+            rgb_prior_flags = rgb_led->flags;
+            rgb_led->flags |= PWM_LED_FLAGS_ON | PWM_LED_FLAGS_ENABLED;
+            if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                led_set_teensy_led( rgb_led );
                 rgb_max_value = 255;
             } else {
+                pwm_set_rgb_led( rgb_led );
+                pwm_commit( true );
                 rgb_max_value = 4095;
             }
 
-            rgb_widget_color[ 0 ] = 0;
-            rgb_widget_color[ 1 ] = 0;
-            rgb_widget_color[ 2 ] = 0;
-            rgb_focus_locked = false;
-
-            // Configure the LED:
-            rgb_prior_flags = rgb_led->flags;
-            rgb_led->flags |= PWM_LED_FLAGS_ON | PWM_LED_FLAGS_ENABLED;
-            for ( int i = 0; i < 6; i++ ) {
-                rgb_led->values[ i ] = 0;
-            }
-            pwm_set_rgb_led( rgb_led );
-            pwm_commit( true );
-
+            // Configure the widget:
             rgb_widget_focus = UI_RGB_BAR_RED;
+            rgb_focus_locked = false;
             rgb_widget_title = item->label;
             input_mode = UI_INPUT_RGB;
             display_draw( true );
@@ -912,9 +922,15 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                         display_draw( false );
                     } else {
                         input_mode = UI_INPUT_MENU;
+
                         rgb_led->flags = rgb_prior_flags;
-                        pwm_set_rgb_led( rgb_led );
-                        pwm_commit( true );
+                        if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                            led_set_teensy_led( rgb_led );
+                        } else {
+                            pwm_set_rgb_led( rgb_led );
+                            pwm_commit( true );
+                        }
+
                         display_draw( true );
                     }
                     break;
@@ -1003,12 +1019,14 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                     int index = color << 1;
                     if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
                         rgb_led->values[ index + 0 ] = rgb_widget_color[ color ];
+                        led_set_teensy_led( rgb_led );
                     } else {
                         rgb_led->values[ index + 0 ] = 0;
                         rgb_led->values[ index + 1 ] = rgb_widget_color[ color ];
+                        pwm_set_rgb_led( rgb_led );
+                        pwm_commit( true );
                     }
-                    pwm_set_rgb_led( rgb_led );
-                    pwm_commit( true );
+
                     display_draw( false );
                 }
             }
@@ -1029,9 +1047,14 @@ void ui_leave() {
 
     // Reset LED if one was being configured:
     if ( input_mode == UI_INPUT_RGB ) {
+
         rgb_led->flags = rgb_prior_flags;
-        pwm_set_rgb_led( rgb_led );
-        pwm_commit( true );
+        if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+            led_set_teensy_led( rgb_led );
+        } else {
+            pwm_set_rgb_led( rgb_led );
+            pwm_commit( true );
+        }
     }
 
 #ifdef LED_CONTROLLER_ENABLE
