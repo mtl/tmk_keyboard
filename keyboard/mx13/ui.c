@@ -7,8 +7,9 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h> 
-//#include "dt_logo.h"
+#include "dt_logo.h"
 #include "mx13_logo.h"
+#include "mx13_logo_commando.h"
 #include "display.h"
 #include "keycode.h"
 #include "led-local.h"
@@ -182,9 +183,193 @@ bool ui_draw( u8g_t * u8g_ref ) {
 
         return true;
     } else {
-        display_draw_full_screen_bitmap( (u8g_pgm_uint8_t *) mx13_logo );
+        display_draw_full_screen_bitmap( (u8g_pgm_uint8_t *) mx13_logo_commando );
         return false;
     }
+}
+
+
+/***************************************************************************/
+
+static uint16_t num_widget_max = 9999;
+static uint16_t num_widget_min = 0;
+static uint16_t num_widget_value = 0;
+static char * num_widget_title = NULL;
+
+uint8_t ui_get_digit( uint16_t value, uint16_t digit ) {
+
+    for ( int i = 0; i < digit; i++ ) {
+        value /= 10;
+    }
+    return value % 10;
+
+}
+
+void ui_draw_num_selector() {
+
+    char number[ 6 ] = "     ";
+    char * num;
+
+    // Render title bar and background:
+    int y = ui_draw_page( num_widget_title );
+
+    // Calculate number font dimensions:
+    u8g_SetFont( u8g, u8g_font_fub49n );
+    ui_menu_list_font_height = u8g_GetFontAscent( u8g );
+    ui_menu_list_font_vsize = ui_menu_list_font_height - u8g_GetFontDescent( u8g );
+
+    // Calculate list font dimensions:
+    u8g_SetFont( u8g, ui_menu_list_font );
+    ui_menu_list_font_height = u8g_GetFontAscent( u8g );
+    ui_menu_list_font_vsize = ui_menu_list_font_height - u8g_GetFontDescent( u8g );
+
+    // Compute first line y pos and line height:
+    y += ui_menu_list_font_height + ui_menu_list_hpad - 1;
+    int step = ( ui_menu_list_vpad << 1 ) + ui_menu_list_font_vsize - 1;
+
+    // Draw current value:
+    int val = num_widget_value;
+    int num_digits = 0;
+    num = &number + 4;
+    while ( 1 ) {
+
+        if ( ! val ) {
+            if ( ! num_digits ) {
+                *num = '0';
+            }
+            break;
+        }
+
+        *num-- = 0x30 + val % 10;
+        num_digits++;
+        val /= 10;
+    }
+    u8g_DrawStr(
+        u8g,
+        ( 128 - u8g_GetStrWidth( u8g, num ) ) / 2,
+        70, // y position
+        num
+    );
+
+
+/*
+
+    // Draw current value:
+    while ( num_digits ) {
+        
+
+
+
+
+
+
+    }
+
+
+
+    // Compute bar dimensions:
+    int bar_frame_x = ui_menu_list_hpad;
+    int bar_x = bar_frame_x + frame_width + ui_widget_focus_frame_pad;
+    uint16_t bar_bg_width = 128 - ( ui_menu_list_hpad << 1 );
+    uint16_t max_bar_width = bar_bg_width - ( ui_widget_focus_frame_pad << 1 );
+    uint32_t bar_width = 0;
+
+    // Draw bar:
+    display_set_draw_color( &ui_rgb_red );
+    int y_red = y;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 0 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_red - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    display_set_draw_color( &ui_rgb_green );
+    int y_green = y_red + step;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 1 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_green - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    display_set_draw_color( &ui_rgb_blue );
+    int y_blue = y_green + step;
+    bar_width = max_bar_width;
+    bar_width *= rgb_widget_color[ 2 ];
+    bar_width /= rgb_max_value;
+    u8g_DrawBox(
+        u8g,
+        bar_x,
+        y_blue - ui_menu_list_font_height,
+        bar_width,
+        ui_menu_list_font_vsize
+    );
+
+    // Draw numbers:
+    display_set_draw_color( &ui_menu_title_color_fg );
+    char digits[] = "   ";
+    if ( rgb_max_value < 256 ) {
+        digits[ 2 ] = 0;
+    }
+    int d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 0 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 0 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 0 ] );
+    u8g_DrawStr( u8g, num_x, y_red, digits );
+    d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 1 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 1 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 1 ] );
+    u8g_DrawStr( u8g, num_x, y_green, digits );
+    d = 0;
+    if ( rgb_max_value > 255 ) {
+        digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 2 ] >> 8 );
+    }
+    digits[ d++ ] = ui_log_nibchar( rgb_widget_color[ 2 ] >> 4 );
+    digits[ d ] = ui_log_nibchar( rgb_widget_color[ 2 ] );
+    u8g_DrawStr( u8g, num_x, y_blue, digits );
+
+    // Draw focus:
+    if ( rgb_focus_locked ) {
+        display_set_draw_color( &rgb_focus_color );
+    }
+    int color = rgb_widget_focus >> 1;
+    if ( ! color ) {
+        y = y_red;
+    } else if ( color == 1 ) {
+        y = y_green;
+    } else {
+        y = y_blue;
+    }
+    if ( rgb_widget_focus % 2 ) {
+        u8g_DrawFrame(
+            u8g, num_x - ui_widget_focus_frame_pad - 1,
+            y - ui_menu_list_font_height - ui_widget_focus_frame_pad - frame_width,
+            128 - ui_menu_list_hpad - frame_width - ui_widget_focus_frame_pad - num_x + 4,
+            ui_menu_list_font_vsize + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
+        );
+    } else {
+        u8g_DrawFrame(
+            u8g, ui_menu_list_hpad,
+            y - ui_menu_list_font_height - ui_widget_focus_frame_pad - frame_width,
+            max_bar_width + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 ),
+            ui_menu_list_font_vsize + ( ui_widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
+        );
+    }
+    */
 }
 
 
@@ -436,7 +621,7 @@ void ui_enter() {
 
     menu_stack[ 0 ] = &menu;
     menu_stack_pos = 0;
-//    input_mode = UI_INPUT_MENU;
+    input_mode = UI_INPUT_MENU;
 
     input_mode = UI_INPUT_LOG;
 

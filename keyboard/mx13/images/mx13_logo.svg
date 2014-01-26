@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="mx13_logo2.svg">
+   sodipodi:docname="mx13_logo.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,7 +25,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.25"
-     inkscape:cx="-485.64053"
+     inkscape:cx="1914.3595"
      inkscape:cy="1281.8136"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -364,6 +364,101 @@
        style="fill:#0846c5;fill-opacity:1"
        sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
        inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <rect
+       style="fill:#f8f0e4;fill-opacity:1;stroke:none"
+       id="rect3865-4"
+       width="1257.1428"
+       height="1257.1428"
+       x="1595.4286"
+       y="-1016.2092"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#03b300;fill-opacity:1;stroke:none"
+       id="path3008-4-5"
+       sodipodi:cx="-1400.7142"
+       sodipodi:cy="-268.35211"
+       sodipodi:rx="200.71428"
+       sodipodi:ry="200.71428"
+       d="m -1200,-268.35211 a 200.71428,200.71428 0 1 1 -401.4285,0 200.71428,200.71428 0 1 1 401.4285,0 z"
+       transform="matrix(0.8328078,-0.48082182,0.48082182,0.8328078,3954.2916,-640.59291)"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143433px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#e0d82c;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="1684.1439"
+       y="1241.7007"
+       id="text3004-44-3-5-5"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-9-2"
+         x="1684.1439"
+         y="1241.7007">MX</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143432999999504px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#c0febf;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="2243.0732"
+       y="1245.4562"
+       id="text3004-44-3-3-1"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-2-8"
+         x="2243.0732"
+         y="1245.4562">1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:365.00143432999999504px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#c0febf;fill-opacity:1;stroke:none;font-family:Resea;-inkscape-font-specification:Resea Bold"
+       x="2356.4885"
+       y="1245.4562"
+       id="text3004-44-3-31-0"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.8660254,-0.50000001,0.50000001,0.8660254,0,0)"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998"><tspan
+         sodipodi:role="line"
+         id="tspan3006-5-2-91-5"
+         x="2356.4885"
+         y="1245.4562">3</tspan></text>
+    <path
+       id="path3035-8-2-6"
+       d="m 1595.4286,-432.70485 15.9929,27.70056 197.0209,-113.75007 -15.9929,-27.70056 z m 31.1024,53.87091 15.9929,27.70056 197.0209,-113.75007 -15.9929,-27.70056 z m 87.7217,21.18178 16.0155,27.73978 85.3244,-49.26202 -16.0156,-27.73978 z m 31.125,53.91014 15.9929,27.70054 85.3243,-49.26201 -15.9929,-27.70054 z m 31.1024,53.87091 15.9929,27.70054 85.3243,-49.26202 -15.9929,-27.70054 z m 31.1024,53.8709 15.9929,27.70054 85.3243,-49.26202 -15.9929,-27.70054 z m -23.9749,85.66979 16.0155,27.739791 197.0209,-113.750071 -16.0155,-27.73978 z m 31.125,53.910131 15.9929,27.70056 197.0209,-113.750071 -15.9929,-27.70056 z"
+       inkscape:connector-curvature="0"
+       style="fill:#36963c;fill-opacity:1"
+       sodipodi:nodetypes="cccccccccccccccccccccccccccccccccccccccc"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <path
+       id="path3035-6-0-5"
+       d="m 1820.4169,-562.54963 15.993,27.70056 280.7636,-162.09899 c 0,0 -44.6713,-11.14305 -82.655,10.78684 z m 31.1251,53.91017 15.9703,27.66131 313.3435,-180.90895 c 0,1e-5 -15.9686,-19.20662 -26.0131,-21.86308 z m 87.6991,21.1425 16.0155,27.73978 85.3243,-49.26197 -16.0156,-27.73979 z m 168.3157,-97.17717 16.0156,27.73978 85.3244,-49.26203 c 0,0 -3.0411,-17.77683 -10.5988,-30.86719 z m -137.1907,151.08731 15.9929,27.70054 217.9368,-125.82587 c 0,-1e-5 10.0246,-24.73895 8.0466,-41.57974 z m 31.1024,53.87091 15.9929,27.70054 241.9763,-139.70508 c -13.5714,-10.08877 -40.0324,-13.82134 -40.0324,-13.82134 z m 31.1024,53.8709 15.9929,27.70054 85.3242,-49.26197 -15.9929,-27.70054 z m 168.3157,-97.17717 15.993,27.70054 90.7411,-52.38944 c -7.5475,-13.07277 -21.4097,-24.57316 -21.4097,-24.57316 l -85.3244,49.26203 z m -193.8327,183.73726 16.0156,27.73978 303.3006,-175.11072 c 2.716,-10.03714 -5.9727,-33.53802 -5.9727,-33.53802 z m 31.125,53.91012 15.9703,27.66133 214.1016,-123.61159 c 37.9835,-21.92986 50.6918,-66.14872 50.6918,-66.14872 z"
+       inkscape:connector-curvature="0"
+       style="fill:#36963c;fill-opacity:1"
+       sodipodi:nodetypes="cccsccccccccccccccccccccccccccccccccccccccccccccscc"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
+       inkscape:export-xdpi="9.1599998"
+       inkscape:export-ydpi="9.1599998" />
+    <path
+       id="path3035-0-9-4"
+       d="m 2156.2175,-756.47648 15.9929,27.70056 169.8579,-98.06749 -26.0752,-21.87954 z m 291.6368,-168.37658 5.9106,33.52158 168.3158,-97.17717 -15.9929,-27.70055 z m -260.5118,222.28676 15.9703,27.66131 188.4806,-108.81933 -25.3014,-22.27397 z m 271.4721,-156.73448 6.6392,33.04861 187.7293,-108.38555 -15.9703,-27.66131 z m -183.773,177.87698 16.0155,27.73979 151.2748,-87.33855 -26.0979,-21.9187 z m 196.2697,-113.31637 5.8937,33.58366 152.0259,-87.77222 -16.0156,-27.73978 z m -165.1447,167.22652 15.9929,27.70054 85.3244,-49.26203 -8.9026,-15.41971 14.3194,12.2923 156.2961,-90.23758 -3.0904,-18.77537 8.9025,15.41971 85.3244,-49.26204 -15.9929,-27.70054 -160.1709,92.47473 5.0456,28.37098 -22.0868,-18.5323 z m 31.1024,53.8709 15.9929,27.70054 85.3243,-49.26203 -15.9929,-27.70054 z m 100.8235,-58.21046 26.3124,21.74254 117.1925,-67.66112 -6.1873,-33.36179 z m 152.0259,-87.77222 15.9929,27.70054 85.3244,-49.26203 -15.9929,-27.70054 z m -221.747,199.85359 15.9929,27.70054 85.3243,-49.26204 -15.9929,-27.70054 z m 120.1973,-69.39599 25.9962,21.92516 78.5632,-45.35851 -5.9105,-33.52162 z m 132.6521,-76.5867 15.9929,27.70054 85.3244,-49.26203 -15.993,-27.70054 z m -276.8243,231.65244 16.0156,27.73978 140.4016,-81.06088 -16.0156,-27.73978 z m 194.6881,-112.40321 26.2957,21.80457 39.9734,-23.07868 -6.3681,-33.30975 z m 113.2386,-65.37832 16.0156,27.73978 141.9436,-81.9512 -16.0156,-27.73978 z m -276.8016,231.69166 15.9929,27.70056 140.4015,-81.06089 -15.9929,-27.70056 z m 214.1805,-123.65723 25.8324,21.91513 1.7227,-0.94227 -5.9274,-33.45955 -21.6276,12.48671 z m 93.7461,-54.12431 15.9929,27.70056 141.9437,-81.95119 -15.993,-27.70056 z"
+       inkscape:connector-curvature="0"
+       style="fill:#36963c;fill-opacity:1"
+       sodipodi:nodetypes="ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+       inkscape:export-filename="/home/mike/build/tmk_keyboard/keyboard/mx13/mx13_logo_commando.png"
        inkscape:export-xdpi="9.1599998"
        inkscape:export-ydpi="9.1599998" />
   </g>

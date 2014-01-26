@@ -35,6 +35,54 @@ u8g_t u8g;
 
 /***************************************************************************/
 
+void display_busy( bool is_busy ) {
+
+#ifdef LED_CONTROLLER_ENABLE
+
+    static bool was_busy = false;
+    static uint16_t values[ 6 ];
+    static uint8_t prior_flags = 0;
+    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+
+    // Save LED state:
+    if ( is_busy && ! was_busy ) {
+
+        prior_flags = led->flags;
+        for ( int i = 0; i < 6; i++ ) {
+            values[ i ] = led->values[ i ];
+        }
+
+        // Turn on LED:
+        led->flags |= PWM_LED_FLAGS_ON;
+        pwm_rgb_led_set_percent( led, PWM_RED, 3 );
+        pwm_rgb_led_set_percent( led, PWM_GREEN, 0 );
+        pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+        pwm_set_rgb_led( led );
+        pwm_commit( true );
+
+        was_busy = true;
+    }
+
+    // Restore LED state:
+    else if ( ! is_busy && was_busy ) {
+
+        // Restore LED state:
+        led->flags = prior_flags;
+        for ( int i = 0; i < 6; i++ ) {
+            led->values[ i ] = values[ i ];
+        }
+        pwm_set_rgb_led( led );
+        pwm_commit( true );
+
+        was_busy = false;
+    }
+
+#endif
+}
+
+
+/***************************************************************************/
+
 void display_clear() {
     u8g_SetRGB( &u8g, 0, 0, 0 );
     u8g_DrawBox( &u8g, 0, 0, 128, 128 );
@@ -45,53 +93,31 @@ void display_clear() {
 
 void display_draw( bool sleep ) {
 
-#ifdef LED_CONTROLLER_ENABLE
+    // Turn on the busy LED:
+    display_busy( true );
 
-    // Save LED state:
-    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
-    uint16_t values[ 6 ];
-    uint8_t rgb_prior_flags = led->flags;
-    for ( int i = 0; i < 6; i++ ) {
-        values[ i ] = led->values[ i ];
-    }
-
-    // Turn on LED:
-    led->flags |= PWM_LED_FLAGS_ON;
-    pwm_rgb_led_set_percent( led, PWM_RED, 3 );
-    pwm_rgb_led_set_percent( led, PWM_GREEN, 0 );
-    pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
-    pwm_set_rgb_led( led );
-    pwm_commit( true );
-#endif
-
+    // Blank the display if requested:
     if ( sleep ) {
         u8g_SleepOn( &u8g );
     }
 
+    // Render the image:
     u8g_FirstPage( &u8g );
     do {
+        // Stop if the draw function doesn't want to continue:
         if ( ! ui_draw( &u8g ) ) {
             break;
         }
     } while ( u8g_NextPage( &u8g ) );
     u8g_Delay( 100 );
 
+    // Turn the display back on if blanking was requested:
     if ( sleep ) {
         u8g_SleepOff( &u8g );
     }
 
-
-#ifdef LED_CONTROLLER_ENABLE
-
-    // Restore LED state:
-    led->flags = rgb_prior_flags;
-    for ( int i = 0; i < 6; i++ ) {
-        led->values[ i ] = values[ i ];
-    }
-    pwm_set_rgb_led( led );
-    pwm_commit( true );
-#endif
-
+    // Turn off the busy LED:
+    display_busy( false );
 }
 
 

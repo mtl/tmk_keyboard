@@ -46,6 +46,7 @@ typedef union display_color {
  ***************************************************************************/
 
 void display_init( void );
+void display_busy( bool );
 void display_clear( void );
 void display_draw( bool );
 void display_draw_bitmap( u8g_uint_t, u8g_uint_t, u8g_uint_t, u8g_uint_t, const u8g_pgm_uint8_t * );

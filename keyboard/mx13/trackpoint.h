@@ -2,6 +2,11 @@
  *
  *  TrackPoint support
  *
+ *  by Mike Ter Louw
+ *
+ *  Public Domain
+ *
+ *
  ***************************************************************************/
 
 #ifndef MX13_TRACKPOINT_H
@@ -14,6 +19,12 @@
 /****************************************************************************
  * Typedefs
  ***************************************************************************/
+
+// Could sense this by starting with a hard reset and reading location 0x2c.
+#define TP_THREE_BUTTONS (1)
+
+//#define TP_MAX_CONFIG_LOCATIONS ( sizeof( tp_ram_medium_sets ) / sizeof( tp_ram_medium_sets[ 0 ] ) )
+#define TP_MAX_CONFIG_LOCATIONS (34)
 
 typedef struct {
 
@@ -49,17 +60,6 @@ typedef enum {
     TP_EXTENDED_ID_DONE
 
 } tp_extended_id_state_t;
-
-typedef enum {
-
-    TP_OK = 0,
-    TP_DISABLED,
-    TP_FAIL,
-    TP_PS2_ERROR,
-    TP_BAD_RESPONSE,
-    TP_POST_FAIL,
-
-} tp_status_t;
 
 // RAM locations:
 typedef enum {
@@ -103,7 +103,7 @@ typedef enum {
     TP_RAM_REG22, // bitfield
     TP_RAM_REG23, // bitfield
     TP_RAM_DRFTCNT2,
-    TP_RAM_POST, // bitfield
+    TP_RAM_POST, // bitfield, read-only
     TP_RAM_MOUSTAT, // bitfield
     TP_RAM_CURSTAT, // bitfield
     TP_RAM_REG28, // bitfield
@@ -216,6 +216,82 @@ typedef enum {
 
 } tp_ram_location_t;
 
+typedef struct {
+    uint8_t location;
+    uint8_t value;
+} tp_ram_location_info_t;
+
+typedef struct {
+
+    uint8_t num_items;
+    tp_ram_location_info_t items[ TP_MAX_CONFIG_LOCATIONS ];
+
+} tp_config_t;
+
+// Result codes for tp_* functions:
+typedef enum {
+
+    TP_OK = 0,
+    TP_DISABLED,
+    TP_FAIL,
+    TP_PS2_ERROR,
+    TP_BAD_RESPONSE,
+    TP_POST_FAIL,
+
+} tp_status_t;
+
+enum TP_RAM_CONFIG_BITS {
+
+    TP_BIT_PTSON = 0x00, // def:0
+    TP_BIT_HALFTAC, // def:0
+    TP_BIT_BUTTON2, // def:0 (3-button TrackPoint), 1 (2-button TrackPoint)
+    TP_BIT_FLIPX, // def:0
+    TP_BIT_FLIPY, // def:0
+    TP_BIT_FLIPZ, // def:0
+    TP_BIT_SWAPXY, // def:0
+    TP_BIT_FTRANS
+
+};
+
+enum TP_RAM_CURSTAT_BITS {
+
+    TP_BIT_LEFT = 0x00,
+    TP_BIT_RIGHT,
+    TP_BIT_MIDDLE,
+    TP_BIT_CURSTAT_3, // unused, must be 1
+    TP_BIT_XACBIT,
+    TP_BIT_YACBIT,
+    TP_BIT_OVERX,
+    TP_BIT_OVERY
+
+};
+
+enum TP_RAM_MOUSTAT_BITS {
+
+    TP_BIT_MLEFT = 0x00,
+    TP_BIT_MRGHT,
+    TP_BIT_MMIDB,
+    TP_BIT_MOUSTAT_3, // unused
+    TP_BIT_MOUSTAT_4, // x sign bit
+    TP_BIT_MOUSTAT_5, // y sign bit
+    TP_BIT_MOUSTAT_6, // overflow x bit
+    TP_BIT_MOUSTAT_7  // overflow y bit
+
+};
+
+enum TP_RAM_POST_BITS {
+
+    TP_BIT_RAMFAIL = 0x00,
+    TP_BIT_ROMFAIL,
+    TP_BIT_POST_2, // unassigned
+    TP_BIT_XFAIL,
+    TP_BIT_YFAIL,
+    TP_BIT_MOUFAIL,
+    TP_BIT_POST_6, // unassigned
+    TP_BIT_POST_7 // unassigned
+
+};
+
 enum TP_RAM_REG20_BITS {
 
     TP_BIT_MSKIP = 0x00,
@@ -234,7 +310,7 @@ enum TP_RAM_REG21_BITS {
     TP_BIT_XSBIT = 0x00,
     TP_BIT_YSBIT,
     TP_BIT_MWAIT,
-    TP_BIT_XDEVIN,
+    TP_BIT_XDEVIN, // read-only
     TP_BIT_FLOPS,
     TP_BIT_REG21_5, // unassigned
     TP_BIT_LXMIT,
@@ -265,45 +341,6 @@ enum TP_RAM_REG23_BITS {
     TP_BIT_RERROR,
     TP_BIT_BYTE1X,
     TP_BIT_SKIPDRIFT // def:0
-
-};
-
-enum TP_RAM_POST_BITS {
-
-    TP_BIT_RAMFAIL = 0x00,
-    TP_BIT_ROMFAIL,
-    TP_BIT_POST_2, // unassigned
-    TP_BIT_XFAIL,
-    TP_BIT_YFAIL,
-    TP_BIT_MOUFAIL,
-    TP_BIT_POST_6, // unassigned
-    TP_BIT_POST_7 // unassigned
-
-};
-
-enum TP_RAM_MOUSTAT_BITS {
-
-    TP_BIT_MLEFT = 0x00,
-    TP_BIT_MRGHT,
-    TP_BIT_MMIDB,
-    TP_BIT_MOUSTAT_3, // unused
-    TP_BIT_MOUSTAT_4, // x sign bit
-    TP_BIT_MOUSTAT_5, // y sign bit
-    TP_BIT_MOUSTAT_6, // overflow x bit
-    TP_BIT_MOUSTAT_7  // overflow y bit
-
-};
-
-enum TP_RAM_CURSTAT_BITS {
-
-    TP_BIT_LEFT = 0x00,
-    TP_BIT_RIGHT,
-    TP_BIT_MIDDLE,
-    TP_BIT_CURSTAT_3, // unused, must be 1
-    TP_BIT_XACBIT,
-    TP_BIT_YACBIT,
-    TP_BIT_OVERX,
-    TP_BIT_OVERY
 
 };
 
@@ -359,19 +396,6 @@ enum TP_RAM_REG2B_BITS {
 
 };
 
-enum TP_RAM_CONFIG_BITS {
-
-    TP_BIT_PTSON = 0x00, // def:0
-    TP_BIT_HALFTAC, // def:0
-    TP_BIT_BUTTON2,
-    TP_BIT_FLIPX, // def:0
-    TP_BIT_FLIPY, // def:0
-    TP_BIT_FLIPZ, // def:0
-    TP_BIT_REG2C_6, // unassigned
-    TP_BIT_FTRANS
-
-};
-
 enum TP_RAM_REG2D_BITS {
 
     TP_BIT_TWO_HANDED = 0x00, // def:0
@@ -411,7 +435,7 @@ enum TP_RAM_REG2E_BITS {
 #define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 7, 6, 5, 4, 3, 2, 1)
 #define VA_NUM_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, N, ...) N
 #define tp_command(...) \
-    _tp_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
+    tp_do_command( VA_NUM_ARGS( __VA_ARGS__ ), __VA_ARGS__ )
 
 // Command byte responses:
 #define TP_CMD_ACK 0xfa
@@ -422,8 +446,22 @@ enum TP_RAM_REG2E_BITS {
 #define TP_CMD_READ_EXTENDED_ID 0xd0
 #define TP_CMD_READ_SECONDARY_ID 0xe1
 #define TP_CMD_RAM_READ_NEAR 0xe2
+#define TP_CMD_READ_POST_RESULTS 0xe2, 0x25
+#define TP_CMD_DISABLE_EXT_POINT_DEV 0xe2, 0x40
+#define TP_CMD_ENABLE_EXT_POINT_DEV 0xe2, 0x41
+#define TP_CMD_POWER_DOWN 0xe2, 0x44
+#define TP_CMD_SET_HARD_TRANS_MODE 0xe2, 0x45
+#define TP_CMD_READ_ROM_VERSION 0xe2, 0x46
 #define TP_CMD_RAM_TOGGLE 0xe2, 0x47
 #define TP_CMD_RAM_XOR 0xe2, 0x47
+#define TP_CMD_READ_EXT_BUTTON_STATUS 0xe2, 0x4b
+#define TP_CMD_TOGGLE_BLOCK_MIDDLE_BUTTON 0xe2, 0x4c
+#define TP_CMD_SET_SOFT_TRANS_MODE 0xe2, 0x4e
+#define TP_CMD_WRITE_DAC_VALUE 0xe2, 0x4f
+#define TP_CMD_FORCE_RECALIB_CYCLE 0xe2, 0x51
+#define TP_CMD_TACTILE_OUTPUT_PULSE 0xe2, 0x52
+#define TP_CMD_CANCEL_SOFT_TRANS_MODE 0xe2, 0xb9
+#define TP_CMD_POWER_ON_RESET 0xe2, 0x7f
 #define TP_CMD_RAM_READ_FAR 0xe2, 0x80
 #define TP_CMD_RAM_WRITE 0xe2, 0x81
 #define TP_CMD_RESET_SCALING_1_1 0xe6
@@ -456,7 +494,7 @@ extern uint8_t tp_response[];
  * Prototypes
  ***************************************************************************/
 
-tp_status_t _tp_command( int, ... );
+tp_status_t tp_do_command( int, ... );
 tp_status_t tp_init( void );
 tp_status_t tp_ram_bit_clear( uint8_t, uint8_t );
 tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
@@ -464,13 +502,17 @@ tp_status_t tp_ram_read( uint8_t );
 tp_status_t tp_ram_write( uint8_t, uint8_t );
 tp_status_t tp_ram_xor( uint8_t, uint8_t );
 tp_status_t tp_read_data( void );
-tp_status_t tp_recv_extended_id( void );
-tp_status_t tp_recv( void );
+tp_status_t tp_recv_extended_id( tp_extended_id_t * );
 tp_status_t tp_recv_response( int );
-tp_status_t tp_reset( void );
-tp_status_t tp_send( uint8_t );
-tp_status_t tp_send_command_byte( uint8_t );
+tp_status_t tp_reset( bool );
 void tp_zero_response( void );
+
+static uint8_t char_to_nib( uint8_t );
+static tp_status_t initialize( void );
+static tp_status_t lookup( tp_ram_location_info_t **, int, int, uint8_t * );
+static tp_status_t recv( void );
+static tp_status_t send( uint8_t );
+static tp_status_t send_command_byte( uint8_t );
 
 
 /***************************************************************************/
