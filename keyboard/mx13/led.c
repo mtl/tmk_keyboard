@@ -11,6 +11,7 @@
 #include "print.h"
 #include "pwm-driver.h"
 #include "led-local.h"
+#include "settings.h"
 #include "timer.h"
 #include "ui.h"
 
@@ -22,20 +23,14 @@
 /***************************************************************************/
 
 // Globals:
-static bool led_trackpoint_on = (
-#ifdef TRACKPOINT_ENABLE
-    false
-#else
-    true
-#endif
-);
 
-uint8_t led_trackpoint_value = 0x11;
-pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
+led_config_t led_config;
+static pwm_rgb_led_t * leds = &led_config.leds;
 
 #ifdef LED_CONTROLLER_ENABLE
 static volatile bool led_update_pending = false;
 #endif
+
 
 /***************************************************************************/
 
@@ -57,9 +52,6 @@ void led_init() {
     // Initialize PWM on the Teensy:
     led_teensy_pwm_init();
 
-    // Configure the TrackPoint lighting:
-    led_set_trackpoint( led_trackpoint_on );
-
 #ifdef LED_CONTROLLER_ENABLE
 
     // Initialize the external LED controller:
@@ -67,37 +59,67 @@ void led_init() {
 
 #endif
 
-    // Configure initial LED settings:
+    // Load the LED settings if possible, otherwise configure defaults:
+    if ( ! settings_load( MX13_SET_LEDS, &led_config ) ) {
+
+        // Configure TrackPoint LED defaults:
+        led_config.trackpoint.on = (
+#ifdef TRACKPOINT_ENABLE
+            true
+#else
+            false
+#endif
+        );
+        led_config.trackpoint.intensity = 0x11;
+
+        // Configure defaults for the remaining LEDs:
+        for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
+
+            pwm_rgb_led_t * led = &leds[ i ];
+
+            led->flags = PWM_LED_FLAGS_ENABLED;
+            for ( int ch = 0; ch < 3; ch++ ) {
+                led->channels[ ch ] = i * 3 + ch;
+            }
+            for ( int v = 0; v < 6; v++ ) {
+                led->values[ v ] = 0;
+            }
+
+            // PWM controller only supports 5 RGB LEDs.  The rest
+            // are wired to the Teensy:
+            if ( i >= LED_ARRAY_FIRST_TEENSY ) {
+                led->flags |= PWM_LED_FLAGS_TEENSY;
+                // Must set teensy flag before calling this:
+                pwm_rgb_led_set_percent( led, PWM_RED, 10 );
+            } else {
+
+                if ( i == LED_DISPLAY ) {
+                    pwm_rgb_led_set_percent( led, PWM_RED, 0 );
+                    pwm_rgb_led_set_percent( led, PWM_GREEN, 5 );
+                    pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+                } else {
+                    pwm_rgb_led_set_percent( led, PWM_RED, 10 );
+                }
+            }
+        }
+
+        // Save the configuration:
+        settings_save( MX13_SET_LEDS, &led_config );
+    }
+
+    // Apply the configuration:
+
+    led_set_trackpoint( led_config.trackpoint.on );
+
     for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
 
-        pwm_rgb_led_t * led = &leds[ i ];
-
-        led->flags = PWM_LED_FLAGS_ENABLED;
-        for ( int ch = 0; ch < 3; ch++ ) {
-            led->channels[ ch ] = i * 3 + ch;
-        }
-        for ( int v = 0; v < 6; v++ ) {
-            led->values[ v ] = 0;
-        }
-
-        // PWM controller only supports 5 RGB LEDs.  The rest
-        // are wired to the Teensy:
         if ( i >= LED_ARRAY_FIRST_TEENSY ) {
-            led->flags |= PWM_LED_FLAGS_TEENSY;
-            // Must set teensy flag before calling this:
-            pwm_rgb_led_set_percent( led, PWM_RED, 10 );
-            led_set_teensy_led( led );
+            led_set_teensy_led( &leds[ i ] );
         } else {
-
-            if ( i == LED_DISPLAY ) {
-                pwm_rgb_led_set_percent( led, PWM_RED, 0 );
-                pwm_rgb_led_set_percent( led, PWM_GREEN, 5 );
-                pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
-            } else {
-                pwm_rgb_led_set_percent( led, PWM_RED, 10 );
-            }
 #ifdef LED_CONTROLLER_ENABLE
-            pwm_set_rgb_led( led );
+            if ( pwm_initialized ) {
+                pwm_set_rgb_led( &leds[ i ] );
+            }
 #endif
         }
     }
@@ -362,12 +384,12 @@ void led_set_trackpoint( bool on ) {
     //PORTB &= ~(1<<7);
 
     if ( on ) {
-        led_set_teensy_channel( LED_TEENSY_CH_B7, led_trackpoint_value );
+        led_set_teensy_channel( LED_TEENSY_CH_B7, led_config.trackpoint.intensity );
     } else {
         led_set_teensy_channel( LED_TEENSY_CH_B7, 0 );
     }
 
-    led_trackpoint_on = on;
+    led_config.trackpoint.on = on;
 }
 
 

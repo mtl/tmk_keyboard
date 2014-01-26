@@ -37,7 +37,8 @@ typedef enum {
     UI_LED_CONFIG,      // LED configuration
     UI_NAV_PREV,        // Navigate to the previous screen
     UI_RGB_SELECTOR,    // Select an RGB value
-    UI_SUBMENU,         // Navigate to a submenu
+    UI_SAVE,            // Save changes
+    UI_SUBMENU          // Navigate to a submenu
 } ui_menu_item_type_t;
 
 // A menu item:
@@ -88,6 +89,8 @@ typedef enum {
 
 #define UI_MENU_ITEM_RGB_SELECTOR( name, led_ch ) \
     { UI_RGB_SELECTOR, name, .led_channel = led_ch }
+
+#define UI_MENU_ITEM_SAVE( name ) { UI_SAVE, name }
 
 #define UI_MENU_ITEM_SUBMENU( name, title, num_items, ... ) \
     { UI_SUBMENU, name, .submenu = UI_MENU( title, num_items, __VA_ARGS__ ) }

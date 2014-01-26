@@ -6,6 +6,7 @@
 
 #include <avr/eeprom.h> 
 #include <avr/pgmspace.h> 
+#include "led-local.h"
 #include "settings.h"
 
 #ifdef TRACKPOINT_ENABLE
@@ -25,6 +26,7 @@ static bool settings_available( void );
 // Reserved EEPROM memory:
 
 //static setting_led_block_t EEMEM led_settings;
+static led_config_t EEMEM led_area;
 static setting_area_info_t EEMEM ee_areas;
 static tp_config_t EEMEM tp_area;
 
@@ -93,7 +95,13 @@ static bool settings_available() {
     }
 
     // Basic sanity checks on EEPROM area types, sizes and locations.
-    if ( false
+    if (
+
+        ( areas.leds.present && (
+            areas.leds.type != MX13_SET_LEDS ||
+            areas.leds.address != &led_area ||
+            areas.leds.size != sizeof( led_config_t )
+        ) )
 
 #ifdef TRACKPOINT_ENABLE
         || ( areas.trackpoint.present && (
@@ -120,6 +128,11 @@ bool settings_load( setting_area_type_t type, void * block ) {
         return false;
     }
 
+    void * eeprom_src_address = NULL;
+    int size = 0;
+    bool present = false;
+    uint8_t expected_checksum = 0;
+
     switch ( type ) {
 
 #ifdef TRACKPOINT_ENABLE
@@ -127,27 +140,31 @@ bool settings_load( setting_area_type_t type, void * block ) {
         // Load TrackPoint settings:
         case MX13_SET_TRACKPOINT:
 
-            if ( areas.trackpoint.present ) {
-
-                // Read data from EEPROM:
-                eeprom_read_block(
-                    block, &tp_area, sizeof( tp_config_t )
-                );
-
-                // Validate checksum:
-                return (
-                    areas.trackpoint.checksum ==
-                    checksum( block, sizeof( tp_config_t ) )
-                );
-            }
+            present = areas.trackpoint.present;
+            eeprom_src_address = &tp_area;
+            size = sizeof( tp_config_t );
+            expected_checksum = areas.trackpoint.checksum;
             break;
 #endif
 
         // Load LED settings:
         case MX13_SET_LEDS:
+
+            present = areas.leds.present;
+            eeprom_src_address = &led_area;
+            size = sizeof( led_config_t );
+            expected_checksum = areas.leds.checksum;
             break;
     }
 
+    if ( present ) {
+
+        // Read data from EEPROM:
+        eeprom_read_block( block, eeprom_src_address, size );
+
+        // Validate checksum:
+        return expected_checksum == checksum( block, size );
+    }
     return false;
 }
 
@@ -161,7 +178,10 @@ bool settings_save( setting_area_type_t type, void * block ) {
         return false;
     }
 
-    bool updated = false;
+    bool update = false;
+    void * eeprom_dest_address = NULL;
+    int size = 0;
+
     switch ( type ) {
 
 #ifdef TRACKPOINT_ENABLE
@@ -169,27 +189,33 @@ bool settings_save( setting_area_type_t type, void * block ) {
         // Save TrackPoint settings:
         case MX13_SET_TRACKPOINT:
 
-            // Write data to EEPROM:
-            eeprom_write_block(
-                block, &tp_area, sizeof( tp_config_t )
-            );
-
-            // Set area info:
             areas.trackpoint.present = true;
             areas.trackpoint.type = MX13_SET_TRACKPOINT;
-            areas.trackpoint.address = &tp_area;
-            areas.trackpoint.size = sizeof( tp_config_t );
+            areas.trackpoint.address = eeprom_dest_address = &tp_area;
+            areas.trackpoint.size = size = sizeof( tp_config_t );
             areas.trackpoint.checksum = checksum( block, sizeof( tp_config_t ) );
-            updated = true;
+            update = true;
             break;
 #endif
 
         // Load LED settings:
         case MX13_SET_LEDS:
-            return false;
+
+            areas.leds.present = true;
+            areas.leds.type = MX13_SET_LEDS;
+            areas.leds.address = eeprom_dest_address = &led_area;
+            areas.leds.size = size = sizeof( led_config_t );
+            areas.leds.checksum = checksum( block, sizeof( led_config_t ) );
+            update = true;
+            break;
     }
 
-    if ( updated ) {
+    if ( update ) {
+
+        // Write data to EEPROM:
+        eeprom_write_block( block, eeprom_dest_address, size );
+
+        // Write updated areas info:
         eeprom_write_block(
             &areas, &ee_areas, sizeof( setting_area_info_t )
         );

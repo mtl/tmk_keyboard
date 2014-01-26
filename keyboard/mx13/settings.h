@@ -8,7 +8,6 @@
 #define SETTINGS_H
 
 #include <stdbool.h>
-#include "led-local.h"
 
 
 /****************************************************************************

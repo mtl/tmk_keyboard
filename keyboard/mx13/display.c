@@ -42,7 +42,7 @@ void display_busy( bool is_busy ) {
     static bool was_busy = false;
     static uint16_t values[ 6 ];
     static uint8_t prior_flags = 0;
-    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
+    pwm_rgb_led_t * led = &led_config.leds[ LED_DISPLAY ];
 
     // Save LED state:
     if ( is_busy && ! was_busy ) {

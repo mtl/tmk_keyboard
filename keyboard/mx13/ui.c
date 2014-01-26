@@ -14,12 +14,19 @@
 #include "keycode.h"
 #include "led-local.h"
 #include "pwm-driver.h"
+#include "settings.h"
 #include "ui.h"
 
 
 /***************************************************************************/
+// Static prototypes:
 
+static void set_indicator( bool, bool );
+
+
+/***************************************************************************/
 // Globals:
+
 bool ui_active = false;
 
 static ui_input_mode_t input_mode = UI_INPUT_MENU;
@@ -122,7 +129,7 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
         UI_MENU_ITEM_DUMMY( "Bootloader" ),
         UI_MENU_ITEM_DUMMY( "Restart" )
     ),
-    UI_MENU_ITEM_DUMMY( "Save..." )
+    UI_MENU_ITEM_SAVE( "Save" )
 );
 
 static int ui_menu_title_font_vsize = 0;
@@ -165,6 +172,60 @@ static uint8_t log[ UI_LOG_ROWS ][ UI_LOG_COLS + 1 ] = {
 };
 static int log_cursor_row = 0;
 static int log_cursor_column = 0;
+
+
+/***************************************************************************/
+
+static void set_indicator( bool is_active, bool update ) {
+
+#ifdef LED_CONTROLLER_ENABLE
+
+    static bool was_active = false;
+    static uint16_t values[ 6 ];
+    static uint8_t prior_flags = 0;
+    pwm_rgb_led_t * led = &led_config.leds[ LED_DISPLAY ];
+
+    // Save LED state:
+    if ( is_active && ! was_active ) {
+
+        prior_flags = led->flags;
+        for ( int i = 0; i < 6; i++ ) {
+            values[ i ] = led->values[ i ];
+        }
+
+        // Turn on LED:
+        led->flags |= PWM_LED_FLAGS_ON;
+        pwm_rgb_led_set_percent( led, PWM_RED, 0 );
+        pwm_rgb_led_set_percent( led, PWM_GREEN, 1 );
+        pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
+
+        if ( update ) {
+            pwm_set_rgb_led( led );
+            pwm_commit( true );
+        }
+
+        was_active = true;
+    }
+
+    // Restore LED state:
+    else if ( ! is_active && was_active ) {
+
+        // Restore LED state:
+        led->flags = prior_flags;
+        for ( int i = 0; i < 6; i++ ) {
+            led->values[ i ] = values[ i ];
+        }
+
+        if ( update ) {
+            pwm_set_rgb_led( led );
+            pwm_commit( true );
+        }
+
+        was_active = false;
+    }
+
+#endif
+}
 
 
 /***************************************************************************/
@@ -625,7 +686,6 @@ int ui_draw_page( char * title ) {
 
 /***************************************************************************/
 
-
 void ui_enter() {
 
     if ( ui_active ) {
@@ -641,18 +701,7 @@ void ui_enter() {
 //    input_mode = UI_INPUT_LOG;
 
     display_draw( true );
-
-#ifdef LED_CONTROLLER_ENABLE
-
-    // Turn on LED:
-    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
-    led->flags |= PWM_LED_FLAGS_ON;
-    pwm_rgb_led_set_percent( led, PWM_RED, 0 );
-    pwm_rgb_led_set_percent( led, PWM_GREEN, 1 );
-    pwm_rgb_led_set_percent( led, PWM_BLUE, 0 );
-    pwm_set_rgb_led( led );
-    pwm_commit( true );
-#endif
+    set_indicator( true, true );
 }
 
 
@@ -821,7 +870,7 @@ void ui_menu_select( int item_no ) {
         case UI_RGB_SELECTOR:
             
             // Get the LED parameters:
-            rgb_led = &leds[ item->led_channel ];
+            rgb_led = &led_config.leds[ item->led_channel ];
 
             // Start with current LED color:
             if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
@@ -852,6 +901,13 @@ void ui_menu_select( int item_no ) {
             rgb_widget_title = item->label;
             input_mode = UI_INPUT_RGB;
             display_draw( true );
+            break;
+
+        case UI_SAVE:
+            // Temporarily restore display LED so the UI indicator does not get saved:
+            set_indicator( false, false );
+            settings_save( MX13_SET_LEDS, &led_config );
+            set_indicator( true, false );
             break;
     }
 }
@@ -1057,16 +1113,8 @@ void ui_leave() {
         }
     }
 
-#ifdef LED_CONTROLLER_ENABLE
-
-    // Turn off LED:
-    pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
-    led->flags &= ~PWM_LED_FLAGS_ON;
-    pwm_set_rgb_led( led );
-    pwm_commit( true );
-#endif
-
     display_draw( true );
+    set_indicator( false, true );
 }
 
 

@@ -15,11 +15,6 @@
  * Typedefs
  ***************************************************************************/
 
-
-/****************************************************************************
- * Constants and macros
- ***************************************************************************/
-
 typedef enum {
 
     // LEDs wired to the PWM controller:
@@ -41,6 +36,21 @@ typedef enum {
 
 #define LED_ARRAY_SIZE LED_TRACKPOINT
 #define LED_ARRAY_FIRST_TEENSY LED_NUM_LOCK_1
+
+/****************************************************************************
+ * Constants and macros
+ ***************************************************************************/
+
+typedef struct {
+
+    pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
+    struct {
+        bool on;
+        uint8_t intensity;
+    } trackpoint;
+
+} led_config_t;
+
 #define LED_TEENSY_FULL 0xff
 
 // Teensy PWM "channel numbers":
@@ -57,8 +67,7 @@ typedef enum {
  * Externs
  ***************************************************************************/
 
-extern uint8_t led_trackpoint_value;
-extern pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
+extern led_config_t led_config;
 
 
 /****************************************************************************
