@@ -26,10 +26,9 @@ static ui_input_mode_t input_mode = UI_INPUT_MENU;
 static ui_menu_t * menu_stack[ UI_MAX_MENU_DEPTH ] = { 0 };
 static int menu_stack_pos = 0;
 
-static ui_menu_t led_menu = UI_MENU( "", 3,
-    UI_MENU_ITEM_RGB_SELECTOR( "Color - on", 0 ),
-    UI_MENU_ITEM_RGB_SELECTOR( "Color - off", 0 ),
-    UI_MENU_ITEM_DUMMY( "Master control" ),
+static ui_menu_t led_menu = UI_MENU( "", 2,
+    UI_MENU_ITEM_DUMMY( "Enable/disable" ),
+    UI_MENU_ITEM_RGB_SELECTOR( "Color", 0 ),
 );
 
 static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
@@ -50,49 +49,65 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", 6,
         UI_MENU_ITEM_LED_CONFIG( "TrackPoint", LED_TRACKPOINT ),
         UI_MENU_ITEM_LED_CONFIG( "Layer", LED_DISPLAY )
     ),
-    UI_MENU_ITEM_SUBMENU( "TrackPoint", NULL, 5,
+    UI_MENU_ITEM_SUBMENU( "TrackPoint", NULL, 4,
+
         // tactile output pulse commands?
-        UI_MENU_ITEM_SUBMENU( "Motion", NULL, 6,
-            UI_MENU_ITEM_DUMMY( "Sensitivity" ), // 0-255
-            UI_MENU_ITEM_DUMMY( "Negative Inertia" ), // 0-255
-            UI_MENU_ITEM_DUMMY( "Xfer Up Plateau" ), // default: 0x61
-            UI_MENU_ITEM_DUMMY( "Invert X axis" ),
-            UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
-            UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
+
+        UI_MENU_ITEM_SUBMENU( "Basic config", NULL, 4,
+            UI_MENU_ITEM_DUMMY( "Pointer speed" ), // 0-255
+            UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
+            UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
+            UI_MENU_ITEM_DUMMY( "Press-to-select" )
         ),
-        UI_MENU_ITEM_SUBMENU( "Press-to-select", NULL, 9,
-            UI_MENU_ITEM_DUMMY( "Enable/disable" ),
-            UI_MENU_ITEM_DUMMY( "Backup range" ), // default: 0x0a
-            UI_MENU_ITEM_DUMMY( "Drag hysteresis" ), // default: 0xff
-            UI_MENU_ITEM_DUMMY( "Minimum drag" ), // default: 0x14
-            UI_MENU_ITEM_DUMMY( "Down threshold" ), // default: 0x08
-            UI_MENU_ITEM_DUMMY( "Up threshold" ), // default: 0xff (disabled)
-            UI_MENU_ITEM_DUMMY( "Z time constant" ), // default: 0x26
-            UI_MENU_ITEM_DUMMY( "Jenks Curvature" ), // default: 0x87
-            UI_MENU_ITEM_DUMMY( "Skip backups on/off" ) // default: 0
+        UI_MENU_ITEM_SUBMENU( "Advanced config", NULL, 4,
+            UI_MENU_ITEM_SUBMENU( "Motion", NULL, 5,
+                UI_MENU_ITEM_DUMMY( "Negative Inertia" ), // 0-255
+                UI_MENU_ITEM_DUMMY( "Xfer Up Plateau" ), // default: 0x61
+                UI_MENU_ITEM_DUMMY( "Invert X axis" ),
+                UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
+                UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
+            ),
+            UI_MENU_ITEM_SUBMENU( "Press-to-select", NULL, 8,
+                UI_MENU_ITEM_DUMMY( "Backup range" ), // default: 0x0a
+                UI_MENU_ITEM_DUMMY( "Drag hysteresis" ), // default: 0xff
+                UI_MENU_ITEM_DUMMY( "Minimum drag" ), // default: 0x14
+                UI_MENU_ITEM_DUMMY( "Down threshold" ), // default: 0x08
+                UI_MENU_ITEM_DUMMY( "Up threshold" ), // default: 0xff (disabled)
+                UI_MENU_ITEM_DUMMY( "Z time constant" ), // default: 0x26
+                UI_MENU_ITEM_DUMMY( "Jenks Curvature" ), // default: 0x87
+                UI_MENU_ITEM_DUMMY( "Skip backups" ) // default: 0
+            ),
+            UI_MENU_ITEM_SUBMENU( "Drift control", NULL, 7,
+                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
+                UI_MENU_ITEM_DUMMY( "Drift threshold" ), // default: 0xfe
+                UI_MENU_ITEM_DUMMY( "Counter 1 reset" ), // default: 0x05
+                UI_MENU_ITEM_DUMMY( "XY avg threshold" ), // default: 0xff
+                UI_MENU_ITEM_DUMMY( "XY avg time const" ), // default: 0x40 or 0x80 (hw dep)
+                UI_MENU_ITEM_DUMMY( "Z drift limit" ), // default: 0x03
+                UI_MENU_ITEM_DUMMY( "Z drift reload" ) // default: 0x64
+            ),
+            UI_MENU_ITEM_SUBMENU( "Calibration", NULL, 7,
+                UI_MENU_ITEM_DUMMY( "XY origin time" ), // default: 0x80
+                UI_MENU_ITEM_DUMMY( "Pot. en/disable" ), // default: 0 (enabled)
+                UI_MENU_ITEM_DUMMY( "Pot. recalibrate" ),
+                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
+                UI_MENU_ITEM_DUMMY( "Skip Z step" ), // default: 0
+                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
+                UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
+            )
         ),
-        UI_MENU_ITEM_SUBMENU( "Drift control", NULL, 7,
-            UI_MENU_ITEM_DUMMY( "Counter 1 reset val." ), // default: 0x05
-            UI_MENU_ITEM_DUMMY( "XY avg. time const." ), // default: 0x40 or 0x80 (hw dep)
-            UI_MENU_ITEM_DUMMY( "Z drift limit" ), // default: 0x03
-            UI_MENU_ITEM_DUMMY( "Z drift reload val." ), // default: 0x64
-            UI_MENU_ITEM_DUMMY( "XY avg. threshold" ), // default: 0xff
-            UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
-            UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
+        UI_MENU_ITEM_SUBMENU( "Info", NULL, 4,
+            UI_MENU_ITEM_DUMMY( "Page 1" ),
+            UI_MENU_ITEM_DUMMY( "Page 2" ),
+            UI_MENU_ITEM_DUMMY( "Page 3" ),
+            UI_MENU_ITEM_DUMMY( "Page 4" )
         ),
-        UI_MENU_ITEM_SUBMENU( "Calibration", NULL, 7,
-            UI_MENU_ITEM_DUMMY( "XY avg. origin time" ), // default: 0x80
-            UI_MENU_ITEM_DUMMY( "Pot. enable/disable" ), // default: 0 (enabled)
-            UI_MENU_ITEM_DUMMY( "Pot. recalib. now" ),
-            UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
-            UI_MENU_ITEM_DUMMY( "Skip Z step on/off" ), // default: 0
-            UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
-            UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
-        ),
-        UI_MENU_ITEM_SUBMENU( "Debug", NULL, 3,
-            UI_MENU_ITEM_DUMMY( "POST" ),
-            UI_MENU_ITEM_DUMMY( "Reset" ),
-            UI_MENU_ITEM_DUMMY( "Reset to defaults" )
+        UI_MENU_ITEM_SUBMENU( "Debug", NULL, 5,
+            UI_MENU_ITEM_DUMMY( "Reload config" ), // reapply config from EEPROM
+            UI_MENU_ITEM_DUMMY( "View POST results" ),
+            UI_MENU_ITEM_DUMMY( "Reset to defaults" ),
+            UI_MENU_ITEM_DUMMY( "Soft reset" ),
+            UI_MENU_ITEM_DUMMY( "Hard reset" )
         )
     ),
     UI_MENU_ITEM_SUBMENU( "Keyboard", NULL, 2,
@@ -794,6 +809,7 @@ void ui_menu_select( int item_no ) {
         case UI_EXIT:
         case UI_LED_CONFIG:
             led_menu.title = item->label;
+            led_menu.items[ 1 ].led_channel = item->led_channel;
             ui_enter_menu( &led_menu, NULL );
 
         case UI_NAV_PREV:

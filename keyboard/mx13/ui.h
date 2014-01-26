@@ -96,7 +96,7 @@ typedef enum {
 
 #define UI_LOG_ROWS 8
 #define UI_LOG_COLS 21
-#define UI_LOG_NEW_ROW "                     \0"
+#define UI_LOG_NEW_ROW "                     "
 
 
 /****************************************************************************
