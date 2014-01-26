@@ -12,16 +12,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <avr/eeprom.h> 
 #include <avr/io.h>
 #include <util/delay.h>
-#include "ps2.h"
-#include "ps2_mouse.h"
-#include "trackpoint.h"
-#include "usb_mouse.h"
-#include "util.h"
 #include "display.h"
+#include "ps2.h"
+#include "settings.h"
+#include "trackpoint.h"
 #include "ui.h"
+#include "util.h"
+
 
 /***************************************************************************/
 // Static prototoypes:
@@ -241,8 +240,6 @@ static int num_soft_sets = (
     sizeof( tp_ram_soft_sets[ 0 ] )
 );
 
-static tp_config_t EEMEM config;
-
 
 /***************************************************************************/
 
@@ -284,20 +281,28 @@ static tp_status_t initialize( bool hard ) {
     status = tp_command( TP_CMD_SET_REMOTE_MODE );
     RET_ON_ERROR();
 
-    //--------------------
+    // Load configuration:
+    tp_config_t config;
+    if ( settings_load( MX13_SET_TRACKPOINT, &config ) ) {
 
-    // Load config.
+        status = tp_set_config( &config );
+        RET_ON_ERROR();
 
+    } else {
 
+        // Set sensitivity:
+        status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
+        RET_ON_ERROR();
 
+        // Enable press-to-select:
+        status = tp_ram_bit_set( TP_RAM_CONFIG, TP_BIT_PTSON );
+        RET_ON_ERROR();
 
-    // Set sensitivity:
-    status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
-    RET_ON_ERROR();
-
-    // Enable press-to-select:
-    status = tp_ram_bit_set( TP_RAM_CONFIG, TP_BIT_PTSON );
-    RET_ON_ERROR();
+        // Save the configuration:
+        status = tp_get_config( &config );
+        RET_ON_ERROR();
+        settings_save( MX13_SET_TRACKPOINT, &config );
+    }
 
     //--------------------
 
@@ -534,7 +539,7 @@ tp_status_t tp_do_command( int num_bytes, ... ) {
 
 /***************************************************************************/
 
-tp_status_t tp_get_current_config( tp_config_t * config ) {
+tp_status_t tp_get_config( tp_config_t * config ) {
 
     uint8_t default_value = 0;
 
@@ -585,7 +590,9 @@ tp_status_t tp_get_current_config( tp_config_t * config ) {
 // Initialize the TrackPoint.
 tp_status_t tp_init() {
 
+#ifdef DISPLAY_ENABLE
     display_busy( true );
+#endif
 
     initialized = true;
     status = initialize( false );
@@ -594,7 +601,9 @@ tp_status_t tp_init() {
         initialized = false;
     }
 
+#ifdef DISPLAY_ENABLE
     display_busy( false );
+#endif
 
     return status;
 }
@@ -917,7 +926,7 @@ tp_status_t tp_recv_response( int num_bytes ) {
 
 /***************************************************************************/
 
-tp_status_t tp_set_current_config( tp_config_t * config ) {
+tp_status_t tp_set_config( tp_config_t * config ) {
 
     uint8_t config_bitmask = 0;
 
@@ -933,7 +942,7 @@ tp_status_t tp_set_current_config( tp_config_t * config ) {
 
         // Look up the configurable bits:
         status = lookup(
-            tp_ram_defaults,
+            tp_ram_medium_sets,
             num_defaults, info->location, &config_bitmask
         );
         RET_ON_ERROR();
@@ -946,6 +955,18 @@ tp_status_t tp_set_current_config( tp_config_t * config ) {
         // Configure the location if needed:
         uint8_t current_config = ram_value & config_bitmask;
         uint8_t requested_config = info->value & config_bitmask;
+
+//        ui_log_append_str( "TP: Config(" );
+//        ui_log_append_byte( info->location );
+//        ui_log_append_str( "," );
+//        ui_log_append_byte( info->value );
+//        ui_log_append_str( "," );
+//        ui_log_append_byte( current_config );
+//        ui_log_append_str( "," );
+//        ui_log_append_byte( requested_config );
+//        ui_log_append_str( ")\n" );
+//        display_draw( false );
+
         if ( current_config != requested_config ) {
 
             // Merge configurable bits with unconfigurable bits:

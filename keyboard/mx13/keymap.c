@@ -73,6 +73,8 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
         keycode = pgm_read_byte(&keymaps[0][(key.row)][(key.col)]);
     }
 
+#ifdef DISPLAY_ENABLE
+
     // Handle UI lock key:
     if ( keycode == MX13_UI_LOCK ) {
         if ( keymap_is_pressed( key ) ) {
@@ -88,7 +90,7 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
         if ( first ) {
             ui_handle_key(
                 layer,
-                pgm_read_byte(&keymaps[MX13_UI_LAYER][(key.row)][(key.col)]),
+                pgm_read_byte( &keymaps[ MX13_UI_LAYER ][ key.row ][ key.col ] ),
                 keymap_is_pressed( key )
             );
             first = false;
@@ -97,6 +99,7 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
         }
         return KC_NO;
     }
+#endif
 
     // Let TMK handle the keycode:
     return keycode;

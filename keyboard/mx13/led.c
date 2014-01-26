@@ -10,16 +10,26 @@
 #include "led.h"
 #include "print.h"
 #include "pwm-driver.h"
-#include "trackpoint.h"
 #include "led-local.h"
 #include "timer.h"
 #include "ui.h"
+
+#ifdef TRACKPOINT_ENABLE
+#   include "trackpoint.h"
+#endif
 
 
 /***************************************************************************/
 
 // Globals:
-static bool led_trackpoint_on = true;
+static bool led_trackpoint_on = (
+#ifdef TRACKPOINT_ENABLE
+    false
+#else
+    true
+#endif
+);
+
 uint8_t led_trackpoint_value = 0x11;
 pwm_rgb_led_t leds[ LED_ARRAY_SIZE ];
 
@@ -150,9 +160,11 @@ void led_set( uint8_t usb_led ) {
 
 void led_set_layer_indicator( uint32_t state ) {
 
+#ifdef DISPLAY_ENABLE
     if ( ui_active ) {
         return;
     }
+#endif
 
     pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
 

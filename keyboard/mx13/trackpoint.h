@@ -497,7 +497,7 @@ extern uint8_t tp_response[];
  ***************************************************************************/
 
 tp_status_t tp_do_command( int, ... );
-tp_status_t tp_get_current_config( tp_config_t * );
+tp_status_t tp_get_config( tp_config_t * );
 tp_status_t tp_init( void );
 tp_status_t tp_ram_bit_clear( uint8_t, uint8_t );
 tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
@@ -506,7 +506,7 @@ tp_status_t tp_ram_write( uint8_t, uint8_t );
 tp_status_t tp_ram_xor( uint8_t, uint8_t );
 tp_status_t tp_recv_extended_id( tp_extended_id_t * );
 tp_status_t tp_recv_response( int );
-tp_status_t tp_set_current_config( tp_config_t * );
+tp_status_t tp_set_config( tp_config_t * );
 void tp_zero_response( void );
 
 
