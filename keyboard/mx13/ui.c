@@ -1019,38 +1019,38 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
                     display_draw( false );
                     break;
                 case KC_INSERT:
-                    if ( rgb_max_value > 255 ) {
-                        rgb_bit = 8;
-                        rgb_inc = true;
-                        rgb_adjust = true;
-                    }
+                    rgb_bit = rgb_max_value > 255 ? 8 : 4;
+                    rgb_inc = true;
+                    rgb_adjust = true;
                     break;
                 case KC_DELETE:
-                    if ( rgb_max_value > 255 ) {
-                        rgb_bit = 8;
-                        rgb_inc = false;
-                        rgb_adjust = true;
-                    }
+                    rgb_bit = rgb_max_value > 255 ? 8 : 4;
+                    rgb_inc = false;
+                    rgb_adjust = true;
                     break;
                 case KC_HOME:
-                    rgb_bit = 4;
+                    rgb_bit = rgb_max_value > 255 ? 4 : 0;
                     rgb_inc = true;
                     rgb_adjust = true;
                     break;
                 case KC_END:
-                    rgb_bit = 4;
+                    rgb_bit = rgb_max_value > 255 ? 4 : 0;
                     rgb_inc = false;
                     rgb_adjust = true;
                     break;
                 case KC_PGUP:
-                    rgb_bit = 0;
-                    rgb_inc = true;
-                    rgb_adjust = true;
+                    if ( rgb_max_value > 255 ) {
+                        rgb_bit = 0;
+                        rgb_inc = true;
+                        rgb_adjust = true;
+                    }
                     break;
                 case KC_PGDN:
-                    rgb_bit = 0;
-                    rgb_inc = false;
-                    rgb_adjust = true;
+                    if ( rgb_max_value > 255 ) {
+                        rgb_bit = 0;
+                        rgb_inc = false;
+                        rgb_adjust = true;
+                    }
                     break;
 
             }
