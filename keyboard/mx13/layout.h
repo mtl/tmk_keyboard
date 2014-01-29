@@ -27,7 +27,7 @@ static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     /* 3: Keyboard configuration UI */
     KEYMAP(\
-        ESC, NO,       NO,  1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   NO,  NO,  NO,        INS, HOME,PGUP, \
+        ESC, NO,       NO,  1,   2,   3,   4,   5,   6,   7,   8,   9,   0,   NO,  NO,  BSPC,      INS, HOME,PGUP, \
         NO,  NO,       TAB, Q,   W,   E,   R,   T,   Y,   U,   I,   O,   P,   NO,  NO,  NO,        DEL, END, PGDN, \
         FN1, NO,       CAPS,A,   S,   D,   F,   G,   H,   J,   K,   L,   SCLN,QUOT,     ENT,                       \
                        LSFT,Z,   X,   C,   V,   B,   N,   M,   COMM,DOT, SLSH,          RSFT,           UP,        \

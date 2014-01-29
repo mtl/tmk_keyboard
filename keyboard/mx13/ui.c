@@ -29,6 +29,8 @@ static void draw_num_selector( void );
 static void draw_page( char * );
 static void draw_rgb_config( void );
 static bool enter_menu( ui_menu_t *, char * );
+static void handle_key_num( uint8_t, int, bool );
+static void handle_key_rgb( uint8_t, int, bool );
 static void initialize( u8g_t * );
 static uint8_t nibchar( uint8_t );
 static void set_indicator( bool, bool );
@@ -49,6 +51,7 @@ static u8g_pgm_uint8_t const * num_selector_num_font = u8g_font_fub25n;
 
 static uint16_t num_widget_max = 9999;
 static uint16_t num_widget_min = 0;
+static ui_number_t num_widget_number = 0;
 static uint16_t num_widget_value = 22222;
 static char * num_widget_title = "Num selector";
 
@@ -71,7 +74,8 @@ static ui_menu_t led_menu = UI_MENU( "", 2,
 );
 
 static ui_menu_t menu = UI_MENU( "MX13 Config", 7,
-    UI_MENU_ITEM_NUM_SELECTOR( "Num Selector", UI_NUM_LED_TP_INTENSITY ),
+    //UI_MENU_ITEM_NUM_SELECTOR( "Num Selector", UI_NUM_LED_TP_INTENSITY ),
+    UI_MENU_ITEM_NUM_SELECTOR( "Num Selector", UI_NUM_TP_SENSITIVITY ),
     UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_1 ),
     UI_MENU_ITEM_SUBMENU( "Lights", NULL, 5,
         UI_MENU_ITEM_SUBMENU( "Caps lock", NULL, 2,
@@ -472,6 +476,220 @@ static bool enter_menu( ui_menu_t * menu, char * default_title ) {
 
 /***************************************************************************/
 
+static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
+
+    if ( ! is_pressed ) {
+        return;
+    }
+
+    int number = -1;
+    int new_value = 0;
+
+    switch ( keycode ) {
+
+        case KC_ESC:
+            input_mode = UI_INPUT_MENU;
+            display_draw( false );
+            break;
+
+        case KC_ENTER:
+
+            switch ( num_widget_number ) {
+
+                case UI_NUM_LED_TP_INTENSITY:
+                    led_config.trackpoint.intensity = num_widget_value ;
+                    led_set_trackpoint( led_config.trackpoint.on );
+                    break;
+
+                case UI_NUM_TP_SENSITIVITY:
+                    tp_ram_write( TP_RAM_SNSTVTY, num_widget_value );
+                    break;
+            }
+
+            input_mode = UI_INPUT_MENU;
+            display_draw( false );
+            break;
+
+        case KC_BSPACE:
+            new_value = num_widget_value / 10;
+            if ( new_value < num_widget_min ) {
+                new_value = num_widget_min;
+            }
+            num_widget_value = new_value;
+            display_draw( false );
+            break;
+
+        case KC_0: number = 0; break;
+        case KC_1: number = 1; break;
+        case KC_2: number = 2; break;
+        case KC_3: number = 3; break;
+        case KC_4: number = 4; break;
+        case KC_5: number = 5; break;
+        case KC_6: number = 6; break;
+        case KC_7: number = 7; break;
+        case KC_8: number = 8; break;
+        case KC_9: number = 9; break;
+
+    }
+
+    if ( number != -1 ) {
+
+        new_value = num_widget_value * 10 + number;
+        if ( new_value <= num_widget_max ) {
+            num_widget_value = new_value;
+        }
+        display_draw( false );
+    }
+}
+
+
+/***************************************************************************/
+
+static void handle_key_rgb( uint8_t layer, int keycode, bool is_pressed ) {
+
+    bool rgb_adjust = false;
+    int rgb_bit = 0;
+    bool rgb_inc = false;
+
+    if ( ! is_pressed ) {
+        return;
+    }
+
+    switch ( keycode ) {
+
+        case KC_ESC:
+            if ( rgb_focus_locked ) {
+                rgb_focus_locked = false;
+                display_draw( false );
+            } else {
+                input_mode = UI_INPUT_MENU;
+
+                rgb_led->flags = rgb_prior_flags;
+                if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                    led_set_teensy_led( rgb_led );
+                } else {
+                    pwm_set_rgb_led( rgb_led );
+                    pwm_commit( true );
+                }
+
+                display_draw( true );
+            }
+            break;
+
+        case KC_UP:
+            if ( ! rgb_focus_locked && rgb_widget_focus > 1 ) {
+                rgb_widget_focus -= 2;
+                display_draw( false );
+            }
+            break;
+            
+        case KC_DOWN:
+            if ( ! rgb_focus_locked && rgb_widget_focus < 4 ) {
+                rgb_widget_focus += 2;
+                display_draw( false );
+            }
+            break;
+
+        case KC_LEFT:
+            if ( ! rgb_focus_locked && rgb_widget_focus % 2 ) {
+                rgb_widget_focus -= 1;
+                display_draw( false );
+            }
+            break;
+
+        case KC_RIGHT:
+            if ( ! rgb_focus_locked && ! ( rgb_widget_focus % 2 ) ) {
+                rgb_widget_focus += 1;
+                display_draw( false );
+            }
+            break;
+
+        case KC_ENTER:
+            rgb_focus_locked = ! rgb_focus_locked;
+            display_draw( false );
+            break;
+
+        case KC_INSERT:
+            rgb_bit = rgb_max_value > 255 ? 8 : 4;
+            rgb_inc = true;
+            rgb_adjust = true;
+            break;
+
+        case KC_DELETE:
+            rgb_bit = rgb_max_value > 255 ? 8 : 4;
+            rgb_inc = false;
+            rgb_adjust = true;
+            break;
+
+        case KC_HOME:
+            rgb_bit = rgb_max_value > 255 ? 4 : 0;
+            rgb_inc = true;
+            rgb_adjust = true;
+            break;
+
+        case KC_END:
+            rgb_bit = rgb_max_value > 255 ? 4 : 0;
+            rgb_inc = false;
+            rgb_adjust = true;
+            break;
+
+        case KC_PGUP:
+            if ( rgb_max_value > 255 ) {
+                rgb_bit = 0;
+                rgb_inc = true;
+                rgb_adjust = true;
+            }
+            break;
+
+        case KC_PGDN:
+            if ( rgb_max_value > 255 ) {
+                rgb_bit = 0;
+                rgb_inc = false;
+                rgb_adjust = true;
+            }
+            break;
+    }
+
+    if ( rgb_adjust ) {
+
+        int color = rgb_widget_focus >> 1;
+        uint8_t nibble = 0xf & ( rgb_widget_color[ color ] >> rgb_bit );
+
+        if ( rgb_inc ) {
+            if ( nibble < 0xf ) {
+                rgb_widget_color[ color ] += 1 << rgb_bit;
+            } else {
+                rgb_adjust = false;
+            }
+        } else {
+            if ( nibble > 0 ) {
+                rgb_widget_color[ color ] -= 1 << rgb_bit;
+            } else {
+                rgb_adjust = false;
+            }
+        }
+
+        if ( rgb_adjust ) {
+
+            int index = color << 1;
+            if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
+                rgb_led->values[ index + 0 ] = rgb_widget_color[ color ];
+                led_set_teensy_led( rgb_led );
+            } else {
+                rgb_led->values[ index + 0 ] = 0;
+                rgb_led->values[ index + 1 ] = rgb_widget_color[ color ];
+                pwm_set_rgb_led( rgb_led );
+                pwm_commit( true );
+            }
+
+            display_draw( false );
+        }
+    }
+}
+
+
+/***************************************************************************/
+
 static void initialize( u8g_t * u8g_ref ) {
 
     static bool initialized = false;
@@ -562,6 +780,7 @@ static void start_num_selector(
 
     num_widget_max = 255;
     num_widget_min = 0;
+    num_widget_number = item->number;
     num_widget_title = item->label;
     uint8_t value = 0;
 
@@ -569,6 +788,7 @@ static void start_num_selector(
 
         case UI_NUM_LED_TP_INTENSITY:
             num_widget_value = led_config.trackpoint.intensity;
+            led_set_trackpoint( true );
             break;
 
         case UI_NUM_TP_SENSITIVITY:
@@ -1000,13 +1220,10 @@ void ui_menu_select( int item_no ) {
 
 void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
 
-    bool rgb_adjust = false;
-    int rgb_bit = 0;
-    bool rgb_inc = false;
-
     switch ( input_mode ) {
 
         case UI_INPUT_NUM:
+            handle_key_num( layer, keycode, is_pressed );
             break;
 
         case UI_INPUT_MENU:
@@ -1053,125 +1270,7 @@ void ui_handle_key( uint8_t layer, int keycode, bool is_pressed ) {
             break;
 
         case UI_INPUT_RGB:
-            if ( ! is_pressed ) {
-                break;
-            }
-
-            switch ( keycode ) {
-                case KC_ESC:
-                    if ( rgb_focus_locked ) {
-                        rgb_focus_locked = false;
-                        display_draw( false );
-                    } else {
-                        input_mode = UI_INPUT_MENU;
-
-                        rgb_led->flags = rgb_prior_flags;
-                        if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
-                            led_set_teensy_led( rgb_led );
-                        } else {
-                            pwm_set_rgb_led( rgb_led );
-                            pwm_commit( true );
-                        }
-
-                        display_draw( true );
-                    }
-                    break;
-                case KC_UP:
-                    if ( ! rgb_focus_locked && rgb_widget_focus > 1 ) {
-                        rgb_widget_focus -= 2;
-                        display_draw( false );
-                    }
-                    break;
-                case KC_DOWN:
-                    if ( ! rgb_focus_locked && rgb_widget_focus < 4 ) {
-                        rgb_widget_focus += 2;
-                        display_draw( false );
-                    }
-                    break;
-                case KC_LEFT:
-                    if ( ! rgb_focus_locked && rgb_widget_focus % 2 ) {
-                        rgb_widget_focus -= 1;
-                        display_draw( false );
-                    }
-                    break;
-                case KC_RIGHT:
-                    if ( ! rgb_focus_locked && ! ( rgb_widget_focus % 2 ) ) {
-                        rgb_widget_focus += 1;
-                        display_draw( false );
-                    }
-                    break;
-                case KC_ENTER:
-                    rgb_focus_locked = ! rgb_focus_locked;
-                    display_draw( false );
-                    break;
-                case KC_INSERT:
-                    rgb_bit = rgb_max_value > 255 ? 8 : 4;
-                    rgb_inc = true;
-                    rgb_adjust = true;
-                    break;
-                case KC_DELETE:
-                    rgb_bit = rgb_max_value > 255 ? 8 : 4;
-                    rgb_inc = false;
-                    rgb_adjust = true;
-                    break;
-                case KC_HOME:
-                    rgb_bit = rgb_max_value > 255 ? 4 : 0;
-                    rgb_inc = true;
-                    rgb_adjust = true;
-                    break;
-                case KC_END:
-                    rgb_bit = rgb_max_value > 255 ? 4 : 0;
-                    rgb_inc = false;
-                    rgb_adjust = true;
-                    break;
-                case KC_PGUP:
-                    if ( rgb_max_value > 255 ) {
-                        rgb_bit = 0;
-                        rgb_inc = true;
-                        rgb_adjust = true;
-                    }
-                    break;
-                case KC_PGDN:
-                    if ( rgb_max_value > 255 ) {
-                        rgb_bit = 0;
-                        rgb_inc = false;
-                        rgb_adjust = true;
-                    }
-                    break;
-
-            }
-            if ( rgb_adjust ) {
-                int color = rgb_widget_focus >> 1;
-                uint8_t nibble = 0xf & ( rgb_widget_color[ color ] >> rgb_bit );
-                if ( rgb_inc ) {
-                    if ( nibble < 0xf ) {
-                        rgb_widget_color[ color ] += 1 << rgb_bit;
-                    } else {
-                        rgb_adjust = false;
-                    }
-                } else {
-                    if ( nibble > 0 ) {
-                        rgb_widget_color[ color ] -= 1 << rgb_bit;
-                    } else {
-                        rgb_adjust = false;
-                    }
-                }
-                if ( rgb_adjust ) {
-
-                    int index = color << 1;
-                    if ( rgb_led->flags & PWM_LED_FLAGS_TEENSY ) {
-                        rgb_led->values[ index + 0 ] = rgb_widget_color[ color ];
-                        led_set_teensy_led( rgb_led );
-                    } else {
-                        rgb_led->values[ index + 0 ] = 0;
-                        rgb_led->values[ index + 1 ] = rgb_widget_color[ color ];
-                        pwm_set_rgb_led( rgb_led );
-                        pwm_commit( true );
-                    }
-
-                    display_draw( false );
-                }
-            }
+            handle_key_rgb( layer, keycode, is_pressed );
             break;
     }
 }
@@ -1197,6 +1296,14 @@ void ui_leave() {
             pwm_set_rgb_led( rgb_led );
             pwm_commit( true );
         }
+    }
+
+    // Reset TrackPoint LED if it was being configured:
+    else if (
+        input_mode == UI_INPUT_NUM &&
+        num_widget_number == UI_NUM_LED_TP_INTENSITY
+    ) {
+        led_set_trackpoint( led_config.trackpoint.on );
     }
 
     display_draw( true );
