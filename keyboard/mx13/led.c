@@ -188,6 +188,12 @@ void led_set_layer_indicator( uint32_t state ) {
     }
 #endif
 
+#ifdef TRACKPOINT_ENABLE
+    uint8_t status = 0;
+    static bool tp_precision_mode = false;
+    static uint8_t tp_prior_sensitivity = 0;
+#endif
+
     pwm_rgb_led_t * led = &leds[ LED_DISPLAY ];
 
     // If layer 1 is the only one active, turn off the light:
@@ -206,6 +212,25 @@ void led_set_layer_indicator( uint32_t state ) {
         // If layer 1 is on, add blue:
         if ( state & (1<<1) ) {
             pwm_rgb_led_set_percent( led, PWM_BLUE, 3 );
+
+#ifdef TRACKPOINT_ENABLE
+            if ( ! tp_precision_mode && tp_precision_sensitivity > 0 ) {
+
+                status = tp_ram_read( TP_RAM_SNSTVTY, &tp_prior_sensitivity );
+                if ( status == TP_OK ) {
+                    tp_ram_write( TP_RAM_SNSTVTY, tp_precision_sensitivity );
+                    tp_precision_mode = true;
+                }
+            }
+
+        } else {
+            if ( tp_precision_mode ) {
+                status = tp_ram_write( TP_RAM_SNSTVTY, tp_prior_sensitivity );
+                if ( status == TP_OK ) {
+                    tp_precision_mode = false;
+                }
+            }
+#endif
         }
 
         // If layer 2 is on, add green:

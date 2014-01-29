@@ -207,6 +207,9 @@ tp_ram_location_info_t tp_ram_defaults[] = {
 // Globals:
 static bool initialized = false;
 static tp_status_t status = 0; // status of most recent operation
+
+uint8_t tp_normal_sensitivity = 0xc0;
+uint8_t tp_precision_sensitivity = 64;
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
@@ -292,6 +295,7 @@ static tp_status_t initialize( bool hard ) {
         // Set sensitivity:
         status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
         RET_ON_ERROR();
+        tp_normal_sensitivity = tp_sensitivity;
 
         // Enable press-to-select:
         status = tp_ram_bit_set( TP_RAM_CONFIG, TP_BIT_PTSON );
@@ -300,6 +304,9 @@ static tp_status_t initialize( bool hard ) {
         // Save the configuration:
         status = tp_get_config( &config );
         RET_ON_ERROR();
+
+        tp_precision_sensitivity = config.precision_sensitivity = 64;
+
         settings_save( MX13_SET_TRACKPOINT, &config );
     }
 
@@ -988,6 +995,13 @@ tp_status_t tp_set_config( tp_config_t * config ) {
             tp_ram_write( info->location, new_config );
             RET_ON_ERROR();
         }
+    }
+
+    tp_precision_sensitivity = config->precision_sensitivity;
+
+    status = tp_ram_read( TP_RAM_SNSTVTY, &ram_value );
+    if ( status == TP_OK ) {
+        tp_sensitivity = tp_normal_sensitivity = ram_value;
     }
 
     return TP_OK;

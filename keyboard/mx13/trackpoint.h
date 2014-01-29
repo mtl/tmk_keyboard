@@ -227,6 +227,7 @@ typedef struct {
 
     uint8_t num_items;
     tp_ram_location_info_t items[ TP_MAX_CONFIG_LOCATIONS ];
+    uint8_t precision_sensitivity;
 
 } tp_config_t;
 
@@ -488,7 +489,12 @@ enum TP_RAM_REG2E_BITS {
  * Externs
  ***************************************************************************/
 
+extern uint8_t tp_normal_sensitivity;
+extern uint8_t tp_precision_sensitivity;
 extern uint8_t tp_response[];
+extern int tp_scroll_divisor_h;
+extern int tp_scroll_divisor_v;
+extern int tp_sensitivity;
 
 
 /****************************************************************************
