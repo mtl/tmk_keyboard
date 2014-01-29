@@ -432,7 +432,7 @@ enum TP_RAM_REG2E_BITS {
 // Maximum command response size:
 #define TP_RESPONSE_BUFFER_SIZE 4
 
-#define TP_RAM_BIT_TOGGLE( location, bit ) tp_ram_xor( (location), (1<<(bit)) )
+#define tp_ram_bit_toggle( location, bit ) tp_ram_xor( (location), (1<<(bit)) )
 
 #define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__, 7, 6, 5, 4, 3, 2, 1)
 #define VA_NUM_ARGS_IMPL(_1, _2, _3, _4, _5, _6, _7, N, ...) N
@@ -488,7 +488,6 @@ enum TP_RAM_REG2E_BITS {
  * Externs
  ***************************************************************************/
 
-extern uint8_t tp_last_response_byte;
 extern uint8_t tp_response[];
 
 
@@ -501,7 +500,7 @@ tp_status_t tp_get_config( tp_config_t * );
 tp_status_t tp_init( void );
 tp_status_t tp_ram_bit_clear( uint8_t, uint8_t );
 tp_status_t tp_ram_bit_set( uint8_t, uint8_t );
-tp_status_t tp_ram_read( uint8_t );
+tp_status_t tp_ram_read( uint8_t, uint8_t * );
 tp_status_t tp_ram_write( uint8_t, uint8_t );
 tp_status_t tp_ram_xor( uint8_t, uint8_t );
 tp_status_t tp_recv_extended_id( tp_extended_id_t * );

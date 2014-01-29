@@ -28,9 +28,9 @@
 static uint8_t char_to_nib( uint8_t );
 static tp_status_t initialize( bool );
 static tp_status_t lookup( tp_ram_location_info_t[], int, int, uint8_t * );
-static tp_status_t recv( void );
+static tp_status_t recv( uint8_t * );
 static tp_status_t reset( bool );
-static tp_status_t send( uint8_t );
+static tp_status_t send( uint8_t, uint8_t * );
 static tp_status_t send_command_byte( uint8_t );
 
 
@@ -206,8 +206,7 @@ tp_ram_location_info_t tp_ram_defaults[] = {
 
 // Globals:
 static bool initialized = false;
-static int status = 0; // tp_status_t of last operation
-uint8_t tp_last_response_byte = 0; // Most recent byte returned by the TP
+static tp_status_t status = 0; // status of most recent operation
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
@@ -355,9 +354,9 @@ static tp_status_t lookup(
 /***************************************************************************/
 
 // Receive a single response byte.
-static tp_status_t recv() {
+static tp_status_t recv( uint8_t * response ) {
 
-    uint8_t r = ps2_host_recv_response();
+    *response = ps2_host_recv_response();
 
     if ( ps2_error != PS2_ERR_NONE ) {
 //        printf( "%sRecv error: x%02X.\n", ps2_prefix, ps2_error );
@@ -365,11 +364,10 @@ static tp_status_t recv() {
     }
 
 //    print( "Received: " );
-//    phex( r );
+//    phex( *response );
 //    print( ".\n" );
 //    _delay_ms(100);
 
-    tp_last_response_byte = r;
     return TP_OK;
 }
 
@@ -391,6 +389,8 @@ static tp_status_t reset( bool hard ) {
     status = tp_recv_response( 2 );
     RET_ON_ERROR();
 
+    //uint8_t value = 0;
+
     // Post completion code should be 0xAA on success or 0xFC on error.
     switch ( tp_response[ 0 ] ) {
         case 0xaa:
@@ -403,9 +403,9 @@ static tp_status_t reset( bool hard ) {
 //            _delay_ms(100);
 
             // Read POST results:
-//            status = tp_ram_read( TP_RAM_POST );
+//            status = tp_ram_read( TP_RAM_POST, &value );
 //            if ( status == TP_OK ) {
-//                printf( "%sPOST results: x%02X.\n", tp_prefix, tp_response[ 0 ] );
+//                printf( "%sPOST results: x%02X.\n", tp_prefix, value );
 //            }
 
             return TP_POST_FAIL;
@@ -432,14 +432,14 @@ static tp_status_t reset( bool hard ) {
 /***************************************************************************/
 
 // Send a single byte and indicate whether the PS/2 transmission succeeded.
-static tp_status_t send( uint8_t message ) {
+static tp_status_t send( uint8_t message, uint8_t * response ) {
 
 //    print( "Sending " );
 //    phex( message );
 //    print( "...\n" );
 //    _delay_ms(100);
 
-    uint8_t r = ps2_host_send( message );
+    *response = ps2_host_send( message );
 
     if ( ps2_error != PS2_ERR_NONE ) {
 //        printf( "%sSend error: x%02X.\n", ps2_prefix, ps2_error );
@@ -447,11 +447,10 @@ static tp_status_t send( uint8_t message ) {
     }
 
 //    print( "ACK: " );
-//    phex( r );
+//    phex( *response );
 //    print( ".\n" );
 //    _delay_ms(100);
 
-    tp_last_response_byte = r;
     return TP_OK;
 }
 
@@ -461,13 +460,15 @@ static tp_status_t send( uint8_t message ) {
 // Send a single command byte, verify ack, handle resend, etc.
 static tp_status_t send_command_byte( uint8_t message ) {
 
+    uint8_t response = 0;
+
     for ( int tries = 2; tries > 0; tries-- ) {
 
         // Send the command byte:
-        status = send( message );
+        status = send( message, &response );
         RET_ON_ERROR();
 
-        switch ( tp_last_response_byte ) {
+        switch ( response ) {
 
             case TP_CMD_ACK:
                 return TP_OK;
@@ -491,7 +492,7 @@ static tp_status_t send_command_byte( uint8_t message ) {
 
 //    printf(
 //        "%sFailed to send command byte x%02X (controller returned x%02X).\n",
-//        tp_prefix, message, tp_last_response_byte
+//        tp_prefix, message, response
 //    );
     return TP_FAIL;
 }
@@ -512,15 +513,12 @@ tp_status_t tp_do_command( int num_bytes, ... ) {
 
         status = send_command_byte( va_arg( ap, int ) );
         switch ( status ) {
-            case TP_OK: continue;
+
+            case TP_OK:
+                continue;
+
             case TP_BAD_RESPONSE:
-//                if ( tp_last_response_byte == 0xfe ) {
-//                    printf( "%sCommand not supported.\n", tp_prefix );
-//                }
-
-            // send_command_byte() also returns TP_FAIL.
-            //case TP_FAIL:
-
+            case TP_FAIL:
             default:
 //                printf(
 //                    "%sFailed to send command byte %i of %i.\n",
@@ -541,6 +539,7 @@ tp_status_t tp_do_command( int num_bytes, ... ) {
 
 tp_status_t tp_get_config( tp_config_t * config ) {
 
+    uint8_t current_value = 0;
     uint8_t default_value = 0;
 
     config->num_items = 0;
@@ -562,11 +561,11 @@ tp_status_t tp_get_config( tp_config_t * config ) {
         default_value &= info->value;
 
         // Read the current configuration:
-        status = tp_ram_read( info->location );
+        status = tp_ram_read( info->location, &current_value );
         RET_ON_ERROR();
 
         // Store the current configuration if needed:
-        uint8_t value = tp_last_response_byte & info->value;
+        uint8_t value = current_value & info->value;
         if ( value != default_value ) {
 
 //            ui_log_append_str( "TP: Config(" );
@@ -616,10 +615,11 @@ tp_status_t tp_ram_bit_clear( uint8_t location, uint8_t bit ) {
     // Ensure the TrackPoint is enabled:
     if ( ! initialized ) return TP_DISABLED;
 
-    status = tp_ram_read( location );
+    uint8_t value = 0;
+    status = tp_ram_read( location, &value );
     RET_ON_ERROR();
 
-    status = tp_ram_write( location, tp_response[ 0 ] & ~(1<<bit) );
+    status = tp_ram_write( location, value & ~(1<<bit) );
     RET_ON_ERROR();
 
     return TP_OK;
@@ -634,10 +634,11 @@ tp_status_t tp_ram_bit_set( uint8_t location, uint8_t bit ) {
     // Ensure the TrackPoint is enabled:
     if ( ! initialized ) return TP_DISABLED;
 
-    status = tp_ram_read( location );
+    uint8_t value = 0;
+    status = tp_ram_read( location, &value );
     RET_ON_ERROR();
 
-    status = tp_ram_write( location, tp_response[ 0 ] | (1<<bit) );
+    status = tp_ram_write( location, value | (1<<bit) );
     RET_ON_ERROR();
 
     return TP_OK;
@@ -647,7 +648,7 @@ tp_status_t tp_ram_bit_set( uint8_t location, uint8_t bit ) {
 /***************************************************************************/
 
 // TP Command: Read controller RAM
-tp_status_t tp_ram_read( uint8_t location ) {
+tp_status_t tp_ram_read( uint8_t location, uint8_t * value ) {
 
     // Ensure the TrackPoint is enabled:
     if ( ! initialized ) return TP_DISABLED;
@@ -663,6 +664,7 @@ tp_status_t tp_ram_read( uint8_t location ) {
     status = tp_recv_response( 1 );
     RET_ON_ERROR();
 
+    *value = tp_response[ 0 ];
     return TP_OK;
 }
 
@@ -702,6 +704,8 @@ tp_status_t tp_ram_xor( uint8_t location, uint8_t bitmask ) {
 // Read and parse the extended ID:
 tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
+    uint8_t next_char = 0;
+
     // Issue command to read the extended ID:
     status = tp_command( TP_CMD_READ_EXTENDED_ID );
     RET_ON_ERROR();
@@ -722,19 +726,19 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
     for ( int i = 0; i < 256; i++ ) {
 
         // Get the next byte:
-        status = recv();
+        status = recv( &next_char );
         RET_ON_ERROR();
 
         // Add to the checksum:
-        checksum += tp_last_response_byte;
+        checksum += next_char;
 
         // Handle the current byte:
         switch ( state ) {
 
             // "M 19980216 RSO"
             case TP_OTHER_ID:
-                if ( tp_last_response_byte != '(' ) {
-                    extended_id->other_id[ field_pos++ ] = tp_last_response_byte;
+                if ( next_char != '(' ) {
+                    extended_id->other_id[ field_pos++ ] = next_char;
                 } else {
                     field_pos = 0;
                     checksum = '(';
@@ -746,12 +750,12 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
             case TP_PNP_REVISION_LEVEL:
                 switch ( field_pos++ ) {
                     case 0:
-                        extended_id->pnp_revision_level = tp_last_response_byte;
+                        extended_id->pnp_revision_level = next_char;
                         break;
                     case 1:
                         extended_id->pnp_revision_level = (
                             ( ( extended_id->pnp_revision_level & 0x3f ) << 6 ) |
-                            ( tp_last_response_byte & 0x3f )
+                            ( next_char & 0x3f )
                         );
                         field_pos = 0;
                         state = TP_MANUFACTURER_ID;
@@ -760,7 +764,7 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
             // "IBM"
             case TP_MANUFACTURER_ID:
-                extended_id->manufacturer_id[ field_pos++ ] = tp_last_response_byte;
+                extended_id->manufacturer_id[ field_pos++ ] = next_char;
                 if ( field_pos == 3 ) {
                     field_pos = 0;
                     state = TP_PRODUCT_NO;
@@ -769,7 +773,7 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
             // "378"
             case TP_PRODUCT_NO:
-                extended_id->product_no[ field_pos++ ] = tp_last_response_byte;
+                extended_id->product_no[ field_pos++ ] = next_char;
                 if ( field_pos == 3 ) {
                     field_pos = 0;
                     state = TP_PRODUCT_REVISION;
@@ -778,12 +782,12 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
             // "0" or "1" (depending on BUTTON2 bit of CONFIG register)
             case TP_PRODUCT_REVISION:
-                extended_id->product_revision = tp_last_response_byte;
+                extended_id->product_revision = next_char;
                 state = TP_SERIAL_NO_OPTION;
                 continue;
 
             case TP_SERIAL_NO_OPTION:
-                if ( tp_last_response_byte != '\\' ) {
+                if ( next_char != '\\' ) {
                     // this is invalid
                     // read out until close parenthesis and return a failure code
                 }
@@ -792,12 +796,12 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
             // "\" == not provided (optional field)
             case TP_SERIAL_NO:
-                if ( field_pos == 0 && tp_last_response_byte == '\\' ) {
+                if ( field_pos == 0 && next_char == '\\' ) {
                     state = TP_CLASS_ID;
                 } else {
                     extended_id->serial_no = (
                         ( extended_id->serial_no << 4 ) |
-                        char_to_nib( tp_last_response_byte )
+                        char_to_nib( next_char )
                     );
                     if ( field_pos++ == 8 ) {
                         field_pos = 0;
@@ -807,7 +811,7 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
                 continue;
 
             case TP_CLASS_ID_OPTION:
-                if ( tp_last_response_byte != '\\' ) {
+                if ( next_char != '\\' ) {
                     // this is invalid
                     // read out until close parenthesis and return a failure code
                 }
@@ -820,11 +824,11 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
                     // this is invalid
                     // read out until close parenthesis and return a failure code
                 }
-                if ( tp_last_response_byte == '\\' ) {
+                if ( next_char == '\\' ) {
                     field_pos = 0;
                     state = TP_DRIVER_ID;
                 } else {
-                    extended_id->class_id[ field_pos++ ] = tp_last_response_byte;
+                    extended_id->class_id[ field_pos++ ] = next_char;
                 }
                 continue;
 
@@ -834,11 +838,11 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
                     // this is invalid
                     // read out until close parenthesis and return a failure code
                 }
-                if ( tp_last_response_byte == '\\' ) {
+                if ( next_char == '\\' ) {
                     field_pos = 0;
                     state = TP_USER_NAME;
                 } else {
-                    extended_id->driver_id[ field_pos++ ] = tp_last_response_byte;
+                    extended_id->driver_id[ field_pos++ ] = next_char;
                 }
                 continue;
 
@@ -848,26 +852,26 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
                     // this is invalid
                     // read out until close parenthesis and return a failure code
                 }
-                if ( tp_last_response_byte == '\\' ) {
+                if ( next_char == '\\' ) {
                     field_pos = 0;
                     state = TP_CHECKSUM;
                 } else {
-                    extended_id->user_name[ field_pos++ ] = tp_last_response_byte;
+                    extended_id->user_name[ field_pos++ ] = next_char;
                 }
                 continue;
 
             // "7F"
             case TP_CHECKSUM:
 
-                checksum -= tp_last_response_byte;
+                checksum -= next_char;
                 switch ( field_pos++ ) {
                     case 0:
-                        extended_id->checksum = char_to_nib( tp_last_response_byte );
+                        extended_id->checksum = char_to_nib( next_char );
                         break;
                     case 1:
                         extended_id->checksum = (
                             ( extended_id->checksum << 4 ) |
-                            char_to_nib( tp_last_response_byte )
+                            char_to_nib( next_char )
                         );
 
                         field_pos = 0;
@@ -877,7 +881,7 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 
             // ")"
             case TP_END_PNP:
-                if ( tp_last_response_byte != ')' ) {
+                if ( next_char != ')' ) {
                     // this is invalid
                     // return a failure code
                 }
@@ -902,11 +906,13 @@ tp_status_t tp_recv_extended_id( tp_extended_id_t * extended_id ) {
 // Receive the given number of bytes and store them into the response buffer.
 tp_status_t tp_recv_response( int num_bytes ) {
 
+    uint8_t * ptr = &tp_response[ 0 ];
+
     tp_zero_response();
 
     for ( int i = 0; i < num_bytes; i++ ) {
 
-        status = recv();
+        status = recv( ptr++ );
         RET_ON_ERROR();
 
 //        if ( status != TP_OK ) {
@@ -917,7 +923,6 @@ tp_status_t tp_recv_response( int num_bytes ) {
 //            return status;
 //        }
 
-        tp_response[ i ] = tp_last_response_byte;
     }
 
     return TP_OK;
@@ -929,6 +934,7 @@ tp_status_t tp_recv_response( int num_bytes ) {
 tp_status_t tp_set_config( tp_config_t * config ) {
 
     uint8_t config_bitmask = 0;
+    uint8_t ram_value = 0;
 
     // Execute hard reset to put device config into known state:
     status = reset( true );
@@ -948,9 +954,8 @@ tp_status_t tp_set_config( tp_config_t * config ) {
         RET_ON_ERROR();
 
         // Read the current device config:
-        status = tp_ram_read( info->location );
+        status = tp_ram_read( info->location, &ram_value );
         RET_ON_ERROR();
-        uint8_t ram_value = tp_last_response_byte;
 
         // Configure the location if needed:
         uint8_t current_config = ram_value & config_bitmask;

@@ -19,26 +19,39 @@
 
 struct ui_menu_item;
 
+// Numbers:
+typedef enum {
+
+    UI_NUM_LED_TP_INTENSITY,
+    UI_NUM_TP_SENSITIVITY
+
+} ui_number_t;
+
 // A menu:
 typedef struct ui_menu {
+
     char * title;
 //    u8g_pgm_uint8_t U8G_PROGMEM title;
     //u8g_pgm_uint8_t * title;
     int num_items;
     struct ui_menu_item * items;
+
 } ui_menu_t;
 
 // Types of menu items:
 typedef enum {
+
     UI_CONFIRM,         // A confirmation screen
     UI_DUMMY,           // A dummy menu item
     UI_EDITOR,          // A text editor
     UI_EXIT,            // Exit the UI
     UI_LED_CONFIG,      // LED configuration
     UI_NAV_PREV,        // Navigate to the previous screen
+    UI_NUM_SELECTOR,    // Select a numeric value
     UI_RGB_SELECTOR,    // Select an RGB value
     UI_SAVE,            // Save changes
     UI_SUBMENU          // Navigate to a submenu
+
 } ui_menu_item_type_t;
 
 // A menu item:
@@ -51,20 +64,26 @@ typedef struct ui_menu_item {
     union {
         led_indices_t led_channel;  // UI_LED_CONFIG, UI_RGB_SELECTOR
         ui_menu_t submenu;          // UI_SUBMENU
+        ui_number_t number;         // UI_NUM_SELECTOR
     };
+
 } ui_menu_item_t;
 
 // Input modes:
 typedef enum {
+
     UI_INPUT_MENU,            // Navigating the menus
     UI_INPUT_YES_NO,          // Binary choice
     UI_INPUT_EDIT,            // Editing text
     UI_INPUT_LOG,             // Log
+    UI_INPUT_NUM,             // Decimal number entry
     UI_INPUT_RGB              // Editing an RGB value
+
 } ui_input_mode_t;
 
 // RGB config widgets:
 typedef enum {
+
     UI_RGB_BAR_RED,
     UI_RGB_NUM_RED,
     UI_RGB_BAR_GREEN,
@@ -72,6 +91,7 @@ typedef enum {
     UI_RGB_BAR_BLUE,
     UI_RGB_NUM_BLUE
 //    UI_RGB_HEX,
+
 } ui_rgb_widgets_t;
 
 
@@ -86,6 +106,9 @@ typedef enum {
 
 #define UI_MENU_ITEM_LED_CONFIG( name, led_ch ) \
     { UI_LED_CONFIG, name, .led_channel = led_ch }
+
+#define UI_MENU_ITEM_NUM_SELECTOR( name, num ) \
+    { UI_NUM_SELECTOR, name, .number = num }
 
 #define UI_MENU_ITEM_RGB_SELECTOR( name, led_ch ) \
     { UI_RGB_SELECTOR, name, .led_channel = led_ch }
@@ -114,19 +137,13 @@ extern bool ui_active;
  ***************************************************************************/
 
 bool ui_draw( u8g_t * );
-void ui_draw_log( void );
-void ui_draw_menu( ui_menu_t * );
-int ui_draw_page( char * );
-void ui_draw_rgb_config( void );
 void ui_enter( void );
-bool ui_enter_menu( ui_menu_t *, char * );
 void ui_handle_key( uint8_t, int, bool );
 void ui_leave( void );
 void ui_log_append_byte( uint8_t );
 void ui_log_append_char( uint8_t );
 void ui_log_append_str( char * );
 void ui_log_newline( void );
-uint8_t ui_log_nibchar( uint8_t );
 
 
 /***************************************************************************/

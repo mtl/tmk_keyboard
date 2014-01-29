@@ -25,7 +25,7 @@
 // Globals:
 
 led_config_t led_config;
-static pwm_rgb_led_t * leds = &led_config.leds;
+static pwm_rgb_led_t * leds = &led_config.leds[ 0 ];
 
 #ifdef LED_CONTROLLER_ENABLE
 static volatile bool led_update_pending = false;
