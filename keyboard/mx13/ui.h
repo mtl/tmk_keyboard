@@ -22,8 +22,54 @@ struct ui_menu_item;
 // Numbers:
 typedef enum {
 
-    UI_NUM_LED_TP_INTENSITY,
-    UI_NUM_TP_SENSITIVITY
+#ifdef TRACKPOINT_ENABLE
+    UI_NUM_TP_RAM_START,
+    //------------------------
+    UI_NUM_TP_SNSTVTY,
+    UI_NUM_TP_INERTIA,
+    UI_NUM_TP_VALUE6,
+    UI_NUM_TP_REACH,
+    UI_NUM_TP_DRAGHYS,
+    UI_NUM_TP_MINDRAG,
+    UI_NUM_TP_THR,
+    UI_NUM_TP_UTHR,
+    UI_NUM_TP_ZTC,
+    UI_NUM_TP_JKCUR,
+    UI_NUM_TP_RSTDFT1,
+    UI_NUM_TP_XYDRIFTAVG,
+    UI_NUM_TP_XYAVGTHR,
+    UI_NUM_TP_PDRIFTLIM,
+    UI_NUM_TP_PDRIFT_REL,
+    UI_NUM_TP_DRIFT,
+    UI_NUM_TP_XYAVG_FACTOR,
+
+
+
+/*
+
+// bits:
+                UI_MENU_ITEM_DUMMY( "Skip Z step" ), // default: 0
+                UI_MENU_ITEM_DUMMY( "Pot. en/disable" ), // default: 0 (enabled) (skippots?)
+                UI_MENU_ITEM_DUMMY( "Pot. recalibrate" ),
+            UI_MENU_ITEM_DUMMY( "Press-to-select" )
+                UI_MENU_ITEM_DUMMY( "Skip backups" ) // default: 0
+                UI_MENU_ITEM_DUMMY( "Invert X axis" ),
+                UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
+                UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
+                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled) DRIFT en/dis
+
+// other:
+                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
+            UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
+            UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
+                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
+*/
+
+    //------------------------
+    UI_NUM_TP_RAM_END,
+#endif
+
+    UI_NUM_LED_TP_INTENSITY
 
 } ui_number_t;
 

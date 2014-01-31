@@ -213,7 +213,7 @@ uint8_t tp_precision_sensitivity = 64;
 uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP command
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
-int tp_sensitivity = 0xc0;
+int tp_sensitivity = 0x80;
 int tp_scroll_divisor_h = 2;
 int tp_scroll_divisor_v = 2;
 
@@ -293,9 +293,13 @@ static tp_status_t initialize( bool hard ) {
     } else {
 
         // Set sensitivity:
-        status = tp_ram_write( TP_RAM_SNSTVTY, tp_sensitivity );
+        status = tp_ram_write( TP_RAM_SNSTVTY, tp_normal_sensitivity );
         RET_ON_ERROR();
-        tp_normal_sensitivity = tp_sensitivity;
+        tp_sensitivity = tp_normal_sensitivity;
+
+        // Set transfer function upper plateau:
+        status = tp_ram_write( TP_RAM_VALUE6, 150 );
+        RET_ON_ERROR();
 
         // Enable press-to-select:
         status = tp_ram_bit_set( TP_RAM_CONFIG, TP_BIT_PTSON );
