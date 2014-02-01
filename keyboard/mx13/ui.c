@@ -83,28 +83,19 @@ static ui_menu_t led_menu = UI_MENU( "", 2,
 );
 
 #ifdef TRACKPOINT_ENABLE
-#    define UI_MAIN_MENU_ITEMS 6
-#else
 #    define UI_MAIN_MENU_ITEMS 5
+#else
+#    define UI_MAIN_MENU_ITEMS 4
 #endif
 
 static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
-    UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_1 ),
-    UI_MENU_ITEM_SUBMENU( "Lights", NULL, 5,
-        UI_MENU_ITEM_SUBMENU( "Caps lock", NULL, 2,
-            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_CAPS_LOCK_0 ),
-            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_CAPS_LOCK_1 )
+//    UI_MENU_ITEM_RGB_SELECTOR( "RGB Selector", LED_CAPS_LOCK_1 ),
+    UI_MENU_ITEM_SUBMENU( "Keyboard", NULL, 2,
+        UI_MENU_ITEM_SUBMENU( "Key repeat", NULL, 2,
+            UI_MENU_ITEM_DUMMY( "Delay" ),
+            UI_MENU_ITEM_DUMMY( "Rate" )
         ),
-        UI_MENU_ITEM_SUBMENU( "Num lock", NULL, 2,
-            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_NUM_LOCK_0 ),
-            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_NUM_LOCK_1 )
-        ),
-        UI_MENU_ITEM_SUBMENU( "Scroll lock", NULL, 2,
-            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_SCROLL_LOCK_0 ),
-            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_SCROLL_LOCK_1 )
-        ),
-        UI_MENU_ITEM_NUM_SELECTOR( "TrackPoint", UI_NUM_LED_TP_INTENSITY ),
-        UI_MENU_ITEM_LED_CONFIG( "Layer", LED_DISPLAY )
+        UI_MENU_ITEM_DUMMY( "Debug" )
     ),
 
 #ifdef TRACKPOINT_ENABLE
@@ -139,7 +130,7 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
                 UI_MENU_ITEM_FLAG( "Skip backups", UI_NUM_TP_REG2D, TP_BIT_SKIPBACK )
             ),
             UI_MENU_ITEM_SUBMENU( "Drift control", NULL, 7,
-                UI_MENU_ITEM_FLAG( "Enable/disable", UI_NUM_TP_REG23, TP_BIT_SKIPDRIFT ),
+                UI_MENU_ITEM_FLAG( "Enabled", UI_NUM_TP_REG23, TP_BIT_SKIPDRIFT ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Drift threshold", UI_NUM_TP_DRIFT ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Counter 1 reset", UI_NUM_TP_RSTDFT1 ),
                 UI_MENU_ITEM_NUM_SELECTOR( "XY avg threshold", UI_NUM_TP_XYAVGTHR ),
@@ -171,12 +162,21 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
     ),
 #endif
 
-    UI_MENU_ITEM_SUBMENU( "Keyboard", NULL, 2,
-        UI_MENU_ITEM_SUBMENU( "Key repeat", NULL, 2,
-            UI_MENU_ITEM_DUMMY( "Delay" ),
-            UI_MENU_ITEM_DUMMY( "Rate" )
+    UI_MENU_ITEM_SUBMENU( "Lights", NULL, 5,
+        UI_MENU_ITEM_SUBMENU( "Caps lock", NULL, 2,
+            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_CAPS_LOCK_0 ),
+            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_CAPS_LOCK_1 )
         ),
-        UI_MENU_ITEM_DUMMY( "Debug" )
+        UI_MENU_ITEM_SUBMENU( "Num lock", NULL, 2,
+            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_NUM_LOCK_0 ),
+            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_NUM_LOCK_1 )
+        ),
+        UI_MENU_ITEM_SUBMENU( "Scroll lock", NULL, 2,
+            UI_MENU_ITEM_LED_CONFIG( "Panel", LED_SCROLL_LOCK_0 ),
+            UI_MENU_ITEM_LED_CONFIG( "In-key", LED_SCROLL_LOCK_1 )
+        ),
+        UI_MENU_ITEM_NUM_SELECTOR( "TrackPoint", UI_NUM_LED_TP_INTENSITY ),
+        UI_MENU_ITEM_LED_CONFIG( "Layer", LED_DISPLAY )
     ),
     UI_MENU_ITEM_SUBMENU( "Firmware", NULL, 3,
         UI_MENU_ITEM_DUMMY( "Background" ),
@@ -754,11 +754,7 @@ static void handle_key_rgb( uint8_t layer, int keycode, bool is_pressed ) {
             break;
 
         case KC_0:
-            for ( int i = 0; i < 3; i++ ) {
-                rgb_widget_color[ i ] = 0;
-            }
-            // We don't really want to decrement, but want to 
-            // trigger the LED update code below.
+            rgb_widget_color[ rgb_widget_focus >> 1 ] = 1;
             rgb_bit = 0;
             rgb_inc = false;
             rgb_adjust = true;
