@@ -228,6 +228,8 @@ typedef struct {
     uint8_t num_items;
     tp_ram_location_info_t items[ TP_MAX_CONFIG_LOCATIONS ];
     uint8_t precision_sensitivity;
+    uint8_t scroll_divisor_h;
+    uint8_t scroll_divisor_v;
 
 } tp_config_t;
 
@@ -512,6 +514,7 @@ tp_status_t tp_ram_write( uint8_t, uint8_t );
 tp_status_t tp_ram_xor( uint8_t, uint8_t );
 tp_status_t tp_recv_extended_id( tp_extended_id_t * );
 tp_status_t tp_recv_response( int );
+tp_status_t tp_save( void );
 tp_status_t tp_set_config( tp_config_t * );
 void tp_zero_response( void );
 

@@ -54,9 +54,10 @@ typedef enum {
     //------------------------
     UI_NUM_TP_RAM_BIT_END,
 
+    UI_NUM_TP_SCROLL_V,
+    UI_NUM_TP_SCROLL_H,
+
 /*
-            UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
-            UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
                 UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after E2 51
 
             info:

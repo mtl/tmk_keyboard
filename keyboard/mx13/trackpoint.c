@@ -297,9 +297,6 @@ static tp_status_t initialize( bool hard ) {
         RET_ON_ERROR();
         tp_sensitivity = tp_normal_sensitivity;
 
-        // Set precision sensitivity:
-        tp_precision_sensitivity = config.precision_sensitivity = 64;
-
         // Set transfer function upper plateau:
         status = tp_ram_write( TP_RAM_VALUE6, 150 );
         RET_ON_ERROR();
@@ -309,10 +306,8 @@ static tp_status_t initialize( bool hard ) {
         RET_ON_ERROR();
 
         // Save the configuration:
-        status = tp_get_config( &config );
+        status = tp_save();
         RET_ON_ERROR();
-
-        settings_save( MX13_SET_TRACKPOINT, &config );
     }
 
     //--------------------
@@ -549,6 +544,8 @@ tp_status_t tp_do_command( int num_bytes, ... ) {
 
 /***************************************************************************/
 
+// Populate a given tp_config_t struct with the currently active TrackPoint
+// configuration.
 tp_status_t tp_get_config( tp_config_t * config ) {
 
     uint8_t current_value = 0;
@@ -591,6 +588,11 @@ tp_status_t tp_get_config( tp_config_t * config ) {
             config->items[ config->num_items++ ].value = value;
         }
     }
+
+    // Store non-TP-RAM settings:
+    config->precision_sensitivity = tp_precision_sensitivity;
+    config->scroll_divisor_h = tp_scroll_divisor_h;
+    config->scroll_divisor_v = tp_scroll_divisor_v;
 
     return TP_OK;
 }
@@ -961,6 +963,22 @@ tp_status_t tp_recv_response( int num_bytes ) {
 
 /***************************************************************************/
 
+// Save the current configuration.
+tp_status_t tp_save() {
+
+    tp_config_t config;
+
+    // Extract current configuration:
+    status = tp_get_config( &config );
+    RET_ON_ERROR();
+
+    // Save the extracted configuration:
+    settings_save( MX13_SET_TRACKPOINT, &config );
+}
+
+
+/***************************************************************************/
+
 tp_status_t tp_set_config( tp_config_t * config ) {
 
     uint8_t config_bitmask = 0;
@@ -1026,7 +1044,10 @@ tp_status_t tp_set_config( tp_config_t * config ) {
         tp_sensitivity = tp_normal_sensitivity = ram_value;
     }
 
+    // Set non-TP-RAM settings:
     tp_precision_sensitivity = config->precision_sensitivity;
+    tp_scroll_divisor_h = config->scroll_divisor_h;
+    tp_scroll_divisor_v = config->scroll_divisor_v;
 
     return TP_OK;
 }

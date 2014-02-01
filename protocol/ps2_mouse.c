@@ -122,7 +122,10 @@ void ps2_mouse_task(void)
 
 #if PS2_MOUSE_SCROLL_BTN_MASK
         static uint16_t scroll_button_time = 0;
-        if ((mouse_report.buttons & (PS2_MOUSE_SCROLL_BTN_MASK)) == (PS2_MOUSE_SCROLL_BTN_MASK)) {
+        if (
+			(mouse_report.buttons & (PS2_MOUSE_SCROLL_BTN_MASK)) == (PS2_MOUSE_SCROLL_BTN_MASK) &&
+			( (PS2_MOUSE_SCROLL_DIVISOR_V) > 0 || (PS2_MOUSE_SCROLL_DIVISOR_H) > 0 )
+		) {
             if (scroll_state == SCROLL_NONE) {
                 scroll_button_time = timer_read();
                 scroll_state = SCROLL_BTN;
@@ -134,8 +137,12 @@ void ps2_mouse_task(void)
             if (mouse_report.x || mouse_report.y) {
                 scroll_state = SCROLL_SENT;
 
-                mouse_report.v = -mouse_report.y/(PS2_MOUSE_SCROLL_DIVISOR_V);
-                mouse_report.h =  mouse_report.x/(PS2_MOUSE_SCROLL_DIVISOR_H);
+				if ( (PS2_MOUSE_SCROLL_DIVISOR_V) > 0 ) {
+					mouse_report.v = -mouse_report.y/(PS2_MOUSE_SCROLL_DIVISOR_V);
+				}
+				if ( (PS2_MOUSE_SCROLL_DIVISOR_H) > 0 ) {
+					mouse_report.h =  mouse_report.x/(PS2_MOUSE_SCROLL_DIVISOR_H);
+				}
                 mouse_report.x = 0;
                 mouse_report.y = 0;
                 //host_mouse_send(&mouse_report);

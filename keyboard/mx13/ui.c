@@ -114,8 +114,8 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
 
         UI_MENU_ITEM_SUBMENU( "Basic config", NULL, 4,
             UI_MENU_ITEM_NUM_SELECTOR( "Pointer speed", UI_NUM_TP_SNSTVTY ),
-            UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
-            UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
+            UI_MENU_ITEM_NUM_SELECTOR( "V-scroll div", UI_NUM_TP_SCROLL_V ),
+            UI_MENU_ITEM_NUM_SELECTOR( "H-scroll div", UI_NUM_TP_SCROLL_H ),
             UI_MENU_ITEM_FLAG( "Press-to-select", UI_NUM_TP_CONFIG, TP_BIT_PTSON )
         ),
         UI_MENU_ITEM_SUBMENU( "Advanced config", NULL, 4,
@@ -516,7 +516,7 @@ static bool get_flag_state( ui_number_t number, uint8_t bit ) {
 #ifdef TRACKPOINT_ENABLE
     // Handle TrackPoint bits:
     uint8_t tp_ram_location = map_number_to_tp_ram( number );
-    if ( tp_ram_location != -1 ) {
+    if ( tp_ram_location != 255 ) {
 
         bool state = false;
         tp_status_t result = tp_ram_bit_get( tp_ram_location, bit, &state );
@@ -538,7 +538,7 @@ static void set_flag_state( ui_number_t number, uint8_t bit, bool state ) {
 #ifdef TRACKPOINT_ENABLE
     // Handle TrackPoint bits:
     uint8_t tp_ram_location = map_number_to_tp_ram( number );
-    if ( tp_ram_location != -1 ) {
+    if ( tp_ram_location != 255 ) {
 
         if ( state ) {
             tp_ram_bit_set( tp_ram_location, bit );
@@ -577,7 +577,7 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
 
 #ifdef TRACKPOINT_ENABLE
             tp_ram_location = map_number_to_tp_ram( num_widget_number );
-            if ( tp_ram_location != -1 ) {
+            if ( tp_ram_location != 255 ) {
                 tp_ram_write( tp_ram_location, num_widget_value );
 
                 // Update sesitivity variables:
@@ -593,6 +593,14 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
                     case UI_NUM_LED_TP_INTENSITY:
                         led_config.trackpoint.intensity = num_widget_value ;
                         led_set_trackpoint( led_config.trackpoint.on );
+                        break;
+
+                    case UI_NUM_TP_SCROLL_H:
+                        tp_scroll_divisor_h = num_widget_value;
+                        break;
+
+                    case UI_NUM_TP_SCROLL_V:
+                        tp_scroll_divisor_v = num_widget_value;
                         break;
 
                     default:
@@ -744,6 +752,17 @@ static void handle_key_rgb( uint8_t layer, int keycode, bool is_pressed ) {
                 rgb_adjust = true;
             }
             break;
+
+        case KC_0:
+            for ( int i = 0; i < 3; i++ ) {
+                rgb_widget_color[ i ] = 0;
+            }
+            // We don't really want to decrement, but want to 
+            // trigger the LED update code below.
+            rgb_bit = 0;
+            rgb_inc = false;
+            rgb_adjust = true;
+            break;
     }
 
     if ( rgb_adjust ) {
@@ -838,7 +857,7 @@ static uint8_t map_number_to_tp_ram( ui_number_t number ) {
         }
     }
 
-    return -1;
+    return 255;
 }
 #endif
 
@@ -926,8 +945,8 @@ static void start_num_selector(
     uint8_t value = 0;
 
 #ifdef TRACKPOINT_ENABLE
-    uint8_t tp_ram_location = map_number_to_tp_ram( item->number );
-    if ( tp_ram_location != -1 ) {
+    uint8_t tp_ram_location = map_number_to_tp_ram( num_widget_number );
+    if ( tp_ram_location != 255 ) {
 
         status = tp_ram_read( tp_ram_location, &value );
         if ( status != TP_OK ) {
@@ -938,14 +957,25 @@ static void start_num_selector(
 
     else {
 #endif
-        switch ( item->number ) {
+        switch ( num_widget_number ) {
 
             case UI_NUM_LED_TP_INTENSITY:
                 num_widget_value = led_config.trackpoint.intensity;
                 led_set_trackpoint( true );
                 break;
 
-            default: break;
+            case UI_NUM_TP_SCROLL_H:
+                num_widget_value = tp_scroll_divisor_h;
+                num_widget_max = 16256;
+                break;
+
+            case UI_NUM_TP_SCROLL_V:
+                num_widget_value = tp_scroll_divisor_v;
+                num_widget_max = 16256;
+                break;
+
+            default:
+                break;
         }
 #ifdef TRACKPOINT_ENABLE
     }
@@ -1302,11 +1332,6 @@ void ui_log_newline() {
 
 void ui_menu_select( int item_no ) {
 
-#ifdef TRACKPOINT_ENABLE
-    uint8_t status = 0;
-    tp_config_t tp_config;
-#endif
-
     // If 0, navigate back/up:
     if ( ! item_no ) {
         if ( menu_stack_pos ) {
@@ -1369,10 +1394,7 @@ void ui_menu_select( int item_no ) {
             set_indicator( false, false );
             settings_save( MX13_SET_LEDS, &led_config );
 #ifdef TRACKPOINT_ENABLE
-            status = tp_get_config( &tp_config );
-            if ( status == TP_OK ) {
-                settings_save( MX13_SET_TRACKPOINT, &tp_config );
-            }
+            tp_save();
 #endif
             set_indicator( true, false );
             break;
