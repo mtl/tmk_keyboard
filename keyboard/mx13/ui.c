@@ -33,6 +33,7 @@ static void draw_num_selector( void );
 static void draw_page( char * );
 static void draw_rgb_config( void );
 static bool enter_menu( ui_menu_t *, char * );
+static bool get_flag_state( ui_number_t, uint8_t );
 static void handle_key_num( uint8_t, int, bool );
 static void handle_key_rgb( uint8_t, int, bool );
 static void initialize( u8g_t * );
@@ -40,6 +41,7 @@ static void initialize( u8g_t * );
 static uint8_t map_number_to_tp_ram( ui_number_t );
 #endif
 static uint8_t nibchar( uint8_t );
+static void set_flag_state( ui_number_t, uint8_t, bool );
 static void set_indicator( bool, bool );
 static void start_num_selector( ui_menu_t *, ui_menu_item_t * );
 static void start_rgb_selector( ui_menu_t *, ui_menu_item_t * );
@@ -114,15 +116,15 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
             UI_MENU_ITEM_NUM_SELECTOR( "Pointer speed", UI_NUM_TP_SNSTVTY ),
             UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
             UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
-            UI_MENU_ITEM_DUMMY( "Press-to-select" )
+            UI_MENU_ITEM_FLAG( "Press-to-select", UI_NUM_TP_CONFIG, TP_BIT_PTSON )
         ),
         UI_MENU_ITEM_SUBMENU( "Advanced config", NULL, 4,
             UI_MENU_ITEM_SUBMENU( "Motion", NULL, 5,
                 UI_MENU_ITEM_NUM_SELECTOR( "Mid speed plateau", UI_NUM_TP_VALUE6 ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Negative inertia", UI_NUM_TP_INERTIA ),
-                UI_MENU_ITEM_DUMMY( "Invert X axis" ),
-                UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
-                UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
+                UI_MENU_ITEM_FLAG( "Invert X axis", UI_NUM_TP_CONFIG, TP_BIT_FLIPX ),
+                UI_MENU_ITEM_FLAG( "Invert Y axis", UI_NUM_TP_CONFIG, TP_BIT_FLIPY ),
+                UI_MENU_ITEM_FLAG( "Xchg X/Y axes", UI_NUM_TP_CONFIG, TP_BIT_SWAPXY )
             ),
             UI_MENU_ITEM_SUBMENU( "Press-to-select", NULL, 7,
                 UI_MENU_ITEM_SUBMENU( "Thresholds", NULL, 2,
@@ -134,25 +136,23 @@ static ui_menu_t menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
                 UI_MENU_ITEM_NUM_SELECTOR( "Minimum drag", UI_NUM_TP_MINDRAG ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Z time constant", UI_NUM_TP_ZTC ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Jenks Curvature", UI_NUM_TP_JKCUR ),
-                UI_MENU_ITEM_DUMMY( "Skip backups" ) // default: 0
+                UI_MENU_ITEM_FLAG( "Skip backups", UI_NUM_TP_REG2D, TP_BIT_SKIPBACK )
             ),
             UI_MENU_ITEM_SUBMENU( "Drift control", NULL, 7,
-                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
+                UI_MENU_ITEM_FLAG( "Enable/disable", UI_NUM_TP_REG23, TP_BIT_SKIPDRIFT ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Drift threshold", UI_NUM_TP_DRIFT ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Counter 1 reset", UI_NUM_TP_RSTDFT1 ),
                 UI_MENU_ITEM_NUM_SELECTOR( "XY avg threshold", UI_NUM_TP_XYAVGTHR ),
                 UI_MENU_ITEM_NUM_SELECTOR( "XY avg time const", UI_NUM_TP_XYDRIFTAVG ),
                 UI_MENU_ITEM_NUM_SELECTOR( "Z drift limit", UI_NUM_TP_PDRIFTLIM ),
-                UI_MENU_ITEM_NUM_SELECTOR( "Z drift reload", UI_NUM_TP_PDRIFT_REL ),
+                UI_MENU_ITEM_NUM_SELECTOR( "Z drift reload", UI_NUM_TP_PDRIFT_REL )
             ),
-            UI_MENU_ITEM_SUBMENU( "Calibration", NULL, 7,
-                UI_MENU_ITEM_NUM_SELECTOR( "XY origin time", UI_NUM_TP_XYAVG_FACTOR ),
-                UI_MENU_ITEM_DUMMY( "Pot. en/disable" ), // default: 0 (enabled)
-                UI_MENU_ITEM_DUMMY( "Pot. recalibrate" ),
+            UI_MENU_ITEM_SUBMENU( "Calibration", NULL, 5,
                 UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
-                UI_MENU_ITEM_DUMMY( "Skip Z step" ), // default: 0
-                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled)
-                UI_MENU_ITEM_DUMMY( "Drift threshold" ) // default: 0xfe
+                UI_MENU_ITEM_FLAG( "Recalib pots now", UI_NUM_TP_REG23, TP_BIT_SETPOTS ), // wait 310 ms after
+                UI_MENU_ITEM_FLAG( "Pot auto recalib", UI_NUM_TP_REG23, TP_BIT_SKIPPOTS ),
+                UI_MENU_ITEM_FLAG( "Skip Z step", UI_NUM_TP_REG2D, TP_BIT_SKIPZSTEP ),
+                UI_MENU_ITEM_NUM_SELECTOR( "XY origin time", UI_NUM_TP_XYAVG_FACTOR )
             )
         ),
         UI_MENU_ITEM_SUBMENU( "Info", NULL, 4,
@@ -209,7 +209,7 @@ static display_color_t menu_title_color_bg = {{ 100, 100, 200 }};
 static display_color_t menu_title_color_fg = {{ 255, 255, 255 }};
 static display_color_t menu_list_color_bg = {{ 0, 0, 128 }};
 static display_color_t menu_list_color_fg = {{ 255, 255, 255 }};
-static display_color_t menu_list_disabled_color_fg = {{ 128, 128, 128 }};
+static display_color_t menu_list_disabled_color_fg = {{ 0, 0, 64 }};
 static display_color_t rgb_red = {{ 128, 0, 0 }};
 static display_color_t rgb_green = {{ 0, 128, 0 }};
 static display_color_t rgb_blue = {{ 0, 0, 64 }};
@@ -295,10 +295,22 @@ static void draw_menu( ui_menu_t * menu ) {
             break;
         }
 
-        if ( items[ i ].type == UI_DUMMY ) {
-            display_set_draw_color( &menu_list_disabled_color_fg );
-        } else {
-            display_set_draw_color( &menu_list_color_fg );
+        // Set item color:
+        ui_menu_item_t * item = &items[ i ];
+        switch ( item->type ) {
+
+            case UI_DUMMY:
+                display_set_draw_color( &menu_list_disabled_color_fg );
+                break;
+
+            case UI_FLAG:
+                if ( ! get_flag_state( item->number, item->bit ) ) {
+                    display_set_draw_color( &menu_list_disabled_color_fg );
+                    break;
+                }
+
+            default:
+                display_set_draw_color( &menu_list_color_fg );
         }
 
         // Draw item number:
@@ -307,7 +319,7 @@ static void draw_menu( ui_menu_t * menu ) {
         u8g_DrawStr( u8g, menu_list_hpad, y, number );
 
         // Draw item label:
-        u8g_DrawStr( u8g, indent, y, items[ i ].label );
+        u8g_DrawStr( u8g, indent, y, item->label );
         y += step;
     }
 }
@@ -499,6 +511,49 @@ static bool enter_menu( ui_menu_t * menu, char * default_title ) {
 
 /***************************************************************************/
 
+static bool get_flag_state( ui_number_t number, uint8_t bit ) {
+
+#ifdef TRACKPOINT_ENABLE
+    // Handle TrackPoint bits:
+    uint8_t tp_ram_location = map_number_to_tp_ram( number );
+    if ( tp_ram_location != -1 ) {
+
+        bool state = false;
+        tp_status_t result = tp_ram_bit_get( tp_ram_location, bit, &state );
+        if ( result != TP_OK ) {
+            return false;
+        }
+        return state;
+    }
+#endif
+
+    return false;
+}
+
+
+/***************************************************************************/
+
+static void set_flag_state( ui_number_t number, uint8_t bit, bool state ) {
+
+#ifdef TRACKPOINT_ENABLE
+    // Handle TrackPoint bits:
+    uint8_t tp_ram_location = map_number_to_tp_ram( number );
+    if ( tp_ram_location != -1 ) {
+
+        if ( state ) {
+            tp_ram_bit_set( tp_ram_location, bit );
+        } else {
+            tp_ram_bit_clear( tp_ram_location, bit );
+        }
+        return;
+    }
+#endif
+
+}
+
+
+/***************************************************************************/
+
 static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
 
     if ( ! is_pressed ) {
@@ -515,7 +570,7 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
 
         case KC_ESC:
             input_mode = UI_INPUT_MENU;
-            display_draw( false );
+            display_draw( true );
             break;
 
         case KC_ENTER:
@@ -524,6 +579,11 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
             tp_ram_location = map_number_to_tp_ram( num_widget_number );
             if ( tp_ram_location != -1 ) {
                 tp_ram_write( tp_ram_location, num_widget_value );
+
+                // Update sesitivity variables:
+                if ( tp_ram_location == TP_RAM_SNSTVTY ) {
+                    tp_normal_sensitivity = tp_sensitivity = num_widget_value;
+                }
             }
 
             else {
@@ -543,7 +603,7 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
 #endif
 
             input_mode = UI_INPUT_MENU;
-            display_draw( false );
+            display_draw( true );
             break;
 
         case KC_BSPACE:
@@ -744,27 +804,36 @@ static void initialize( u8g_t * u8g_ref ) {
 static uint8_t map_number_to_tp_ram( ui_number_t number ) {
 
     if (
-        number > UI_NUM_TP_RAM_START &&
-        number < UI_NUM_TP_RAM_END
+        (
+            number > UI_NUM_TP_RAM_BYTE_START &&
+            number < UI_NUM_TP_RAM_BYTE_END
+        ) ||
+        (
+            number > UI_NUM_TP_RAM_BIT_START &&
+            number < UI_NUM_TP_RAM_BIT_END
+        )
     ) {
         switch ( number ) {
 
-            case UI_NUM_TP_SNSTVTY: return TP_RAM_SNSTVTY;
-            case UI_NUM_TP_INERTIA: return TP_RAM_INERTIA;
-            case UI_NUM_TP_VALUE6: return TP_RAM_VALUE6;
-            case UI_NUM_TP_REACH: return TP_RAM_REACH;
+            case UI_NUM_TP_CONFIG: return TP_RAM_CONFIG;
             case UI_NUM_TP_DRAGHYS: return TP_RAM_DRAGHYS;
-            case UI_NUM_TP_MINDRAG: return TP_RAM_MINDRAG;
-            case UI_NUM_TP_THR: return TP_RAM_THR;
-            case UI_NUM_TP_UTHR: return TP_RAM_UTHR;
-            case UI_NUM_TP_ZTC: return TP_RAM_ZTC;
+            case UI_NUM_TP_DRIFT: return TP_RAM_DRIFT;
+            case UI_NUM_TP_INERTIA: return TP_RAM_INERTIA;
             case UI_NUM_TP_JKCUR: return TP_RAM_JKCUR;
-            case UI_NUM_TP_RSTDFT1: return TP_RAM_RSTDFT1;
-            case UI_NUM_TP_XYDRIFTAVG: return TP_RAM_XYDRIFTAVG;
+            case UI_NUM_TP_MINDRAG: return TP_RAM_MINDRAG;
             case UI_NUM_TP_PDRIFTLIM: return TP_RAM_PDRIFTLIM;
             case UI_NUM_TP_PDRIFT_REL: return TP_RAM_PDRIFT_REL;
-            case UI_NUM_TP_DRIFT: return TP_RAM_DRIFT;
+            case UI_NUM_TP_REACH: return TP_RAM_REACH;
+            case UI_NUM_TP_REG23: return TP_RAM_REG23;
+            case UI_NUM_TP_REG2D: return TP_RAM_REG2D;
+            case UI_NUM_TP_RSTDFT1: return TP_RAM_RSTDFT1;
+            case UI_NUM_TP_SNSTVTY: return TP_RAM_SNSTVTY;
+            case UI_NUM_TP_THR: return TP_RAM_THR;
+            case UI_NUM_TP_UTHR: return TP_RAM_UTHR;
+            case UI_NUM_TP_VALUE6: return TP_RAM_VALUE6;
             case UI_NUM_TP_XYAVG_FACTOR: return TP_RAM_XYAVG_FACTOR;
+            case UI_NUM_TP_XYDRIFTAVG: return TP_RAM_XYDRIFTAVG;
+            case UI_NUM_TP_ZTC: return TP_RAM_ZTC;
             default: break;
         }
     }
@@ -1233,6 +1302,11 @@ void ui_log_newline() {
 
 void ui_menu_select( int item_no ) {
 
+#ifdef TRACKPOINT_ENABLE
+    uint8_t status = 0;
+    tp_config_t tp_config;
+#endif
+
     // If 0, navigate back/up:
     if ( ! item_no ) {
         if ( menu_stack_pos ) {
@@ -1265,10 +1339,12 @@ void ui_menu_select( int item_no ) {
             enter_menu( &item->submenu, item->label );
             break;
 
-        case UI_CONFIRM:
-        case UI_DUMMY:
-        case UI_EDITOR:
-        case UI_EXIT:
+        case UI_FLAG:
+            set_flag_state(
+                item->number, item->bit,
+                ! get_flag_state( item->number, item->bit )
+            );
+            display_draw( false );
             break;
 
         case UI_LED_CONFIG:
@@ -1292,7 +1368,16 @@ void ui_menu_select( int item_no ) {
             // Temporarily restore display LED so the UI indicator does not get saved:
             set_indicator( false, false );
             settings_save( MX13_SET_LEDS, &led_config );
+#ifdef TRACKPOINT_ENABLE
+            status = tp_get_config( &tp_config );
+            if ( status == TP_OK ) {
+                settings_save( MX13_SET_TRACKPOINT, &tp_config );
+            }
+#endif
             set_indicator( true, false );
+            break;
+
+        default:
             break;
     }
 }

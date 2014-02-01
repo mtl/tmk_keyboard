@@ -23,7 +23,7 @@ struct ui_menu_item;
 typedef enum {
 
 #ifdef TRACKPOINT_ENABLE
-    UI_NUM_TP_RAM_START,
+    UI_NUM_TP_RAM_BYTE_START,
     //------------------------
     UI_NUM_TP_SNSTVTY,
     UI_NUM_TP_INERTIA,
@@ -42,31 +42,37 @@ typedef enum {
     UI_NUM_TP_PDRIFT_REL,
     UI_NUM_TP_DRIFT,
     UI_NUM_TP_XYAVG_FACTOR,
+    //------------------------
+    UI_NUM_TP_RAM_BYTE_END,
 
 
+    UI_NUM_TP_RAM_BIT_START,
+    //------------------------
+    UI_NUM_TP_CONFIG,
+    UI_NUM_TP_REG23,
+    UI_NUM_TP_REG2D,
+    //------------------------
+    UI_NUM_TP_RAM_BIT_END,
 
 /*
-
-// bits:
-                UI_MENU_ITEM_DUMMY( "Skip Z step" ), // default: 0
-                UI_MENU_ITEM_DUMMY( "Pot. en/disable" ), // default: 0 (enabled) (skippots?)
-                UI_MENU_ITEM_DUMMY( "Pot. recalibrate" ),
-            UI_MENU_ITEM_DUMMY( "Press-to-select" )
-                UI_MENU_ITEM_DUMMY( "Skip backups" ) // default: 0
-                UI_MENU_ITEM_DUMMY( "Invert X axis" ),
-                UI_MENU_ITEM_DUMMY( "Invert Y axis" ),
-                UI_MENU_ITEM_DUMMY( "Xchg X/Y axes" )
-                UI_MENU_ITEM_DUMMY( "Enable/disable" ), // default: 0 (enabled) DRIFT en/dis
-
-// other:
-                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
             UI_MENU_ITEM_DUMMY( "VScroll speed" ), // 0 disables?
             UI_MENU_ITEM_DUMMY( "HScroll speed" ), // 0 disables?
-                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after
+                UI_MENU_ITEM_DUMMY( "Recalibrate now" ), // must wait 310 ms after E2 51
+
+            info:
+            UI_MENU_ITEM_DUMMY( "Page 1" ),
+            UI_MENU_ITEM_DUMMY( "Page 2" ),
+            UI_MENU_ITEM_DUMMY( "Page 3" ),
+            UI_MENU_ITEM_DUMMY( "Page 4" )
+
+            UI_MENU_ITEM_DUMMY( "Reload config" ), // reapply config from EEPROM
+            UI_MENU_ITEM_DUMMY( "View POST results" ),
+            UI_MENU_ITEM_DUMMY( "Reset to defaults" ),
+            UI_MENU_ITEM_DUMMY( "Soft reset" ),
+            UI_MENU_ITEM_DUMMY( "Hard reset" )
 */
 
     //------------------------
-    UI_NUM_TP_RAM_END,
 #endif
 
     UI_NUM_LED_TP_INTENSITY
@@ -91,6 +97,7 @@ typedef enum {
     UI_DUMMY,           // A dummy menu item
     UI_EDITOR,          // A text editor
     UI_EXIT,            // Exit the UI
+    UI_FLAG,            // A toggleable flag
     UI_LED_CONFIG,      // LED configuration
     UI_NAV_PREV,        // Navigate to the previous screen
     UI_NUM_SELECTOR,    // Select a numeric value
@@ -107,10 +114,15 @@ typedef struct ui_menu_item {
     char * label;
     //u8g_pgm_uint8_t label;
 
-    union {
-        led_indices_t led_channel;  // UI_LED_CONFIG, UI_RGB_SELECTOR
-        ui_menu_t submenu;          // UI_SUBMENU
-        ui_number_t number;         // UI_NUM_SELECTOR
+    struct {
+        union {
+            led_indices_t led_channel;  // UI_LED_CONFIG, UI_RGB_SELECTOR
+            ui_menu_t submenu;          // UI_SUBMENU
+            ui_number_t number;         // UI_NUM_SELECTOR, UI_FLAG
+        };
+        union {
+            uint8_t bit;                // UI_FLAG
+        };
     };
 
 } ui_menu_item_t;
@@ -149,6 +161,9 @@ typedef enum {
     { name, num_items, (ui_menu_item_t[]) {__VA_ARGS__} }
 
 #define UI_MENU_ITEM_DUMMY( name ) { UI_DUMMY, name }
+
+#define UI_MENU_ITEM_FLAG( name, num, bitpos ) \
+    { UI_FLAG, name, .number = num, .bit = bitpos }
 
 #define UI_MENU_ITEM_LED_CONFIG( name, led_ch ) \
     { UI_LED_CONFIG, name, .led_channel = led_ch }

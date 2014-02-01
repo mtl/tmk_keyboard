@@ -214,8 +214,8 @@ uint8_t tp_response[ TP_RESPONSE_BUFFER_SIZE ]; // Response to most recent TP co
 
 // Middle-button-scroll is implemented by dividing cursor movement by these amounts:
 int tp_sensitivity = 0x80;
-int tp_scroll_divisor_h = 2;
-int tp_scroll_divisor_v = 2;
+int tp_scroll_divisor_h = 3;
+int tp_scroll_divisor_v = 3;
 
 static int num_defaults = (
     sizeof( tp_ram_defaults ) /
@@ -297,6 +297,9 @@ static tp_status_t initialize( bool hard ) {
         RET_ON_ERROR();
         tp_sensitivity = tp_normal_sensitivity;
 
+        // Set precision sensitivity:
+        tp_precision_sensitivity = config.precision_sensitivity = 64;
+
         // Set transfer function upper plateau:
         status = tp_ram_write( TP_RAM_VALUE6, 150 );
         RET_ON_ERROR();
@@ -308,8 +311,6 @@ static tp_status_t initialize( bool hard ) {
         // Save the configuration:
         status = tp_get_config( &config );
         RET_ON_ERROR();
-
-        tp_precision_sensitivity = config.precision_sensitivity = 64;
 
         settings_save( MX13_SET_TRACKPOINT, &config );
     }
@@ -633,6 +634,24 @@ tp_status_t tp_ram_bit_clear( uint8_t location, uint8_t bit ) {
     status = tp_ram_write( location, value & ~(1<<bit) );
     RET_ON_ERROR();
 
+    return TP_OK;
+}
+
+
+/***************************************************************************/
+
+// TP Command: Get a bit in controller RAM
+tp_status_t tp_ram_bit_get( uint8_t location, uint8_t bit, bool * result ) {
+
+    // Ensure the TrackPoint is enabled:
+    if ( ! initialized ) return TP_DISABLED;
+
+    uint8_t value = 0;
+    status = tp_ram_read( location, &value );
+    RET_ON_ERROR();
+
+    *result = ( value & (1<<bit) ) != false;
+    
     return TP_OK;
 }
 
@@ -1001,12 +1020,13 @@ tp_status_t tp_set_config( tp_config_t * config ) {
         }
     }
 
-    tp_precision_sensitivity = config->precision_sensitivity;
-
+    // Read back the sesitivity setting:
     status = tp_ram_read( TP_RAM_SNSTVTY, &ram_value );
     if ( status == TP_OK ) {
         tp_sensitivity = tp_normal_sensitivity = ram_value;
     }
+
+    tp_precision_sensitivity = config->precision_sensitivity;
 
     return TP_OK;
 }
