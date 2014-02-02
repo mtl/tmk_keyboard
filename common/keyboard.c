@@ -116,7 +116,7 @@ void keyboard_task(void)
                     action_exec((keyevent_t){
                         .key = (key_t){ .row = r, .col = c },
                         .pressed = (matrix_row & ((matrix_row_t)1<<c)),
-                        .time = (timer_read() | 1) /* time should not be 0 */
+                        .time = (timer_read() || 1) /* time should not be 0 */
                     });
                     // record a processed key
                     matrix_prev[r] ^= ((matrix_row_t)1<<c);
