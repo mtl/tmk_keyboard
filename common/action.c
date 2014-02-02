@@ -53,6 +53,34 @@ void action_exec(keyevent_t event)
 #endif
 }
 
+// Action Memory: For each pressed key in the matrix, stores the action
+// that resulted from the most recent press event.
+action_t action_memory[ MATRIX_ROWS ][ MATRIX_COLS ] = {{{ 0 }}};
+
+// Avoid the following problem:
+//   1. Key X is pressed, sending make code for key "x".
+//   2. FN layer is engaged
+//   3. Key X is released, sending break code for key FN(X)
+//      * Break code for unpressed FN(X) is ignored by the host
+//   4. If "x" is a regular key, host simulates repeated key presses
+//      for "x", since it has not yet received a break event.
+//   5. If "x" is a modifier, host thinks the modifier remains in the
+//      pressed state, since it has not yet received a break event.
+//
+static void action_memory_map(keyevent_t event, action_t * action) {
+
+	action_t * slot = &action_memory[ event.key.row ][ event.key.col ];
+
+	if ( event.pressed ) {
+
+		*slot = *action;
+
+	} else if ( slot->code != ACTION_NO ) {
+
+		*action = *slot;
+	}
+}
+
 void process_action(keyrecord_t *record)
 {
     keyevent_t event = record->event;
@@ -63,6 +91,9 @@ void process_action(keyrecord_t *record)
     if (IS_NOEVENT(event)) { return; }
 
     action_t action = layer_switch_get_action(event.key);
+
+	action_memory_map( event, &action );
+
     dprint("ACTION: "); debug_action(action);
 #ifndef NO_ACTION_LAYER
     dprint(" layer_state: "); layer_debug();
