@@ -327,6 +327,50 @@ static void draw_menu( ui_menu_t * menu ) {
 
 /***************************************************************************/
 
+static void draw_num_selector() {
+
+    char number[ 6 ] = "     ";
+    char * num;
+
+    // Render title bar and background:
+    draw_page( num_widget_title );
+
+    // Compute first line y pos and line height:
+    int y = page_body_start + num_font_height + num_vpad - 1;
+    int step = ( menu_list_vpad << 1 ) + num_font_vsize - 1;
+
+    // Create string from value:
+    int val = num_widget_value;
+    int num_digits = 0;
+    num = &number[ 0 ] + 5;
+    for ( int i = 0; i < 5; i++ ) {
+
+        num--;
+        *num = 0x30 + val % 10;
+        num_digits++;
+        val /= 10;
+
+        if ( ! val ) break;
+    }
+    if ( ! num_digits ) {
+        *num = '0';
+    }
+
+    // Draw current value:
+    display_set_draw_color( &menu_list_color_fg );
+    u8g_SetFont( u8g, num_selector_num_font );
+    u8g_DrawStr(
+        u8g,
+        // Make sure this is positive if using a very wide font:
+        ( 128 - u8g_GetStrWidth( u8g, num ) ) / 2,
+        y,
+        num
+    );
+}
+
+
+/***************************************************************************/
+
 static void draw_page( char * title ) {
 
     // Draw title bar:
@@ -1062,166 +1106,6 @@ bool ui_draw( u8g_t * u8g_ref ) {
         display_draw_full_screen_bitmap( (u8g_pgm_uint8_t *) mx13_logo_commando );
         return false;
     }
-}
-
-
-/***************************************************************************/
-
-static uint8_t get_digit( uint16_t value, uint16_t digit ) {
-
-    for ( int i = 0; i < digit; i++ ) {
-        value /= 10;
-    }
-    return value % 10;
-
-}
-
-static void draw_num_selector() {
-
-    char number[ 6 ] = "     ";
-    char * num;
-
-    // Render title bar and background:
-    draw_page( num_widget_title );
-
-    // Compute first line y pos and line height:
-    int y = page_body_start + num_font_height + num_vpad - 1;
-    int step = ( menu_list_vpad << 1 ) + num_font_vsize - 1;
-
-    // Create string from value:
-    int val = num_widget_value;
-    int num_digits = 0;
-    num = &number[ 0 ] + 5;
-    for ( int i = 0; i < 5; i++ ) {
-
-        num--;
-        *num = 0x30 + val % 10;
-        num_digits++;
-        val /= 10;
-
-        if ( ! val ) break;
-    }
-    if ( ! num_digits ) {
-        *num = '0';
-    }
-
-    // Draw current value:
-    display_set_draw_color( &menu_list_color_fg );
-    u8g_SetFont( u8g, num_selector_num_font );
-    u8g_DrawStr(
-        u8g,
-        // Make sure this is positive if using a very wide font:
-        ( 128 - u8g_GetStrWidth( u8g, num ) ) / 2,
-        y,
-        num
-    );
-
-    /*
-
-
-    // Compute bar dimensions:
-    int bar_frame_x = menu_list_hpad;
-    int bar_x = bar_frame_x + frame_width + widget_focus_frame_pad;
-    uint16_t bar_bg_width = 128 - ( menu_list_hpad << 1 );
-    uint16_t max_bar_width = bar_bg_width - ( widget_focus_frame_pad << 1 );
-    uint32_t bar_width = 0;
-
-    // Draw bar:
-    display_set_draw_color( &rgb_red );
-    int y_red = y;
-    bar_width = max_bar_width;
-    bar_width *= rgb_widget_color[ 0 ];
-    bar_width /= rgb_max_value;
-    u8g_DrawBox(
-        u8g,
-        bar_x,
-        y_red - menu_list_font_height,
-        bar_width,
-        menu_list_font_vsize
-    );
-
-    display_set_draw_color( &rgb_green );
-    int y_green = y_red + step;
-    bar_width = max_bar_width;
-    bar_width *= rgb_widget_color[ 1 ];
-    bar_width /= rgb_max_value;
-    u8g_DrawBox(
-        u8g,
-        bar_x,
-        y_green - menu_list_font_height,
-        bar_width,
-        menu_list_font_vsize
-    );
-
-    display_set_draw_color( &rgb_blue );
-    int y_blue = y_green + step;
-    bar_width = max_bar_width;
-    bar_width *= rgb_widget_color[ 2 ];
-    bar_width /= rgb_max_value;
-    u8g_DrawBox(
-        u8g,
-        bar_x,
-        y_blue - menu_list_font_height,
-        bar_width,
-        menu_list_font_vsize
-    );
-
-    // Draw numbers:
-    display_set_draw_color( &menu_title_color_fg );
-    char digits[] = "   ";
-    if ( rgb_max_value < 256 ) {
-        digits[ 2 ] = 0;
-    }
-    int d = 0;
-    if ( rgb_max_value > 255 ) {
-        digits[ d++ ] = nibchar( rgb_widget_color[ 0 ] >> 8 );
-    }
-    digits[ d++ ] = nibchar( rgb_widget_color[ 0 ] >> 4 );
-    digits[ d ] = nibchar( rgb_widget_color[ 0 ] );
-    u8g_DrawStr( u8g, num_x, y_red, digits );
-    d = 0;
-    if ( rgb_max_value > 255 ) {
-        digits[ d++ ] = nibchar( rgb_widget_color[ 1 ] >> 8 );
-    }
-    digits[ d++ ] = nibchar( rgb_widget_color[ 1 ] >> 4 );
-    digits[ d ] = nibchar( rgb_widget_color[ 1 ] );
-    u8g_DrawStr( u8g, num_x, y_green, digits );
-    d = 0;
-    if ( rgb_max_value > 255 ) {
-        digits[ d++ ] = nibchar( rgb_widget_color[ 2 ] >> 8 );
-    }
-    digits[ d++ ] = nibchar( rgb_widget_color[ 2 ] >> 4 );
-    digits[ d ] = nibchar( rgb_widget_color[ 2 ] );
-    u8g_DrawStr( u8g, num_x, y_blue, digits );
-
-    // Draw focus:
-    if ( rgb_focus_locked ) {
-        display_set_draw_color( &rgb_focus_color );
-    }
-    int color = rgb_widget_focus >> 1;
-    if ( ! color ) {
-        y = y_red;
-    } else if ( color == 1 ) {
-        y = y_green;
-    } else {
-        y = y_blue;
-    }
-    if ( rgb_widget_focus % 2 ) {
-        u8g_DrawFrame(
-            u8g, num_x - widget_focus_frame_pad - 1,
-            y - menu_list_font_height - widget_focus_frame_pad - frame_width,
-            128 - menu_list_hpad - frame_width - widget_focus_frame_pad - num_x + 4,
-            menu_list_font_vsize + ( widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
-        );
-    } else {
-        u8g_DrawFrame(
-            u8g, menu_list_hpad,
-            y - menu_list_font_height - widget_focus_frame_pad - frame_width,
-            max_bar_width + ( widget_focus_frame_pad << 1 ) + ( frame_width << 1 ),
-            menu_list_font_vsize + ( widget_focus_frame_pad << 1 ) + ( frame_width << 1 )
-        );
-    }
-    */
 }
 
 

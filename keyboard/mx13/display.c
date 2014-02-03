@@ -1,7 +1,7 @@
 /****************************************************************************
  *
  *  SSD1351 support
- *  128 x 128 262-color (?) OLED
+ *  128 x 128 18-bit color OLED
  *
  ***************************************************************************/
 
@@ -146,51 +146,6 @@ void display_draw_full_screen_bitmap( const u8g_pgm_uint8_t *image ) {
     u8g_SleepOff( &u8g );
 }
 
-
-/***************************************************************************/
-
-void display_draw_u8g_logo() {
-
-    u8g_SetRGB(&u8g, 0, 0, 255 );
-    display_draw_u8g_name(2);
-    u8g_SetRGB(&u8g, 0, 255, 0 );
-    display_draw_u8g_name(1);
-    u8g_SetRGB(&u8g, 255, 0, 0 );
-    display_draw_u8g_name(0);
-
-    u8g_SetRGB(&u8g, 0, 255, 255 );
-    display_draw_u8g_url();
-}
-
-
-/***************************************************************************/
-
-void display_draw_u8g_name( uint8_t d ) {
-
-	uint8_t ybase = 10;
-	//uint8_t ybase = 100;
-
-    u8g_SetFont(&u8g, u8g_font_gdr25r);
-    u8g_DrawStr(&u8g, 0+d, ybase + 20+d, "U");
-    u8g_SetFont(&u8g, u8g_font_gdr30n);
-    u8g_DrawStr90(&u8g, 23+d,ybase+d,"8");
-    u8g_SetFont(&u8g, u8g_font_gdr25r);
-    u8g_DrawStr(&u8g, 53+d,ybase+20+d,"g");
-
-    u8g_DrawHLine(&u8g, 2+d, ybase+25+d, 47);
-    u8g_DrawVLine(&u8g, 45+d, ybase + 22+d, 12);
-}
-
-
-/***************************************************************************/
-
-void display_draw_u8g_url() {
-
-	//uint8_t ybase = 10;
-
-    u8g_SetFont( &u8g, u8g_font_4x6 );
-    u8g_DrawStr( &u8g, 1, 54,"code.google.com/p/u8glib" );
-}
 
 /***************************************************************************/
 

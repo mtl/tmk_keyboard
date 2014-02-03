@@ -1,0 +1,39 @@
+
+To-do:
+---------------
+
+Necessary features:
+ * When numlock is active, activate the numlock layer
+
+Enhanced features:
+ * Finish TrackPoint menu items
+    * Commands
+	* Display info
+	* Debug stuff
+ * Figure out why hid_listen isn't working
+ * Swap out u8glib for ucglib
+    * Develop ucglib driver(s): avr, ssd1351?
+	* C API
+
+Bonus:
+ * Implement typematic key repeater
+ * Make UI look better, more consistent
+ * LED fade out when deactivating caps lock, etc.
+ * TrackPoint LED breathing effect
+
+Others:
+ * Fix stuck pixels
+ * Update case design DWG file
+    * Move stabilizer holes 0.5 mm up
+	* Cut out under glider logo
+	* Revise bridge layer based on new pictures of TrackPoint button assembly
+
+
+
+
+
+
+
+
+
+

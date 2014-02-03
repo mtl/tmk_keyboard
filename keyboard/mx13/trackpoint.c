@@ -974,6 +974,8 @@ tp_status_t tp_save() {
 
     // Save the extracted configuration:
     settings_save( MX13_SET_TRACKPOINT, &config );
+
+    return TP_OK;
 }
 
 

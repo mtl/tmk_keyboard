@@ -7,6 +7,7 @@
 #include <avr/io.h>
 #include <stdbool.h>
 #include "stdint.h"
+#include "action_layer.h"
 #include "led.h"
 #include "print.h"
 #include "pwm-driver.h"
@@ -19,6 +20,7 @@
 #   include "trackpoint.h"
 #endif
 
+#define MX13_NUM_LOCK_LAYER 2
 
 /***************************************************************************/
 
@@ -143,6 +145,21 @@ void led_init() {
 // later.
 void led_set( uint8_t usb_led ) {
 
+    static bool num_lock_layer_applied = false;
+
+    // Apply the num-lock function layer when the indicator is lit:
+    bool num_lock_indicated = ( usb_led & ( 1 << USB_LED_NUM_LOCK ) ) != 0;
+    if ( num_lock_indicated && ! num_lock_layer_applied ) {
+
+        layer_on( MX13_NUM_LOCK_LAYER );
+        num_lock_layer_applied = true;
+
+    } else if ( num_lock_layer_applied && ! num_lock_indicated ) {
+
+        layer_off( MX13_NUM_LOCK_LAYER );
+        num_lock_layer_applied = false;
+    }
+
 #ifdef LED_CONTROLLER_ENABLE
     for ( int i = 0; i < LED_ARRAY_SIZE; i++ ) {
 
@@ -153,15 +170,15 @@ void led_set( uint8_t usb_led ) {
                 continue;
             case LED_CAPS_LOCK_0:
             case LED_CAPS_LOCK_1:
-                new_on = usb_led & ( 1 << USB_LED_CAPS_LOCK );
+                new_on = ( usb_led & ( 1 << USB_LED_CAPS_LOCK ) ) != 0;
                 break;
             case LED_NUM_LOCK_0:
             case LED_NUM_LOCK_1:
-                new_on = usb_led & ( 1 << USB_LED_NUM_LOCK );
+                new_on = num_lock_indicated;
                 break;
             case LED_SCROLL_LOCK_0:
             case LED_SCROLL_LOCK_1:
-                new_on = usb_led & ( 1 << USB_LED_SCROLL_LOCK );
+                new_on = ( usb_led & ( 1 << USB_LED_SCROLL_LOCK ) ) != 0;
                 break;
         }
 

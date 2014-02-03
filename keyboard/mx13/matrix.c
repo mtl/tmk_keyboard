@@ -89,6 +89,44 @@ void matrix_init(void)
 
 }
 
+/*
+
+	if ( typematic_task() ) {
+		goto MATRIX_LOOP_END;
+	}
+
+
+
+
+// last repeatable key press row & column
+// ever-been-repeated flag
+// time of last press event
+
+bool typematic_repeated = false;
+bool typematic_sent_break = false;
+
+static bool typematic_task() {
+}
+
+static void typematic_update() {
+}
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
 uint8_t matrix_scan(void)
 {
     // Update LED states if necessary:
