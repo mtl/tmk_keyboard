@@ -57,7 +57,8 @@ SRC =				\
 	matrix.c		\
 	led.c 			\
 	settings.c		\
-	ui.c
+	ui.c 			\
+	ui_menu.c
 
 CONFIG_H = config.h
 

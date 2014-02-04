@@ -3,7 +3,6 @@ To-do:
 ---------------
 
 Necessary features:
- * When numlock is active, activate the numlock layer
 
 Enhanced features:
  * Finish TrackPoint menu items
