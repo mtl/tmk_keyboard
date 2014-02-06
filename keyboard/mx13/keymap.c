@@ -14,6 +14,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
+/***************************************************************************/
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <avr/pgmspace.h>
@@ -28,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "matrix.h"
 #include "ui.h"
 
+
+/***************************************************************************/
 
 #define KEYMAP( \
     K0A, K0B, K0C, K0D, K0E, K0F, K0G, K0H, K0I, K0J, K0K, K0L, K0M, K0N, K0O, K0P, K0Q, K0R, K0S, \
@@ -46,40 +51,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "layout.h"
 
-#define KEYMAPS_SIZE    (sizeof(keymaps) / sizeof(keymaps[0]))
-#define FN_ACTIONS_SIZE (sizeof(fn_actions) / sizeof(fn_actions[0]))
 
+/***************************************************************************/
+
+#define KEYMAPS_SIZE    ( sizeof( keymaps ) / sizeof( keymaps[ 0 ] ) )
+#define FN_ACTIONS_SIZE ( sizeof( fn_actions ) / sizeof( fn_actions[ 0 ] ) )
 #define MX13_UI_LOCK KC_FN1
 #define MX13_UI_LAYER 3
-bool keymap_is_pressed( key_t key ) {
+
+
+/***************************************************************************/
+
+// Return true if the given key is currently pressed.
+static bool is_pressed( key_t key ) {
     matrix_row_t matrix_row = matrix_get_row( key.row );
     return matrix_row & ((matrix_row_t)1<<key.col);
 }
 
-static bool first = true;
 
-/* translates key to keycode */
-uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
-{
+/***************************************************************************/
 
-    uint8_t keycode = 0;
+// Translate Fn keycode to action.
+action_t keymap_fn_to_action( uint8_t keycode ) {
 
-    if (layer < KEYMAPS_SIZE) {
-        keycode = pgm_read_byte(&keymaps[(layer)][(key.row)][(key.col)]);
+    action_t action;
+    action.code = ACTION_NO;
+
+    if ( FN_INDEX( keycode ) < FN_ACTIONS_SIZE ) {
+        action.code = pgm_read_word( &fn_actions[ FN_INDEX( keycode ) ] );
     } else {
-        // XXX: this may cuaes bootlaoder_jump inconsistent fail.
+        action.code = ACTION_NO;
+    }
+
+    return action;
+}
+
+
+/***************************************************************************/
+
+// Translate key to keycode.
+uint8_t keymap_key_to_keycode( uint8_t layer, key_t key ) {
+
+    // This function gets called twice per key press, probably due to the
+    // "action tapping" code.  This variable is used to remember if this is
+    // the first or second invocation.
+    static bool first = true;
+
+    uint8_t keycode = KC_NO;
+
+    if ( layer < KEYMAPS_SIZE ) {
+
+        keycode = pgm_read_byte( &keymaps[ layer ][ key.row ][ key.col ] );
+
+    } else {
+
+        // XXX: this may cuaes bootloader_jump inconsistent fail.
         //debug("key_to_keycode: base "); debug_dec(layer); debug(" is invalid.\n");
         // fall back to layer 0
-        keycode = pgm_read_byte(&keymaps[0][(key.row)][(key.col)]);
+        keycode = pgm_read_byte( &keymaps[ 0 ][ key.row ][ key.col ] );
     }
 
 #ifdef DISPLAY_ENABLE
 
     // Handle UI lock key:
     if ( keycode == MX13_UI_LOCK ) {
-        if ( keymap_is_pressed( key ) ) {
+
+        if ( is_pressed( key ) ) {
+
             ui_enter();
+
         } else {
+
             ui_leave();
         }
         return keycode;
@@ -87,14 +129,18 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
 
     // Redirect keypresses during UI lock:
     if ( layer == MX13_UI_LAYER ) {
+
         if ( first ) {
+
             ui_handle_key(
                 layer,
                 pgm_read_byte( &keymaps[ MX13_UI_LAYER ][ key.row ][ key.col ] ),
-                keymap_is_pressed( key )
+                is_pressed( key )
             );
             first = false;
+
         } else {
+
             first = true;
         }
         return KC_NO;
@@ -105,20 +151,7 @@ uint8_t keymap_key_to_keycode(uint8_t layer, key_t key)
     return keycode;
 }
 
-/* translates Fn keycode to action */
-action_t keymap_fn_to_action(uint8_t keycode)
-{
-    action_t action;
 
-    action.code = ACTION_NO;
-
-    if (FN_INDEX(keycode) < FN_ACTIONS_SIZE) {
-        action.code = pgm_read_word(&fn_actions[FN_INDEX(keycode)]);
-    } else {
-        action.code = ACTION_NO;
-    }
-
-    return action;
-}
+/***************************************************************************/
 
 /* vi: set et sts=4 sw=4 ts=4: */

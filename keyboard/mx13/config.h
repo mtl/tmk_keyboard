@@ -14,40 +14,42 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+/***************************************************************************/
 
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* USB Device descriptor parameter */
+
+/***************************************************************************/
+
+// USB Device descriptor parameters:
 #define VENDOR_ID       0x04b3
-#define PRODUCT_ID      0x1300
+#define PRODUCT_ID      0x0013
 #define DEVICE_VER      0x0001
 #define MANUFACTURER    mtl
 #define PRODUCT         MX13 SpaceSaver Keyboard
 #define DESCRIPTION     t.m.k. keyboard firmware for MX13 SpaceSaver Keyboard
 
-/* key matrix size */
+
+/***************************************************************************/
+
 #define MATRIX_ROWS 5
 #define MATRIX_COLS 19
-
-/* define if matrix has ghost */
-//#define MATRIX_HAS_GHOST
-
-/* Set 0 if debouncing isn't needed */
 #define DEBOUNCE    5
 
-/* Mechanical locking support. Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap */
+// Mechanical locking support.
+// Use KC_LCAP, KC_LNUM or KC_LSCR instead in keymap.
 #define LOCKING_SUPPORT_ENABLE
-/* Locking resynchronize hack */
+
+// Locking resynchronize hack:
 #define LOCKING_RESYNC_ENABLE
 
-/* key combination for command */
+// Key combination for command:
 #define IS_COMMAND() ( \
-    keyboard_report->mods == (MOD_BIT(KC_LSHIFT) | MOD_BIT(KC_RSHIFT)) \
+    keyboard_report->mods == ( MOD_BIT( KC_LSHIFT ) | MOD_BIT( KC_RSHIFT ) ) \
 )
 
-
-// Configurable middle-button-scroll (defined in trackpoint.c):
+// Configurable middle-button-scroll (defined in trackpoint.c).
 // 0x80 is the default TrackPoint sensitivity.
 #define PS2_MOUSE_SCROLL_DIVISOR_H ( ( tp_sensitivity * tp_scroll_divisor_h ) / 0x80 )
 #define PS2_MOUSE_SCROLL_DIVISOR_V ( ( tp_sensitivity * tp_scroll_divisor_v ) / 0x80 )
@@ -55,10 +57,10 @@ extern int tp_sensitivity;
 extern int tp_scroll_divisor_h; // [0,16256]
 extern int tp_scroll_divisor_v; // [0,16256]
 
-/*
- * Feature disable options
- *  These options are also useful to firmware size reduction.
- */
+
+/***************************************************************************/
+// Feature disable options.
+//   These options are also useful to firmware size reduction.
 
 /* disable debug print */
 //#define NO_DEBUG
@@ -73,7 +75,11 @@ extern int tp_scroll_divisor_v; // [0,16256]
 //#define NO_ACTION_MACRO
 //#define NO_ACTION_FUNCTION
 
+
+/***************************************************************************/
+
 #ifdef PS2_USE_USART
+
 /* XCK for clock line and RXD for data line */
 #define PS2_CLOCK_PORT  PORTD
 #define PS2_CLOCK_PIN   PIND
@@ -95,9 +101,6 @@ extern int tp_scroll_divisor_v; // [0,16256]
 } while (0)
 //    UCSR1B &= ~(1 << UDRIE1)        \
 */
-
-
-
 
 /* synchronous, odd parity, 1-bit stop, 8-bit data, sample at falling edge */
 /* set DDR of CLOCK as input to be slave */
@@ -131,9 +134,9 @@ extern int tp_scroll_divisor_v; // [0,16256]
 #define PS2_USART_RX_VECT       USART1_RX_vect
 #endif
 
-
+/*
 #ifdef PS2_USE_INT
-/* uses INT1 for clock line(ATMega32U4) */
+// uses INT1 for clock line(ATMega32U4)
 #define PS2_CLOCK_PORT  PORTD
 #define PS2_CLOCK_PIN   PIND
 #define PS2_CLOCK_DDR   DDRD
@@ -155,8 +158,9 @@ extern int tp_scroll_divisor_v; // [0,16256]
 } while (0)
 #define PS2_INT_VECT    INT1_vect
 #endif
+*/
 
-
+/*
 #ifdef PS2_USE_BUSYWAIT
 #define PS2_CLOCK_PORT  PORTA
 #define PS2_CLOCK_PIN   PINA
@@ -167,18 +171,23 @@ extern int tp_scroll_divisor_v; // [0,16256]
 #define PS2_DATA_DDR    DDRA
 #define PS2_DATA_BIT    5
 #endif
+*/
 
-/* PS/2 mouse */
-//#ifdef PS2_MOUSE_ENABLE
-//#   define PS2_CLOCK_PORT  PORTA
-//#   define PS2_CLOCK_PIN   PINA
-//#   define PS2_CLOCK_DDR   DDRA
-//#   define PS2_CLOCK_BIT   6
-//#   define PS2_DATA_PORT   PORTA
-//#   define PS2_DATA_PIN    PINA
-//#   define PS2_DATA_DDR    DDRA
-//#   define PS2_DATA_BIT    5
-//#endif
+/*
+#ifdef PS2_MOUSE_ENABLE
+#   define PS2_CLOCK_PORT  PORTA
+#   define PS2_CLOCK_PIN   PINA
+#   define PS2_CLOCK_DDR   DDRA
+#   define PS2_CLOCK_BIT   6
+#   define PS2_DATA_PORT   PORTA
+#   define PS2_DATA_PIN    PINA
+#   define PS2_DATA_DDR    DDRA
+#   define PS2_DATA_BIT    5
+#endif
+*/
+
+
+/***************************************************************************/
 
 #endif
 
