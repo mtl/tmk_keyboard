@@ -39,8 +39,9 @@ ui_menu_t ui_menu = UI_MENU( "MX13 Config", UI_MAIN_MENU_ITEMS,
 
         // tactile output pulse commands?
 
-        UI_MENU_ITEM_SUBMENU( "Basic config", NULL, 4,
+        UI_MENU_ITEM_SUBMENU( "Basic config", NULL, 5,
             UI_MENU_ITEM_NUM_SELECTOR( "Pointer speed", UI_NUM_TP_SNSTVTY ),
+            UI_MENU_ITEM_NUM_SELECTOR( "Precision speed", UI_NUM_TP_PRECISION ),
             UI_MENU_ITEM_NUM_SELECTOR( "V-scroll div", UI_NUM_TP_SCROLL_V ),
             UI_MENU_ITEM_NUM_SELECTOR( "H-scroll div", UI_NUM_TP_SCROLL_H ),
             UI_MENU_ITEM_FLAG( "Press-to-select", UI_NUM_TP_CONFIG, TP_BIT_PTSON )

@@ -54,6 +54,7 @@ typedef enum {
     //------------------------
     UI_NUM_TP_RAM_BIT_END,
 
+    UI_NUM_TP_PRECISION,
     UI_NUM_TP_SCROLL_V,
     UI_NUM_TP_SCROLL_H,
 

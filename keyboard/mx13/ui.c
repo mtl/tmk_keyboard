@@ -532,6 +532,10 @@ static void handle_key_num( uint8_t layer, int keycode, bool is_pressed ) {
                         led_set_trackpoint( led_config.trackpoint.on );
                         break;
 
+                    case UI_NUM_TP_PRECISION:
+                        tp_precision_sensitivity = num_widget_value;
+                        break;
+
                     case UI_NUM_TP_SCROLL_H:
                         tp_scroll_divisor_h = num_widget_value;
                         break;
@@ -895,6 +899,10 @@ static void start_num_selector(
             case UI_NUM_LED_TP_INTENSITY:
                 num_widget_value = led_config.trackpoint.intensity;
                 led_set_trackpoint( true );
+                break;
+
+            case UI_NUM_TP_PRECISION:
+                num_widget_value = tp_precision_sensitivity;
                 break;
 
             case UI_NUM_TP_SCROLL_H:

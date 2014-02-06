@@ -22,10 +22,6 @@ Bonus:
 
 Others:
  * Fix stuck pixels
- * Update case design DWG file
-    * Move stabilizer holes 0.5 mm up
-	* Cut out under glider logo
-	* Revise bridge layer based on new pictures of TrackPoint button assembly
 
 
 
