@@ -6,8 +6,12 @@
 
 #include <avr/eeprom.h> 
 #include <avr/pgmspace.h> 
-#include "led-local.h"
 #include "settings.h"
+
+#ifdef EEPROM_LED_SETTINGS
+#    include "led-local.h"
+#endif
+
 
 #ifdef TRACKPOINT_ENABLE
 #    include "trackpoint.h"
@@ -25,10 +29,16 @@ static bool settings_available( void );
 /***************************************************************************/
 // Reserved EEPROM memory:
 
+#ifdef EEPROM_LED_SETTINGS
 //static setting_led_block_t EEMEM led_settings;
 static led_config_t EEMEM led_area;
+#endif
+
 static setting_area_info_t EEMEM ee_areas;
+
+#ifdef TRACKPOINT_ENABLE
 static tp_config_t EEMEM tp_area;
+#endif
 
 
 /***************************************************************************/
@@ -62,7 +72,10 @@ static bool initialize() {
 
         if ( MX13_SET_INVALIDATE || ! settings_available() ) {
             areas.signifier = MX13_SET_SIGNIFIER;
+
+#ifdef EEPROM_LED_SETTINGS
             areas.leds.present = false;
+#endif
 
 #ifdef TRACKPOINT_ENABLE
             areas.trackpoint.present = false;
@@ -96,12 +109,15 @@ static bool settings_available() {
 
     // Basic sanity checks on EEPROM area types, sizes and locations.
     if (
+        false
 
-        ( areas.leds.present && (
+#ifdef EEPROM_LED_SETTINGS
+        || ( areas.leds.present && (
             areas.leds.type != MX13_SET_LEDS ||
             areas.leds.address != &led_area ||
             areas.leds.size != sizeof( led_config_t )
         ) )
+#endif
 
 #ifdef TRACKPOINT_ENABLE
         || ( areas.trackpoint.present && (
@@ -147,6 +163,8 @@ bool settings_load( setting_area_type_t type, void * block ) {
             break;
 #endif
 
+#ifdef EEPROM_LED_SETTINGS
+
         // Load LED settings:
         case MX13_SET_LEDS:
 
@@ -155,6 +173,9 @@ bool settings_load( setting_area_type_t type, void * block ) {
             size = sizeof( led_config_t );
             expected_checksum = areas.leds.checksum;
             break;
+#endif
+
+        default: break;
     }
 
     if ( present ) {
@@ -198,6 +219,8 @@ bool settings_save( setting_area_type_t type, void * block ) {
             break;
 #endif
 
+#ifdef EEPROM_LED_SETTINGS
+
         // Load LED settings:
         case MX13_SET_LEDS:
 
@@ -208,6 +231,9 @@ bool settings_save( setting_area_type_t type, void * block ) {
             areas.leds.checksum = checksum( block, sizeof( led_config_t ) );
             update = true;
             break;
+#endif
+
+        default: break;
     }
 
     if ( update ) {

@@ -14,13 +14,15 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include "display.h"
 #include "ps2.h"
 #include "settings.h"
 #include "trackpoint.h"
-#include "ui.h"
 #include "util.h"
 
+#ifdef DISPLAY_ENABLE
+#    include "display.h"
+#    include "ui.h"
+#endif
 
 /***************************************************************************/
 // Static prototoypes:

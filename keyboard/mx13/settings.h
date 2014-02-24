@@ -9,6 +9,8 @@
 
 #include <stdbool.h>
 
+#define EEPROM_LED_SETTINGS 1
+
 
 /****************************************************************************
  * Typedefs
